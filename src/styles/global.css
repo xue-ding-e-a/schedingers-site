@@ -33,11 +33,11 @@
   --cool: #06b6d4;
   --cool-soft: rgba(6, 182, 212, 0.12);
   --font-heading: 'Space Grotesk', 'PingFang SC', 'HarmonyOS Sans SC', 'Microsoft YaHei',
-    system-ui, sans-serif;
-  --font-body: 'DM Sans', 'PingFang SC', 'HarmonyOS Sans SC', 'Microsoft YaHei', system-ui,
-    -apple-system, 'Segoe UI', sans-serif;
+    'Noto Sans SC', 'Source Han Sans SC', system-ui, sans-serif;
+  --font-body: 'DM Sans', 'PingFang SC', 'HarmonyOS Sans SC', 'Microsoft YaHei', 'Noto Sans SC',
+    'Source Han Sans SC', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-sans: var(--font-body);
-  --font-serif: 'Space Grotesk', Georgia, 'Songti SC', serif;
+  --font-serif: 'Space Grotesk', Georgia, 'Songti SC', 'Noto Serif SC', serif;
   --font-mono: 'JetBrains Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --gutter: clamp(20px, 5vw, 64px);
