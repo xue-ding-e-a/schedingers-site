@@ -207,6 +207,20 @@ p {
   transform: translateX(4px);
 }
 
+.btn-ghost {
+  border-color: var(--line);
+  color: var(--text-dim);
+}
+
+.btn-ghost:hover {
+  color: var(--text);
+  border-color: var(--line-strong);
+}
+
+.btn-ghost:hover .arrow {
+  transform: translate(2px, -2px);
+}
+
 .chip {
   display: inline-flex;
   align-items: center;

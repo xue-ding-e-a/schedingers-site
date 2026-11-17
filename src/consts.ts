@@ -6,6 +6,7 @@ export const SITE = {
   location: { zh: '陕西 · 西安', en: "Xi'an, Shaanxi" },
   email: '2543165843@qq.com',
   wechat: 'schedinger',
+  github: 'https://github.com/xue-ding-e-a',
   since: 2018,
   worksCount: 10,
 } as const;
