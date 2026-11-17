@@ -12,6 +12,7 @@ const langLabel = otherLang === 'zh' ? '中文' : 'EN';
 ---
 
 <BaseLayout lang={lang} title={t('portal.title')} chrome={false} accent="warm">
+  <canvas id="three-canvas" aria-hidden="true"></canvas>
   <div class="portal">
     <div class="veil" aria-hidden="true"></div>
 
@@ -53,6 +54,8 @@ const langLabel = otherLang === 'zh' ? '中文' : 'EN';
       <span class="mono">© {new Date().getFullYear()} {SITE.author[lang]}</span>
     </footer>
   </div>
+
+  <script src={withBase('/vendor/three-bg.js')} type="module" is:inline></script>
 </BaseLayout>
 
 <style>
