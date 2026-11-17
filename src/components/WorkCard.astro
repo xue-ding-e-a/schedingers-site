@@ -7,14 +7,15 @@ interface Props {
   work: Work;
   lang: Lang;
   eager?: boolean;
+  reveal?: boolean;
 }
 
-const { work, lang, eager = false } = Astro.props;
+const { work, lang, eager = false, reveal = true } = Astro.props;
 const href = localizePath(`/works/${work.slug}`, lang);
 const year = work.date.slice(0, 4);
 ---
 
-<a class="work-card reveal" href={href} style={`--tint:${work.color}`}>
+<a class:list={['work-card', { reveal }]} href={href} style={`--tint:${work.color}`}>
   <span class="media" style={`aspect-ratio:${work.width} / ${work.height}`}>
     <img
       src={withBase(work.thumb)}

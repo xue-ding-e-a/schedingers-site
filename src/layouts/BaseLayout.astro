@@ -12,6 +12,7 @@ interface Props {
   chrome?: boolean;
   image?: string;
   accent?: 'warm' | 'cool';
+  preserveWorldNav?: boolean;
 }
 
 const {
@@ -22,10 +23,10 @@ const {
   chrome = true,
   image = '/images/works/galactic-arch-snow-mountain-thumb.webp',
   accent = section === 'dev' ? 'cool' : 'warm',
+  preserveWorldNav = false,
 } = Astro.props;
 
 const t = useTranslations(lang);
-const nav = section === 'photo' ? PHOTO_NAV : section === 'dev' ? DEV_NAV : NAV;
 const adoptStoredWorld = chrome && section === 'neutral';
 const themeColor = section === 'dev' ? '#fffdf8' : section === 'photo' ? '#000000' : '#0f172a';
 
@@ -34,12 +35,19 @@ const basePath = path.startsWith('/en') ? path.slice(3) || '/' : path;
 const otherLang: Lang = lang === 'zh' ? 'en' : 'zh';
 const switchHref = withBase(otherLang === 'en' ? (basePath === '/' ? '/en/' : `/en${basePath}`) : basePath);
 
-const crossTrack =
-  section === 'photo'
+const getCrossTrack = (world: 'photo' | 'dev' | 'neutral') =>
+  world === 'photo'
     ? { href: '/dev', label: lang === 'zh' ? '工程' : 'Engineering', icon: '</>' }
-    : section === 'dev'
+    : world === 'dev'
       ? { href: '/photo', label: lang === 'zh' ? '摄影' : 'Photography', icon: '✦' }
       : null;
+
+const worlds = preserveWorldNav ? (['photo', 'dev', 'neutral'] as const) : [section];
+const navVariants = worlds.map((world) => {
+  const items: readonly { key: string; href: string }[] =
+    world === 'photo' ? PHOTO_NAV : world === 'dev' ? DEV_NAV : NAV;
+  return { world, items, crossTrack: getCrossTrack(world) };
+});
 
 const siteName = SITE.name[lang];
 const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.tagline')}` : `${title} · ${siteName}`;
@@ -86,31 +94,43 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
   <body class:list={['page', `accent-${accent}`]}>
     {
       chrome && (
-        <header class="site-head">
+        <header class:list={['site-head', { 'preserve-world-nav': preserveWorldNav }]}>
           <div class="head-inner">
             <a class="brand" href={localizePath('/', lang)} aria-label={siteName}>
               <span class="brand-mark" aria-hidden="true"></span>
               <span class="brand-text">{siteName}</span>
             </a>
 
-            <nav class="site-nav" aria-label="Primary">
-              {nav.map((item) => {
-                const href = localizePath(item.href, lang);
-                const active = basePath === item.href;
-                return (
-                  <a href={href} class:list={['nav-link', { 'is-active': active }]}>
-                    {t(`nav.${item.key}` as any)}
-                  </a>
-                );
-              })}
-            </nav>
+            {navVariants.map(({ world, items }) => (
+              <nav
+                class:list={['site-nav', { 'world-nav': preserveWorldNav }]}
+                data-world-nav={world}
+                aria-label="Primary"
+              >
+                {items.map((item) => {
+                  const href = localizePath(item.href, lang);
+                  const active = basePath === item.href;
+                  return (
+                    <a href={href} class:list={['nav-link', { 'is-active': active }]}>
+                      {t(`nav.${item.key}` as any)}
+                    </a>
+                  );
+                })}
+              </nav>
+            ))}
 
             <div class="head-tools">
-              {crossTrack && (
-                <a class="track-switch" href={localizePath(crossTrack.href, lang)}>
-                  <span class="track-icon" aria-hidden="true">{crossTrack.icon}</span>
-                  {crossTrack.label}
-                </a>
+              {navVariants.map(({ world, crossTrack }) =>
+                crossTrack ? (
+                  <a
+                    class:list={['track-switch', { 'world-track': preserveWorldNav }]}
+                    data-world-track={world}
+                    href={localizePath(crossTrack.href, lang)}
+                  >
+                    <span class="track-icon" aria-hidden="true">{crossTrack.icon}</span>
+                    {crossTrack.label}
+                  </a>
+                ) : null
               )}
               <a class="lang-switch" href={switchHref} hreflang={otherLang} lang={otherLang}>
                 {otherLang === 'zh' ? '中文' : 'EN'}
@@ -349,6 +369,27 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
         font-family: var(--font-mono);
         font-size: 10px;
         color: var(--accent, var(--warm));
+      }
+
+      .site-nav.world-nav,
+      .track-switch.world-track {
+        display: none;
+      }
+
+      html[data-world='photo'] .site-nav.world-nav[data-world-nav='photo'],
+      html[data-world='dev'] .site-nav.world-nav[data-world-nav='dev'],
+      html[data-world='neutral'] .site-nav.world-nav[data-world-nav='neutral'] {
+        display: flex;
+      }
+
+      html[data-world='photo'] .track-switch.world-track[data-world-track='photo'],
+      html[data-world='dev'] .track-switch.world-track[data-world-track='dev'] {
+        display: inline-flex;
+      }
+
+      html[data-world='dev'] .site-head.preserve-world-nav {
+        --accent: var(--cool);
+        --accent-soft: var(--cool-soft);
       }
 
       .lang-switch {
