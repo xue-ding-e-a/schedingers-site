@@ -25,7 +25,7 @@ const cover = works.find((w) => w.slug === s.cover)!;
         <p class="kicker">{t('series.region')} · {s.region[lang]}</p>
         <h1 class="display">{s.name[lang]}</h1>
         <p class="lead">{s.desc[lang]}</p>
-        <p class="mono count">{list.length} {t('series.works')}</p>
+        <p class="mono numeric count">{list.length} {t('series.works')}</p>
       </div>
       <figure class="hero-cover" style={`background:${s.color}`}>
         <img src={withBase(cover.image)} alt={cover.title[lang]} width={cover.width} height={cover.height} />

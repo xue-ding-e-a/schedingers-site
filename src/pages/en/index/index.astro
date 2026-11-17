@@ -1,0 +1,259 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { works } from '../../../data/works';
+import { projects } from '../../../data/projects';
+import { useTranslations, localizePath, withBase } from '../../../i18n/utils';
+import type { Lang } from '../../../i18n/ui';
+
+const { lang = 'en' } = Astro.props as { lang?: Lang };
+const t = useTranslations(lang);
+
+type Entry = {
+  kind: 'photo' | 'dev';
+  year: string;
+  sortKey: string;
+  title: string;
+  meta: string;
+  href: string;
+  thumb?: string;
+  mark?: string;
+  tint?: string;
+};
+
+const photoEntries: Entry[] = works.map((w) => ({
+  kind: 'photo',
+  year: w.date.slice(0, 4),
+  sortKey: w.date,
+  title: w.title[lang],
+  meta: `${w.region[lang]} · ${w.exif.aperture} · ISO ${w.exif.iso} · ${w.exif.shutter}`,
+  href: localizePath(`/works/${w.slug}`, lang),
+  thumb: w.thumb,
+}));
+
+const devEntries: Entry[] = projects.map((p) => ({
+  kind: 'dev',
+  year: p.year,
+  sortKey: `${p.year}-12-31`,
+  title: p.name[lang],
+  meta: p.stack.join(' · '),
+  href: localizePath(`/projects/${p.slug}`, lang),
+  mark: p.name[lang].slice(0, 1),
+  tint: p.color,
+}));
+
+const entries = [...photoEntries, ...devEntries].sort((a, b) => b.sortKey.localeCompare(a.sortKey));
+---
+
+<BaseLayout lang={lang} title={t('index.title')} description={t('index.lead')} section="neutral">
+  <section class="head container-wide">
+    <p class="kicker">{t('index.kicker')}</p>
+    <h1 class="display">{t('index.title')}</h1>
+    <p class="lead head-lead">{t('index.lead')}</p>
+
+    <div class="filters" role="group" aria-label={t('index.filter')}>
+      <button class="chip" type="button" data-filter="all" aria-pressed="true">
+        {t('index.all')} <span class="numeric">{entries.length}</span>
+      </button>
+      <button class="chip" type="button" data-filter="photo" aria-pressed="false">
+        {t('index.photo')} <span class="numeric">{photoEntries.length}</span>
+      </button>
+      <button class="chip" type="button" data-filter="dev" aria-pressed="false">
+        {t('index.dev')} <span class="numeric">{devEntries.length}</span>
+      </button>
+      <span class="count mono">{entries.length} {t('index.count')}</span>
+    </div>
+  </section>
+
+  <section class="container-wide list" data-index-list aria-live="polite">
+    {entries.map((e) => (
+      <a class="entry" data-kind={e.kind} href={e.href}>
+        <span class="year mono numeric">{e.year}</span>
+        <span class:list={['thumb', e.kind === 'dev' ? 'thumb-dev' : 'thumb-photo']} style={e.tint ? `--tint:${e.tint}` : undefined}>
+          {e.thumb ? (
+            <img src={withBase(e.thumb)} alt="" loading="lazy" decoding="async" />
+          ) : (
+            <span class="mark">{e.mark}</span>
+          )}
+        </span>
+        <span class="body">
+          <span class="kind mono">{e.kind === 'photo' ? t('index.photo') : t('index.dev')}</span>
+          <span class="title">{e.title}</span>
+          <span class="meta mono">{e.meta}</span>
+        </span>
+        <span class="arrow" aria-hidden="true">→</span>
+      </a>
+    ))}
+  </section>
+</BaseLayout>
+
+<script>
+  const list = document.querySelector<HTMLElement>('[data-index-list]');
+  const buttons = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-filter]'));
+
+  buttons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const filter = btn.dataset.filter ?? 'all';
+      buttons.forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+      list?.querySelectorAll<HTMLElement>('[data-kind]').forEach((row) => {
+        row.hidden = filter !== 'all' && row.dataset.kind !== filter;
+      });
+    });
+  });
+</script>
+
+<style>
+  .head {
+    padding-top: clamp(56px, 9vw, 110px);
+    padding-bottom: clamp(28px, 4vw, 48px);
+  }
+
+  .head .display {
+    margin-top: 20px;
+  }
+
+  .head-lead {
+    margin-top: 22px;
+  }
+
+  .filters {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: clamp(28px, 4vw, 44px);
+    padding-top: 22px;
+    border-top: 1px solid var(--line);
+  }
+
+  .chip {
+    cursor: pointer;
+    gap: 8px;
+  }
+
+  .chip .numeric {
+    font-size: 10px;
+    opacity: 0.62;
+  }
+
+  .count {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--text-faint);
+  }
+
+  .list {
+    border-top: 1px solid var(--line);
+  }
+
+  .entry {
+    display: grid;
+    grid-template-columns: 74px 84px minmax(0, 1fr) 24px;
+    gap: clamp(14px, 2vw, 28px);
+    align-items: center;
+    padding-block: 18px;
+    border-bottom: 1px solid var(--line);
+    transition: background 0.3s var(--ease), padding 0.3s var(--ease);
+  }
+
+  .entry[hidden] {
+    display: none;
+  }
+
+  .entry:hover {
+    background: color-mix(in srgb, var(--text) 4%, transparent);
+    padding-inline: 12px;
+  }
+
+  .year {
+    font-size: 12px;
+    color: var(--text-faint);
+  }
+
+  .thumb {
+    width: 84px;
+    height: 64px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+    display: grid;
+    place-items: center;
+    background: var(--bg-elev);
+  }
+
+  .thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .thumb-dev {
+    background: linear-gradient(
+      160deg,
+      color-mix(in srgb, var(--tint) 30%, var(--bg-elev)),
+      var(--bg-elev) 88%
+    );
+  }
+
+  .mark {
+    font-family: var(--font-heading);
+    font-size: 18px;
+    font-weight: 900;
+    color: var(--text-dim);
+  }
+
+  .body {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .kind {
+    font-size: 9.5px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent, var(--warm));
+  }
+
+  .title {
+    font-family: var(--font-heading);
+    font-size: clamp(1rem, 1.6vw, 1.22rem);
+    font-weight: 900;
+    letter-spacing: -0.01em;
+  }
+
+  .meta {
+    font-size: 11px;
+    color: var(--text-faint);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .arrow {
+    font-size: 15px;
+    color: var(--text-faint);
+    transition: transform 0.35s var(--ease), color 0.35s var(--ease);
+  }
+
+  .entry:hover .arrow {
+    transform: translateX(6px);
+    color: var(--text);
+  }
+
+  @media (max-width: 640px) {
+    .entry {
+      grid-template-columns: 64px minmax(0, 1fr) 18px;
+      gap: 14px;
+    }
+    .year {
+      display: none;
+    }
+    .thumb {
+      width: 64px;
+      height: 56px;
+    }
+    .count {
+      display: none;
+    }
+  }
+</style>

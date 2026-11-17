@@ -33,9 +33,9 @@ const monogram = project.name[lang].slice(0, 1);
 
   <span class="info">
     <span class="line">
-      <span class="index mono">{String(index + 1).padStart(2, '0')}</span>
+      <span class="index mono numeric">{String(index + 1).padStart(2, '0')}</span>
       <span class="name">{project.name[lang]}</span>
-      <span class="year mono">{project.year}</span>
+      <span class="year mono numeric">{project.year}</span>
     </span>
     <span class="tagline">{project.tagline[lang]}</span>
     <span class="stack">
@@ -49,36 +49,56 @@ const monogram = project.name[lang].slice(0, 1);
     display: flex;
     flex-direction: column;
     gap: 18px;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .project-card:focus,
+  .project-card:focus-visible,
+  .project-card:active {
+    outline: none;
   }
 
   .frame {
     display: block;
     border: 1px solid var(--line);
-    border-radius: 6px;
+    border-radius: var(--radius-lg);
     overflow: hidden;
-    background: #0a0d14;
-    transition: border-color 0.5s var(--ease), transform 0.6s var(--ease);
+    background: #ffffff;
+    box-shadow: var(--card-shadow);
+    transition: transform 0.5s var(--ease), box-shadow 0.5s var(--ease);
   }
 
   .project-card:hover .frame {
-    border-color: rgba(255, 255, 255, 0.24);
-    transform: translateY(-4px);
+    transform: translateY(-6px);
+    box-shadow: 0 2px 4px rgba(29, 26, 43, 0.05), 0 32px 60px -32px rgba(29, 26, 43, 0.5);
   }
 
   .bar {
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 10px 14px;
+    padding: 11px 14px;
     border-bottom: 1px solid var(--line);
-    background: #090b11;
+    background: #faf6ee;
   }
 
   .dot {
     width: 7px;
     height: 7px;
     border-radius: 50%;
-    background: #232a38;
+    background: #d9d2c6;
+  }
+
+  .dot:nth-child(1) {
+    background: #ffa8b8;
+  }
+
+  .dot:nth-child(2) {
+    background: #ffd98a;
+  }
+
+  .dot:nth-child(3) {
+    background: #9fe3cb;
   }
 
   .url {
@@ -100,30 +120,31 @@ const monogram = project.name[lang].slice(0, 1);
     gap: 16px;
     aspect-ratio: 16 / 10;
     background:
-      radial-gradient(70% 80% at 28% 8%, rgba(255, 255, 255, 0.1), transparent 62%),
-      linear-gradient(160deg, var(--tint), #06080e 82%);
+      radial-gradient(80% 90% at 30% 0%, rgba(255, 255, 255, 0.92), transparent 62%),
+      linear-gradient(160deg, color-mix(in srgb, var(--tint) 22%, #ffffff) 0%, #fffdf8 84%);
     overflow: hidden;
   }
 
   .mark {
     display: grid;
     place-items: center;
-    width: 56px;
-    height: 56px;
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    border-radius: 14px;
-    background: rgba(255, 255, 255, 0.035);
-    font-size: 21px;
+    width: 60px;
+    height: 60px;
+    border: 1px solid rgba(29, 26, 43, 0.1);
+    border-radius: 18px;
+    background: #ffffff;
+    box-shadow: 0 8px 20px -12px rgba(29, 26, 43, 0.4);
+    font-size: 22px;
     font-weight: 500;
-    color: rgba(255, 255, 255, 0.62);
-    transition: border-color 0.5s var(--ease), color 0.5s var(--ease),
-      transform 0.7s var(--ease);
+    color: var(--text-dim);
+    transition: border-color 0.4s var(--ease), color 0.4s var(--ease),
+      transform 0.6s var(--ease);
   }
 
   .project-card:hover .mark {
-    border-color: rgba(255, 255, 255, 0.32);
-    color: rgba(255, 255, 255, 0.9);
-    transform: translateY(-2px);
+    border-color: var(--line-strong);
+    color: var(--text);
+    transform: translateY(-3px) rotate(-3deg);
   }
 
   .mock {
@@ -135,7 +156,7 @@ const monogram = project.name[lang].slice(0, 1);
   .mock-line {
     height: 4px;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(29, 26, 43, 0.12);
   }
 
   .mock-line.l1 {
@@ -156,7 +177,9 @@ const monogram = project.name[lang].slice(0, 1);
     padding: 4px 9px;
     border: 1px solid var(--line);
     border-radius: 999px;
-    background: rgba(6, 7, 11, 0.6);
+    background: rgba(255, 253, 248, 0.78);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
   }
 
   .info {
@@ -177,7 +200,9 @@ const monogram = project.name[lang].slice(0, 1);
   }
 
   .name {
+    font-family: var(--font-heading);
     font-size: 16px;
+    font-weight: 900;
     letter-spacing: 0.01em;
   }
 
@@ -203,9 +228,10 @@ const monogram = project.name[lang].slice(0, 1);
   .tag {
     font-size: 10px;
     letter-spacing: 0.06em;
-    color: var(--text-faint);
+    color: var(--text-dim);
+    background: #ffffff;
     border: 1px solid var(--line);
-    padding: 3px 8px;
-    border-radius: 3px;
+    padding: 4px 10px;
+    border-radius: 999px;
   }
 </style>

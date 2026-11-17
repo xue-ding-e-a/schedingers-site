@@ -82,7 +82,7 @@ const points = series.map((s) => {
         }).addTo(map);
 
         marker.bindPopup(
-          `<a href="${p.href}" style="color:#111;font-family:system-ui;text-decoration:none;">
+          `<a href="${p.href}" style="color:#111;font-family:var(--font-body);text-decoration:none;">
              <strong>${p.name}</strong><br/>
              <span style="font-size:12px;opacity:.7">${p.region} · ${p.count}</span>
            </a>`

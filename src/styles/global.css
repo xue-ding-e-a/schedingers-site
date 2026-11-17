@@ -1,17 +1,17 @@
 @font-face {
-  font-family: 'Space Grotesk';
+  font-family: 'UP Job Heading';
   font-style: normal;
-  font-weight: 400 700;
+  font-weight: 400 900;
   font-display: swap;
-  src: url('../assets/fonts/space-grotesk-latin.woff2') format('woff2');
+  src: url('../assets/fonts/up-job-heading-v2.woff2') format('woff2');
 }
 
 @font-face {
-  font-family: 'DM Sans';
+  font-family: 'UP Job Numeric';
   font-style: normal;
-  font-weight: 400 700;
+  font-weight: 100 900;
   font-display: swap;
-  src: url('../assets/fonts/dm-sans-latin.woff2') format('woff2');
+  src: url('../assets/fonts/up-job-numeric-v1.woff2') format('woff2');
 }
 
 :root {
@@ -32,16 +32,105 @@
   --warm-soft: rgba(236, 72, 153, 0.14);
   --cool: #06b6d4;
   --cool-soft: rgba(6, 182, 212, 0.12);
-  --font-heading: 'Space Grotesk', 'PingFang SC', 'HarmonyOS Sans SC', 'Microsoft YaHei',
-    'Noto Sans SC', 'Source Han Sans SC', system-ui, sans-serif;
-  --font-body: 'DM Sans', 'PingFang SC', 'HarmonyOS Sans SC', 'Microsoft YaHei', 'Noto Sans SC',
-    'Source Han Sans SC', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-heading: 'UP Job Heading', 'Noto Sans SC', sans-serif;
+  --font-body: -apple-system, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
   --font-sans: var(--font-body);
-  --font-serif: 'Space Grotesk', Georgia, 'Songti SC', 'Noto Serif SC', serif;
-  --font-mono: 'JetBrains Mono', 'Cascadia Mono', Consolas, ui-monospace, monospace;
+  --font-numeric: 'UP Job Numeric', -apple-system, 'SF Pro Display', 'Helvetica Neue', 'Segoe UI',
+    Roboto, Arial, sans-serif;
+  --font-mono: ui-monospace, Menlo, monospace;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --gutter: clamp(20px, 5vw, 64px);
   --nav-h: 64px;
+  --radius: 8px;
+  --radius-lg: 16px;
+
+  /* glass surface (neutral / portal) */
+  --glass-bg: rgba(19, 27, 44, 0.55);
+  --glass-bg-scrolled: rgba(17, 24, 39, 0.76);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-highlight: rgba(255, 255, 255, 0.18);
+  --glass-sheen: rgba(255, 255, 255, 0.05);
+  --glass-streak: rgba(255, 255, 255, 0.05);
+  --glass-shadow: 0 18px 44px -24px rgba(0, 0, 0, 0.7);
+  --grain-opacity: 0.06;
+  --scroll-thumb: linear-gradient(180deg, var(--purple), var(--pink));
+  --btn-bg: rgba(30, 41, 59, 0.35);
+  --btn-hover-bg: rgba(59, 130, 246, 0.14);
+  --on-accent: #ffffff;
+  --btn-shadow: none;
+  --card-shadow: none;
+}
+
+/* ---------- world: photography (pure black) ---------- */
+html[data-world='photo'] {
+  color-scheme: dark;
+  --bg: #000000;
+  --bg-deep: #000000;
+  --bg-elev: #0b0b0c;
+  --bg-elev-2: #141416;
+  --line: rgba(255, 255, 255, 0.1);
+  --line-strong: rgba(255, 255, 255, 0.22);
+  --text: #f6f4f0;
+  --text-dim: #a5a29c;
+  --text-faint: #6d6a64;
+  --primary: #e5c9a4;
+  --warm: #e5c9a4;
+  --warm-soft: rgba(229, 201, 164, 0.14);
+  --cool: #e5c9a4;
+  --cool-soft: rgba(229, 201, 164, 0.1);
+  --scroll-thumb: linear-gradient(180deg, #6d6a64, #2a2926);
+  /* 顶部与滚动状态共用同一色相，仅透明度递进，保证滚动时平滑过渡 */
+  --glass-bg: rgba(12, 12, 14, 0.46);
+  --glass-bg-scrolled: rgba(12, 12, 14, 0.74);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-highlight: rgba(255, 255, 255, 0.22);
+  --glass-sheen: rgba(255, 255, 255, 0.07);
+  --glass-streak: rgba(255, 255, 255, 0.08);
+  --glass-shadow: 0 20px 48px -24px #000000;
+  --grain-opacity: 0.1;
+  --btn-bg: rgba(255, 255, 255, 0.04);
+  --btn-hover-bg: rgba(229, 201, 164, 0.12);
+  --on-accent: #0a0a0b;
+  --btn-shadow: none;
+  --card-shadow: none;
+}
+
+/* ---------- world: engineering (warm light) ---------- */
+html[data-world='dev'] {
+  color-scheme: light;
+  --bg: #fffdf8;
+  --bg-deep: #fbf7ef;
+  --bg-elev: #ffffff;
+  --bg-elev-2: #f4efe5;
+  --line: rgba(29, 26, 43, 0.12);
+  --line-strong: rgba(29, 26, 43, 0.28);
+  --text: #1d1a2b;
+  --text-dim: #57506b;
+  --text-faint: #8b849c;
+  --primary: #6b4eff;
+  --purple: #8b5cf6;
+  --pink: #ff5c8a;
+  --cyan: #0e9f9f;
+  --warm: #ff5c8a;
+  --warm-soft: rgba(255, 92, 138, 0.12);
+  --cool: #6b4eff;
+  --cool-soft: rgba(107, 78, 255, 0.1);
+  --radius: 10px;
+  --radius-lg: 18px;
+  --scroll-thumb: linear-gradient(180deg, #b7a9ff, #ffc2d3);
+  --glass-bg: rgba(255, 252, 246, 0.4);
+  --glass-bg-scrolled: rgba(255, 252, 246, 0.62);
+  --glass-border: rgba(29, 26, 43, 0.09);
+  --glass-highlight: rgba(255, 255, 255, 0.9);
+  --glass-sheen: rgba(255, 255, 255, 0.2);
+  --glass-streak: rgba(255, 255, 255, 0.26);
+  --glass-shadow: 0 16px 40px -26px rgba(29, 26, 43, 0.45);
+  --grain-opacity: 0.04;
+  --btn-bg: #ffffff;
+  --btn-hover-bg: #f4efff;
+  --on-accent: #ffffff;
+  --btn-shadow: 0 1px 2px rgba(29, 26, 43, 0.06), 0 10px 24px -16px rgba(29, 26, 43, 0.4);
+  --card-shadow: 0 1px 2px rgba(29, 26, 43, 0.05), 0 18px 40px -24px rgba(29, 26, 43, 0.35);
 }
 
 *,
@@ -59,6 +148,8 @@ html {
 body {
   margin: 0;
   font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
   color: var(--text);
   background: transparent;
   -webkit-font-smoothing: antialiased;
@@ -92,6 +183,25 @@ body::before {
   66% {
     transform: translate(-10%, 10%) rotate(240deg);
   }
+}
+
+/* 纯黑世界：去掉彩色光斑，只留顶部一层极淡的冷光 */
+html[data-world='photo'] body::before {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(70% 42% at 50% -8%, rgba(255, 255, 255, 0.055), transparent 72%);
+  animation: none;
+}
+
+/* 浅色世界：奶油底 + 极淡暖光，让毛玻璃有东西可以模糊 */
+html[data-world='dev'] body::before {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(60% 44% at 18% -6%, rgba(255, 214, 153, 0.26), transparent 70%),
+    radial-gradient(46% 36% at 88% 4%, rgba(197, 181, 255, 0.22), transparent 72%);
+  animation: none;
 }
 
 img,
@@ -132,6 +242,8 @@ h2,
 h3,
 h4 {
   font-family: var(--font-heading);
+  font-weight: 900;
+  line-height: 1.2;
 }
 
 :focus-visible {
@@ -193,7 +305,7 @@ h4 {
   font-size: clamp(2.4rem, 6vw, 4.6rem);
   line-height: 1.06;
   letter-spacing: -0.03em;
-  font-weight: 700;
+  font-weight: 900;
   text-wrap: balance;
 }
 
@@ -202,7 +314,7 @@ h4 {
   font-size: clamp(2.8rem, 8vw, 6.4rem);
   line-height: 1;
   letter-spacing: -0.04em;
-  font-weight: 700;
+  font-weight: 900;
 }
 
 .h2 {
@@ -210,7 +322,7 @@ h4 {
   font-size: clamp(1.6rem, 3.2vw, 2.4rem);
   line-height: 1.16;
   letter-spacing: -0.02em;
-  font-weight: 700;
+  font-weight: 900;
 }
 
 .lead {
@@ -228,10 +340,15 @@ h4 {
   color: var(--text-faint);
 }
 
+.numeric {
+  font-family: var(--font-numeric);
+  font-variant-numeric: tabular-nums;
+}
+
 .prose p {
   font-size: clamp(0.98rem, 1.25vw, 1.06rem);
   line-height: 2;
-  color: #cbd5e1;
+  color: var(--text-dim);
   margin-bottom: 1.35em;
   text-wrap: pretty;
 }
@@ -267,10 +384,11 @@ h4 {
   gap: 10px;
   padding: 13px 24px;
   border: 1px solid var(--line);
-  border-radius: 0.5rem;
-  background: rgba(30, 41, 59, 0.35);
+  border-radius: var(--radius);
+  background: var(--btn-bg);
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
+  box-shadow: var(--btn-shadow);
   font-family: var(--font-body);
   font-size: 14px;
   font-weight: 600;
@@ -281,10 +399,10 @@ h4 {
 }
 
 .btn:hover {
-  background: rgba(59, 130, 246, 0.14);
-  border-color: var(--primary);
+  background: var(--btn-hover-bg);
+  border-color: var(--accent, var(--primary));
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
 }
 
 .btn .arrow {
@@ -311,15 +429,16 @@ h4 {
 
 .btn-ghost {
   background: transparent;
-  border-color: rgba(148, 163, 184, 0.35);
+  border-color: var(--line-strong);
   color: var(--text-dim);
+  box-shadow: none;
 }
 
 .btn-ghost:hover {
-  background: rgba(59, 130, 246, 0.12);
-  border-color: var(--primary);
-  color: #dbeafe;
-  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.14);
+  background: var(--btn-hover-bg);
+  border-color: var(--accent, var(--primary));
+  color: var(--text);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
 }
 
 .btn-ghost:hover .arrow {
@@ -332,7 +451,7 @@ h4 {
   padding: 7px 15px;
   border: 1px solid var(--line);
   border-radius: 999px;
-  background: rgba(30, 41, 59, 0.35);
+  background: var(--btn-bg);
   font-size: 12.5px;
   color: var(--text-dim);
   transition: color 0.25s ease, border-color 0.25s ease, background 0.25s ease;
@@ -341,15 +460,15 @@ h4 {
 
 .chip:hover {
   color: var(--text);
-  border-color: var(--primary);
-  background: rgba(59, 130, 246, 0.12);
+  border-color: var(--accent, var(--primary));
+  background: var(--btn-hover-bg);
 }
 
 .chip[aria-pressed='true'],
 .chip.is-active {
-  color: #fff;
-  background: var(--primary);
-  border-color: var(--primary);
+  color: var(--on-accent);
+  background: var(--accent, var(--primary));
+  border-color: var(--accent, var(--primary));
 }
 
 /* ---------- background canvas ---------- */
@@ -407,9 +526,9 @@ h4 {
   background: var(--bg-deep);
 }
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, var(--purple), var(--pink));
+  background: var(--scroll-thumb);
   border-radius: 8px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, var(--pink), var(--primary));
+  filter: brightness(1.1);
 }

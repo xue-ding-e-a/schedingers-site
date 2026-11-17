@@ -18,18 +18,23 @@ const langLabel = otherLang === 'zh' ? '中文' : 'EN';
 
     <header class="portal-top">
       <span class="mono">{t('portal.overline')}</span>
-      <a class="lang-mini" href={langHref} hreflang={otherLang} lang={otherLang}>{langLabel}</a>
+      <div class="top-links">
+        <a class="lang-mini" href={localizePath('/index', lang)}>{t('nav.index')}</a>
+        <a class="lang-mini" href={langHref} hreflang={otherLang} lang={otherLang}>{langLabel}</a>
+      </div>
     </header>
 
     <div class="portal-core">
       <p class="kicker">{t('site.tagline')}</p>
-      <h1 class="portal-title grad-text">{t('portal.title')}</h1>
+      <h1 class="portal-title">
+        <span class="typewriter-text grad-text" id="typewriter">{t('portal.title')}</span><span class="typewriter-cursor" aria-hidden="true"></span>
+      </h1>
       <p class="portal-lead">{t('portal.desc')}</p>
     </div>
 
     <nav class="doors" aria-label="Choose a track">
       <a class="door door-photo" href={localizePath('/photo', lang)}>
-        <span class="door-index mono">01</span>
+        <span class="door-index mono numeric">01</span>
         <span class="door-body">
           <span class="door-en">{t('portal.photoEn')}</span>
           <span class="door-title">{t('portal.photo')}</span>
@@ -39,7 +44,7 @@ const langLabel = otherLang === 'zh' ? '中文' : 'EN';
       </a>
 
       <a class="door door-dev" href={localizePath('/dev', lang)}>
-        <span class="door-index mono">02</span>
+        <span class="door-index mono numeric">02</span>
         <span class="door-body">
           <span class="door-en">{t('portal.devEn')}</span>
           <span class="door-title">{t('portal.dev')}</span>
@@ -56,6 +61,57 @@ const langLabel = otherLang === 'zh' ? '中文' : 'EN';
   </div>
 
   <script src={withBase('/vendor/three-bg.js')} type="module" is:inline></script>
+  <script>
+    const el = document.getElementById('typewriter');
+    if (el) {
+      const texts = ['薛定谔的站点', "Schedinger's site"];
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      if (reduced) {
+        el.textContent = texts[0];
+      } else {
+        let wordIndex = 0;
+        let charIndex = texts[0].length;
+        let isDeleting = false;
+        let timer;
+
+        const step = () => {
+          const word = texts[wordIndex];
+          if (!isDeleting) {
+            if (charIndex < word.length) {
+              charIndex += 1;
+              el.textContent = word.slice(0, charIndex);
+              timer = setTimeout(step, 90);
+              return;
+            }
+            isDeleting = true;
+            timer = setTimeout(step, 1600);
+            return;
+          }
+          if (charIndex > 0) {
+            charIndex -= 1;
+            el.textContent = word.slice(0, charIndex);
+            timer = setTimeout(step, 55);
+            return;
+          }
+          isDeleting = false;
+          wordIndex = (wordIndex + 1) % texts.length;
+          timer = setTimeout(step, 260);
+        };
+
+        timer = setTimeout(step, 1800);
+
+        document.addEventListener('visibilitychange', () => {
+          if (document.hidden) {
+            clearTimeout(timer);
+          } else {
+            step();
+          }
+        });
+        window.addEventListener('beforeunload', () => clearTimeout(timer));
+      }
+    }
+  </script>
 </BaseLayout>
 
 <style>
@@ -66,7 +122,7 @@ const langLabel = otherLang === 'zh' ? '中文' : 'EN';
     flex-direction: column;
     padding: 26px var(--gutter) 26px;
     overflow: hidden;
-    --accent: var(--warm);
+    --accent: #e5c9a4;
   }
 
   .veil {
@@ -93,6 +149,12 @@ const langLabel = otherLang === 'zh' ? '中文' : 'EN';
     justify-content: space-between;
     align-items: center;
     color: var(--text-faint);
+  }
+
+  .top-links {
+    display: flex;
+    align-items: center;
+    gap: 20px;
   }
 
   .lang-mini {
@@ -123,15 +185,35 @@ const langLabel = otherLang === 'zh' ? '中文' : 'EN';
     font-size: clamp(3rem, 9.5vw, 7.6rem);
     line-height: 0.98;
     letter-spacing: -0.045em;
-    font-weight: 700;
+    font-weight: 900;
+    white-space: nowrap;
+  }
+
+  .typewriter-cursor {
+    display: inline-block;
+    width: clamp(3px, 0.55vw, 6px);
+    height: 0.82em;
+    background: var(--accent, var(--warm));
+    border-radius: 2px;
+    margin-left: 0.06em;
+    vertical-align: baseline;
+    transform: translateY(0.06em);
+    animation: typewriter-blink 1s ease-in-out infinite;
+  }
+
+  @keyframes typewriter-blink {
+    50% {
+      opacity: 0.3;
+    }
   }
 
   .portal-lead {
     margin-top: 26px;
-    max-width: 44ch;
+    max-width: 30em;
     font-size: clamp(0.98rem, 1.3vw, 1.1rem);
     line-height: 1.9;
     color: var(--text-dim);
+    text-wrap: pretty;
   }
 
   .doors {
@@ -159,9 +241,13 @@ const langLabel = otherLang === 'zh' ? '中文' : 'EN';
   }
 
   .door-photo:hover {
-    border-color: var(--warm);
+    border-color: var(--accent);
     transform: translateY(-3px);
-    box-shadow: 0 18px 40px rgba(236, 72, 153, 0.18);
+    box-shadow: 0 18px 40px rgba(229, 201, 164, 0.18);
+  }
+
+  .door-photo:focus-visible {
+    outline-color: var(--accent);
   }
 
   .door-dev:hover {
@@ -180,7 +266,7 @@ const langLabel = otherLang === 'zh' ? '中文' : 'EN';
   }
 
   .door-photo::before {
-    background: radial-gradient(70% 120% at 20% 100%, rgba(236, 72, 153, 0.18), transparent 70%);
+    background: radial-gradient(70% 120% at 20% 100%, rgba(229, 201, 164, 0.18), transparent 70%);
   }
 
   .door-dev::before {
@@ -213,9 +299,10 @@ const langLabel = otherLang === 'zh' ? '中文' : 'EN';
   }
 
   .door-title {
+    font-family: var(--font-heading);
     font-size: clamp(1.5rem, 2.6vw, 2.1rem);
     letter-spacing: -0.02em;
-    font-weight: 600;
+    font-weight: 900;
     line-height: 1.2;
   }
 
@@ -223,7 +310,8 @@ const langLabel = otherLang === 'zh' ? '中文' : 'EN';
     font-size: 13.5px;
     line-height: 1.75;
     color: var(--text-dim);
-    max-width: 34ch;
+    max-width: 28em;
+    text-wrap: balance;
   }
 
   .door-arrow {
@@ -240,7 +328,7 @@ const langLabel = otherLang === 'zh' ? '中文' : 'EN';
 
   .door-photo:hover .door-index,
   .door-photo:hover .door-en {
-    color: var(--warm);
+    color: var(--accent);
   }
 
   .door-dev:hover .door-index,

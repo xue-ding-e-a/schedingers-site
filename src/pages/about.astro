@@ -122,8 +122,8 @@ const gear = [
 
   .head-lead {
     margin-top: 24px;
-    color: rgba(232, 236, 246, 0.8);
-    font-family: var(--font-serif);
+    color: var(--text-dim);
+    font-family: var(--font-body);
     font-size: clamp(1rem, 1.5vw, 1.2rem);
     line-height: 1.9;
   }
@@ -131,6 +131,8 @@ const gear = [
   .head-photo {
     margin: 0;
     overflow: hidden;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--card-shadow);
   }
 
   .head-photo img {

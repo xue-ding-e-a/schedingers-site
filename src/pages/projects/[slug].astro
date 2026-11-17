@@ -146,7 +146,9 @@ const related = projects.filter((x) => x.slug !== p.slug).slice(0, 3);
 
   .panel {
     border: 1px solid var(--line);
-    background: linear-gradient(160deg, var(--tint), #080a11 85%);
+    border-radius: var(--radius-lg);
+    background: linear-gradient(160deg, color-mix(in srgb, var(--tint) 16%, #ffffff), #fffdf8 85%);
+    box-shadow: var(--card-shadow);
     padding: 6px 20px;
   }
 
@@ -223,13 +225,14 @@ const related = projects.filter((x) => x.slug !== p.slug).slice(0, 3);
   .point-text {
     font-size: 14.5px;
     line-height: 1.8;
-    color: #c9d0e0;
+    color: var(--text);
   }
 
   .note-box {
     border-left: 2px solid var(--line-strong);
+    border-radius: var(--radius);
     padding: 18px 22px;
-    background: rgba(255, 255, 255, 0.02);
+    background: var(--bg-elev-2);
     display: grid;
     gap: 10px;
   }

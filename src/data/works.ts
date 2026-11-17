@@ -16,6 +16,7 @@ export type Work = {
   thumb: string;
   width: number;
   height: number;
+  sizeMB: number;
   color: string;
   featured?: boolean;
 };
@@ -23,6 +24,7 @@ export type Work = {
 export const works: Work[] = [
   {
     slug: 'under-the-milky-way',
+    sizeMB: 20.9,
     title: { zh: '银河下的我们', en: 'Us Beneath the Milky Way' },
     series: 'pingan',
     location: { zh: '甘肃 · 天水 · 平安草原', en: "Ping'an Grassland, Tianshui, Gansu" },
@@ -57,6 +59,7 @@ Maybe the point of chasing the sky is not only to record some distant unknown. I
   },
   {
     slug: 'twin-arches-jade',
+    sizeMB: 144.03,
     title: { zh: '双拱如玉', en: 'Twin Arches of Jade' },
     series: 'pingan',
     location: { zh: '甘肃 · 天水 · 平安草原', en: "Ping'an Grassland, Tianshui, Gansu" },
@@ -94,6 +97,7 @@ No daytime noise, only wind over the grass slope. We stand at the edge of the va
   },
   {
     slug: 'prairie-starry-night',
+    sizeMB: 14.68,
     title: { zh: '草原星夜', en: 'Prairie Starry Night' },
     series: 'pingan',
     location: { zh: '甘肃 · 天水 · 平安草原', en: "Ping'an Grassland, Tianshui, Gansu" },
@@ -127,6 +131,7 @@ This starlight set out more than twenty thousand years ago, crossed light years 
   },
   {
     slug: 'winter-milky-way',
+    sizeMB: 6.89,
     title: { zh: '冬夜星河', en: 'Winter Milky Way' },
     series: 'guanshan',
     location: { zh: '陕西 · 宝鸡 · 关山草原', en: 'Guanshan Grassland, Baoji, Shaanxi' },
@@ -163,6 +168,7 @@ Between them lies only this snowfield. Look up and there is the sea of stars; lo
   },
   {
     slug: 'star-trails-river',
+    sizeMB: 7.83,
     title: { zh: '星河流转', en: 'River of Turning Stars' },
     series: 'guanshan',
     location: { zh: '陕西 · 宝鸡 · 关山草原', en: 'Guanshan Grassland, Baoji, Shaanxi' },
@@ -196,6 +202,7 @@ So the star trails are not just lines in the sky. They record the rotation of th
   },
   {
     slug: 'galactic-arch-snow-mountain',
+    sizeMB: 56.52,
     title: { zh: '银河落入雪山', en: 'Where the Milky Way Falls' },
     series: 'guanshan',
     location: { zh: '陕西 · 宝鸡 · 关山草原', en: 'Guanshan Grassland, Baoji, Shaanxi' },
@@ -230,6 +237,7 @@ We are used to calling this a galactic arch, and rarely stop to think that the g
   },
   {
     slug: 'eaves-of-time',
+    sizeMB: 17.37,
     title: { zh: '檐上流年', en: 'Years Above the Eaves' },
     series: 'xianyou',
     location: { zh: '陕西 · 西安 · 周至仙游寺', en: 'Xianyou Temple, Zhouzhi, Xi’an' },
@@ -263,6 +271,7 @@ Standing here in silence, we finish a gaze across time with the same sky people 
   },
   {
     slug: 'meteor-over-ridge',
+    sizeMB: 36.13,
     title: { zh: '山脊流星', en: 'Meteor Over the Ridge' },
     series: 'jiuzhaigou',
     location: { zh: '四川 · 阿坝 · 九寨沟', en: 'Jiuzhaigou, Aba, Sichuan' },
@@ -297,6 +306,7 @@ Standing below the silent forest, time seems to stop. Only starlight passes thro
   },
   {
     slug: 'stars-fall-on-village',
+    sizeMB: 34.68,
     title: { zh: '星落古寨', en: 'Stars Over the Old Village' },
     series: 'jiuzhaigou',
     location: { zh: '四川 · 阿坝 · 九寨沟', en: 'Jiuzhaigou, Aba, Sichuan' },
@@ -331,6 +341,7 @@ The sky is vast, the mountains say nothing. In their embrace, the sea of stars a
   },
   {
     slug: 'plank-road-star-bridge',
+    sizeMB: 77.86,
     title: { zh: '栈道星桥', en: 'The Plank Road Star Bridge' },
     series: 'jiuzhaigou',
     location: { zh: '四川 · 阿坝 · 九寨沟', en: 'Jiuzhaigou, Aba, Sichuan' },

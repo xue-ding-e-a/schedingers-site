@@ -13,9 +13,8 @@ export const SITE = {
 
 export const NAV = [
   { key: 'photo', href: '/photo' },
-  { key: 'works', href: '/works' },
-  { key: 'projects', href: '/projects' },
-  { key: 'build', href: '/build' },
+  { key: 'dev', href: '/dev' },
+  { key: 'index', href: '/index' },
   { key: 'about', href: '/about' },
   { key: 'contact', href: '/contact' },
 ] as const;

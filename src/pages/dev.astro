@@ -15,11 +15,10 @@ const t = useTranslations(lang);
     <h1 class="display-lg hero-title">{t('dev.title')}</h1>
     <p class="lead hero-lead">{t('dev.lead')}</p>
 
-    <div class="terminal mono" aria-hidden="true">
-      <span class="prompt">~</span> site --info
-      <span class="out">astro 5 · typescript · css · canvas</span>
-      <span class="out">14 routes · 2 languages · 0 backend</span>
-      <span class="cursor">▊</span>
+    <div class="terminal mono" aria-hidden="true" data-terminal>
+      <span class="line"><span class="prompt">~</span> <span id="terminal-cmd">site --info</span><span class="cursor">▊</span></span>
+      <span class="out" data-out>astro 5 · typescript · css · canvas</span>
+      <span class="out" data-out>14 routes · 2 languages · 0 backend</span>
     </div>
   </section>
 
@@ -86,7 +85,7 @@ const t = useTranslations(lang);
     font-size: clamp(2.2rem, 5vw, 4.2rem);
     line-height: 1.1;
     letter-spacing: -0.025em;
-    font-weight: 500;
+    font-weight: 900;
   }
 
   .hero-lead {
@@ -101,10 +100,16 @@ const t = useTranslations(lang);
     padding: 20px 24px;
     border: 1px solid var(--line);
     border-left: 2px solid var(--cool);
-    background: rgba(6, 182, 212, 0.03);
+    border-radius: var(--radius-lg);
+    background: var(--cool-soft);
+    box-shadow: var(--card-shadow);
     font-size: 12px;
     color: var(--text-dim);
     line-height: 1.9;
+  }
+
+  .line {
+    display: block;
   }
 
   .prompt {
@@ -117,14 +122,41 @@ const t = useTranslations(lang);
     padding-left: 18px;
   }
 
+  .terminal[data-terminal] [data-out] {
+    opacity: 0;
+    transform: translateY(-3px);
+    transition:
+      opacity 0.35s ease,
+      transform 0.35s ease;
+  }
+
+  .terminal[data-terminal] [data-out]:nth-child(3) {
+    transition-delay: 0.14s;
+  }
+
+  .terminal[data-terminal] [data-out].is-shown {
+    opacity: 1;
+    transform: none;
+  }
+
   .cursor {
     color: var(--cool);
-    animation: blink 1.4s steps(2) infinite;
+    display: inline-block;
+    margin-left: 2px;
+    animation: blink 1s ease-in-out infinite;
   }
 
   @keyframes blink {
     50% {
-      opacity: 0;
+      opacity: 0.3;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .terminal[data-terminal] [data-out] {
+      opacity: 1;
+      transform: none;
+      transition: none;
     }
   }
 
@@ -140,7 +172,7 @@ const t = useTranslations(lang);
   .sec-title {
     margin-top: 16px;
     max-width: 28ch;
-    font-weight: 500;
+    font-weight: 900;
   }
 
   .project-grid {
@@ -161,7 +193,7 @@ const t = useTranslations(lang);
     font-size: 13px;
     letter-spacing: 0.08em;
     color: var(--cool);
-    font-weight: 500;
+    font-weight: 900;
     margin-bottom: 18px;
   }
 
@@ -184,7 +216,7 @@ const t = useTranslations(lang);
     border-top: 1px solid var(--line);
     border-bottom: 1px solid var(--line);
     padding-block: clamp(44px, 6vw, 76px);
-    background: linear-gradient(180deg, rgba(6, 182, 212, 0.035), transparent);
+    background: linear-gradient(180deg, var(--cool-soft), transparent);
   }
 
   .build-inner {
@@ -198,7 +230,7 @@ const t = useTranslations(lang);
   .build-inner .h2 {
     margin-top: 14px;
     max-width: 30ch;
-    font-weight: 500;
+    font-weight: 900;
     color: var(--text-dim);
   }
 
@@ -211,3 +243,71 @@ const t = useTranslations(lang);
     }
   }
 </style>
+
+<script>
+  const terminal = document.querySelector('[data-terminal]');
+  const cmd = document.getElementById('terminal-cmd');
+
+  if (terminal && cmd) {
+    const full = cmd.textContent ?? '';
+    const outs = Array.from(terminal.querySelectorAll('[data-out]'));
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (reduced) {
+      outs.forEach((el) => el.classList.add('is-shown'));
+    } else {
+      let timer = 0;
+      let charIndex = 0;
+      let phase = 'typing';
+      let started = false;
+
+      const setOuts = (show) => {
+        outs.forEach((el) => el.classList.toggle('is-shown', show));
+      };
+
+      const step = () => {
+        if (phase === 'typing') {
+          if (charIndex < full.length) {
+            charIndex += 1;
+            cmd.textContent = full.slice(0, charIndex);
+            timer = window.setTimeout(step, 90);
+            return;
+          }
+          phase = 'holding';
+          setOuts(true);
+          timer = window.setTimeout(step, 2200);
+          return;
+        }
+
+        if (phase === 'holding') {
+          phase = 'deleting';
+          setOuts(false);
+          timer = window.setTimeout(step, 340);
+          return;
+        }
+
+        if (charIndex > 0) {
+          charIndex -= 1;
+          cmd.textContent = full.slice(0, charIndex);
+          timer = window.setTimeout(step, 55);
+          return;
+        }
+
+        phase = 'typing';
+        timer = window.setTimeout(step, 520);
+      };
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          window.clearTimeout(timer);
+        } else if (started) {
+          step();
+        }
+      });
+
+      started = true;
+      cmd.textContent = '';
+      timer = window.setTimeout(step, 900);
+    }
+  }
+</script>

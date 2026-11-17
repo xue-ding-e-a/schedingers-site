@@ -8,13 +8,26 @@ import type { Lang } from '../i18n/ui';
 
 const { lang = 'zh' } = Astro.props as { lang?: Lang };
 const t = useTranslations(lang);
-const hero = works.find((w) => w.slug === 'galactic-arch-snow-mountain')!;
+const hero = works.find((w) => w.slug === 'star-trails-river')!;
+
+// 精选条固定顺序：双拱如玉、银河落入雪山置于末两位
+const featuredOrder = [
+  'meteor-over-ridge',
+  'stars-fall-on-village',
+  'under-the-milky-way',
+  'twin-arches-jade',
+  'galactic-arch-snow-mountain',
+];
+const featuredRank = (slug: string) => {
+  const index = featuredOrder.indexOf(slug);
+  return index === -1 ? featuredOrder.length : index;
+};
+const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) - featuredRank(b.slug));
 ---
 
 <BaseLayout lang={lang} title={t('nav.photo')} description={t('photo.lead')} section="photo">
   <section class="hero">
     <img class="hero-img" src={withBase(hero.image)} alt={hero.title[lang]} width={hero.width} height={hero.height} />
-    <div class="hero-veil" aria-hidden="true"></div>
     <div class="hero-inner container-wide">
       <p class="kicker">{t('photo.kicker')}</p>
       <h1 class="display-lg hero-title">{t('photo.title')}</h1>
@@ -40,8 +53,8 @@ const hero = works.find((w) => w.slug === 'galactic-arch-snow-mountain')!;
     </div>
 
     <div class="strip">
-      {featuredWorks.map((w) => (
-        <div class="strip-item">
+      {featuredByOrder.map((w) => (
+        <div class="strip-item" style={`--ratio:${(w.width / w.height).toFixed(3)}`}>
           <WorkCard work={w} lang={lang} />
         </div>
       ))}
@@ -100,7 +113,10 @@ const hero = works.find((w) => w.slug === 'galactic-arch-snow-mountain')!;
 <style>
   .hero {
     position: relative;
-    min-height: calc(100svh - var(--nav-h));
+    min-height: 100svh;
+    /* 向上延伸，让首屏图覆盖到导航栏顶部 */
+    margin-top: calc(var(--head-h, var(--nav-h)) * -1);
+    padding-top: var(--head-h, var(--nav-h));
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
@@ -113,24 +129,7 @@ const hero = works.find((w) => w.slug === 'galactic-arch-snow-mountain')!;
     width: 100%;
     height: 100%;
     object-fit: cover;
-    animation: heroDrift 26s var(--ease) both;
-  }
-
-  @keyframes heroDrift {
-    from {
-      transform: scale(1.08);
-    }
-    to {
-      transform: scale(1);
-    }
-  }
-
-  .hero-veil {
-    position: absolute;
-    inset: 0;
-    background:
-      linear-gradient(to top, var(--bg) 2%, rgba(6, 7, 11, 0.35) 46%, rgba(6, 7, 11, 0.55) 100%),
-      radial-gradient(70% 60% at 20% 20%, rgba(6, 7, 11, 0.4), transparent 70%);
+    opacity: 0.75;
   }
 
   .hero-inner {
@@ -140,19 +139,21 @@ const hero = works.find((w) => w.slug === 'galactic-arch-snow-mountain')!;
 
   .hero-title {
     margin-top: 20px;
-    max-width: 22ch;
+    max-width: 20em;
     font-size: clamp(2.1rem, 4.6vw, 3.9rem);
     line-height: 1.14;
     letter-spacing: -0.02em;
-    font-weight: 500;
+    font-weight: 900;
+    text-wrap: balance;
   }
 
   .hero-lead {
     margin-top: 22px;
-    max-width: 52ch;
+    max-width: 38em;
     font-size: clamp(0.95rem, 1.25vw, 1.08rem);
     line-height: 1.9;
     color: rgba(232, 236, 246, 0.78);
+    text-wrap: pretty;
   }
 
   .hero-meta {
@@ -181,15 +182,17 @@ const hero = works.find((w) => w.slug === 'galactic-arch-snow-mountain')!;
 
   .sec-title {
     margin-top: 16px;
-    max-width: 26ch;
+    max-width: 24em;
     color: var(--text);
-    font-weight: 500;
+    font-weight: 900;
+    text-wrap: balance;
   }
 
   .strip {
     display: grid;
     grid-auto-flow: column;
-    grid-auto-columns: minmax(280px, 34%);
+    grid-auto-columns: max-content;
+    align-items: start;
     gap: clamp(16px, 2vw, 28px);
     overflow-x: auto;
     scroll-snap-type: x mandatory;
@@ -200,7 +203,18 @@ const hero = works.find((w) => w.slug === 'galactic-arch-snow-mountain')!;
   }
 
   .strip-item {
+    --card-h: 427px;
+    width: calc(var(--card-h) * var(--ratio, 1));
     scroll-snap-align: start;
+  }
+
+  /* 精选条内统一为单行说明，避免文字折行影响卡片整体高度 */
+  .strip-item :global(.meta) {
+    flex-wrap: nowrap;
+  }
+
+  .strip-item :global(.meta > .sub:not(.dim)) {
+    display: none;
   }
 
   .strip::-webkit-scrollbar {
@@ -273,6 +287,7 @@ const hero = works.find((w) => w.slug === 'galactic-arch-snow-mountain')!;
     font-size: 13px;
     line-height: 1.75;
     color: var(--text-dim);
+    text-wrap: pretty;
   }
 
   .atlas-band {
@@ -292,17 +307,27 @@ const hero = works.find((w) => w.slug === 'galactic-arch-snow-mountain')!;
 
   .atlas-inner .h2 {
     margin-top: 14px;
-    max-width: 30ch;
-    font-weight: 500;
+    max-width: 30em;
+    font-weight: 900;
     color: var(--text-dim);
+    text-wrap: balance;
+  }
+
+  /* 首屏图已铺到导航背后：顶部直接使用与滚动后一致的玻璃效果 */
+  :global(html[data-world='photo'] .site-head) {
+    background: var(--glass-bg-scrolled);
+    -webkit-backdrop-filter: blur(28px) saturate(190%);
+    backdrop-filter: blur(28px) saturate(190%);
+    box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-highlight),
+      0 12px 28px -22px rgba(0, 0, 0, 0.6);
   }
 
   @media (max-width: 960px) {
     .series-grid {
       grid-template-columns: 1fr;
     }
-    .strip {
-      grid-auto-columns: 78%;
+    .strip-item {
+      --card-h: 292px;
     }
   }
 

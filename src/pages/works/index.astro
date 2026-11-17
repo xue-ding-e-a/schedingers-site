@@ -27,7 +27,7 @@ const list = sortByDate(works);
           <button class="chip" data-filter={s.slug} aria-pressed="false">{s.name[lang]}</button>
         ))}
       </div>
-      <span class="mono count">{list.length} {t('works.count')}</span>
+      <span class="mono numeric count">{list.length} {t('works.count')}</span>
     </div>
   </div>
 
