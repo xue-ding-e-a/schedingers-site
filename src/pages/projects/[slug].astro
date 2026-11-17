@@ -31,6 +31,12 @@ const related = projects.filter((x) => x.slug !== p.slug).slice(0, 3);
             {isSelf ? t('dev.viewBuild') : t('projects.viewLive')}
             <span class="arrow" aria-hidden="true">→</span>
           </a>
+          {p.repoUrl && (
+            <a class="btn btn-ghost" href={p.repoUrl} target="_blank" rel="noopener">
+              {t('projects.source')}
+              <span class="arrow" aria-hidden="true">↗</span>
+            </a>
+          )}
         </div>
       </div>
 

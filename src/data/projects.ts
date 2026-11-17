@@ -49,8 +49,8 @@ export const projects: Project[] = [
     color: '#1c2430',
     status: 'draft',
     note: {
-      zh: '当前分享链接已失效，需要重新发布后更新地址。',
-      en: 'The shared link is currently unavailable and needs to be republished before updating this entry.',
+      zh: '外部直接访问返回 403，可能需要在原平台的权限内打开。详细说明整理中。',
+      en: 'Direct external access returns 403, so it likely needs to be opened from within the original platform. Full write-up in progress.',
     },
   },
   {
@@ -82,6 +82,7 @@ export const projects: Project[] = [
     role: { zh: '设计 + 前端 + 内容', en: 'Design, front-end, content' },
     stack: ['Astro', 'TypeScript', 'CSS', 'Canvas'],
     liveUrl: '/',
+    repoUrl: 'https://github.com/xue-ding-e-a/schedingers-site',
     color: '#101827',
     status: 'ready',
     overview: {
