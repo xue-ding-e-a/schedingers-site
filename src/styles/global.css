@@ -32,12 +32,14 @@
   --warm-soft: rgba(236, 72, 153, 0.14);
   --cool: #06b6d4;
   --cool-soft: rgba(6, 182, 212, 0.12);
-  --font-heading: 'UP Job Heading', 'Noto Sans SC', sans-serif;
+  /* 统一的中文回退栈：标题 / 正文 / 数字 / 等宽共用，避免同一字段内出现两种中文字形 */
+  --font-cjk: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  --font-heading: 'UP Job Heading', 'Noto Sans SC', var(--font-cjk);
   --font-body: -apple-system, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
   --font-sans: var(--font-body);
   --font-numeric: 'UP Job Numeric', -apple-system, 'SF Pro Display', 'Helvetica Neue', 'Segoe UI',
-    Roboto, Arial, sans-serif;
-  --font-mono: ui-monospace, Menlo, monospace;
+    Roboto, Arial, var(--font-cjk);
+  --font-mono: ui-monospace, Menlo, Consolas, var(--font-cjk);
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --gutter: clamp(20px, 5vw, 64px);
   --nav-h: 64px;
