@@ -1,0 +1,81 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { SITE } from '../consts';
+import { useTranslations } from '../i18n/utils';
+import type { Lang } from '../i18n/ui';
+
+const { lang = 'zh' } = Astro.props as { lang?: Lang };
+const t = useTranslations(lang);
+---
+
+<BaseLayout lang={lang} title={t('footer.credit')} section="neutral">
+  <section class="container-wide head">
+    <p class="kicker">Credits</p>
+    <h1 class="display">{t('footer.credit')}</h1>
+  </section>
+
+  <section class="container-wide body">
+    <div class="item">
+      <h2 class="h3">图片版权</h2>
+      <p>本站所有星空摄影作品均由 {SITE.author[lang]} 拍摄与后期，版权归作者所有。未经许可，不得用于商业用途、展览、印刷或二次分发。</p>
+    </div>
+    <div class="item">
+      <h2 class="h3">授权与合作</h2>
+      <p>如需使用作品，请通过 <a href={`mailto:${SITE.email}`}>{SITE.email}</a> 联系，说明用途、尺寸与使用范围。</p>
+    </div>
+    <div class="item">
+      <h2 class="h3">技术与致谢</h2>
+      <p>站点基于 Astro 构建，地图由 OpenStreetMap 与 CARTO 提供，字体使用系统字体。设计与实现过程记录在<a href="/build">制作手记</a>中。</p>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .head {
+    padding-top: clamp(56px, 9vw, 110px);
+    padding-bottom: clamp(30px, 4vw, 48px);
+  }
+
+  .head .display {
+    margin-top: 20px;
+  }
+
+  .body {
+    display: grid;
+    gap: 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .item {
+    padding-block: clamp(24px, 3.5vw, 40px);
+    border-bottom: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: clamp(20px, 3vw, 48px);
+  }
+
+  .h3 {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .item p {
+    font-size: 13.5px;
+    line-height: 1.9;
+    color: var(--text-dim);
+    max-width: 70ch;
+  }
+
+  .item a {
+    color: var(--text);
+    border-bottom: 1px solid var(--line-strong);
+  }
+
+  @media (max-width: 760px) {
+    .item {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+  }
+</style>

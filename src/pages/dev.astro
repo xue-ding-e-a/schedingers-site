@@ -1,0 +1,213 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import { projects, capabilities } from '../data/projects';
+import { useTranslations, localizePath } from '../i18n/utils';
+import type { Lang } from '../i18n/ui';
+
+const { lang = 'zh' } = Astro.props as { lang?: Lang };
+const t = useTranslations(lang);
+---
+
+<BaseLayout lang={lang} title={t('nav.dev')} description={t('dev.lead')} section="dev" accent="cool">
+  <section class="hero container-wide">
+    <p class="kicker">{t('dev.kicker')}</p>
+    <h1 class="display-lg hero-title">{t('dev.title')}</h1>
+    <p class="lead hero-lead">{t('dev.lead')}</p>
+
+    <div class="terminal mono" aria-hidden="true">
+      <span class="prompt">~</span> site --info
+      <span class="out">astro 5 · typescript · css · canvas</span>
+      <span class="out">14 routes · 2 languages · 0 backend</span>
+      <span class="cursor">▊</span>
+    </div>
+  </section>
+
+  <section class="section container-wide">
+    <div class="sec-head">
+      <div>
+        <p class="kicker">{t('dev.projects')}</p>
+        <h2 class="h2 sec-title">{t('dev.projectsDesc')}</h2>
+      </div>
+      <a class="btn" href={localizePath('/projects', lang)}>
+        {t('nav.projects')}
+        <span class="arrow" aria-hidden="true">→</span>
+      </a>
+    </div>
+
+    <div class="project-grid">
+      {projects.map((p, i) => <ProjectCard project={p} lang={lang} index={i} />)}
+    </div>
+  </section>
+
+  <section class="section container-wide">
+    <div class="sec-head">
+      <div>
+        <p class="kicker">{t('dev.capability')}</p>
+        <h2 class="h2 sec-title">{t('dev.capabilityDesc')}</h2>
+      </div>
+    </div>
+
+    <div class="caps">
+      {capabilities.map((c) => (
+        <div class="cap reveal">
+          <h3 class="cap-group">{c.group[lang]}</h3>
+          <ul class="cap-list">
+            {c.items.map((item) => <li>{item}</li>)}
+          </ul>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <section class="build-band">
+    <div class="container-wide build-inner">
+      <div>
+        <p class="kicker">{t('dev.buildTitle')}</p>
+        <h2 class="h2">{t('dev.buildDesc')}</h2>
+      </div>
+      <a class="btn" href={localizePath('/build', lang)}>
+        {t('dev.viewBuild')}
+        <span class="arrow" aria-hidden="true">→</span>
+      </a>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .hero {
+    padding-top: clamp(64px, 10vw, 130px);
+    padding-bottom: clamp(50px, 7vw, 90px);
+  }
+
+  .hero-title {
+    margin-top: 22px;
+    max-width: 16ch;
+    font-size: clamp(2.2rem, 5vw, 4.2rem);
+    line-height: 1.1;
+    letter-spacing: -0.025em;
+    font-weight: 500;
+  }
+
+  .hero-lead {
+    margin-top: 26px;
+  }
+
+  .terminal {
+    margin-top: clamp(32px, 4vw, 56px);
+    max-width: 560px;
+    display: grid;
+    gap: 8px;
+    padding: 20px 24px;
+    border: 1px solid var(--line);
+    border-left: 2px solid var(--cool);
+    background: rgba(121, 226, 208, 0.03);
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.9;
+  }
+
+  .prompt {
+    color: var(--cool);
+    margin-right: 10px;
+  }
+
+  .out {
+    color: var(--text-faint);
+    padding-left: 18px;
+  }
+
+  .cursor {
+    color: var(--cool);
+    animation: blink 1.4s steps(2) infinite;
+  }
+
+  @keyframes blink {
+    50% {
+      opacity: 0;
+    }
+  }
+
+  .sec-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 32px;
+    flex-wrap: wrap;
+    margin-bottom: clamp(32px, 4vw, 56px);
+  }
+
+  .sec-title {
+    margin-top: 16px;
+    max-width: 28ch;
+    font-weight: 500;
+  }
+
+  .project-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: clamp(24px, 3.4vw, 52px);
+  }
+
+  .caps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(24px, 3vw, 48px);
+    border-top: 1px solid var(--line);
+    padding-top: clamp(28px, 3vw, 44px);
+  }
+
+  .cap-group {
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    color: var(--cool);
+    font-weight: 500;
+    margin-bottom: 18px;
+  }
+
+  .cap-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 10px;
+  }
+
+  .cap-list li {
+    font-size: 13.5px;
+    color: var(--text-dim);
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .build-band {
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    padding-block: clamp(44px, 6vw, 76px);
+    background: linear-gradient(180deg, rgba(121, 226, 208, 0.035), transparent);
+  }
+
+  .build-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 36px;
+    flex-wrap: wrap;
+  }
+
+  .build-inner .h2 {
+    margin-top: 14px;
+    max-width: 30ch;
+    font-weight: 500;
+    color: var(--text-dim);
+  }
+
+  @media (max-width: 900px) {
+    .project-grid {
+      grid-template-columns: 1fr;
+    }
+    .caps {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

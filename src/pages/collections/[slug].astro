@@ -1,0 +1,102 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import WorkCard from '../../components/WorkCard.astro';
+import { series, getSeries } from '../../data/series';
+import { works, sortByDate } from '../../data/works';
+import { useTranslations, localizePath } from '../../i18n/utils';
+import type { Lang } from '../../i18n/ui';
+
+export function getStaticPaths() {
+  return series.map((s) => ({ params: { slug: s.slug }, props: { s } }));
+}
+
+const { s } = Astro.props;
+const { lang = 'zh' } = Astro.props as { lang?: Lang };
+const t = useTranslations(lang);
+const list = sortByDate(works.filter((w) => w.series === s.slug));
+const cover = works.find((w) => w.slug === s.cover)!;
+---
+
+<BaseLayout lang={lang} title={s.name[lang]} description={s.desc[lang]} section="photo" image={cover.thumb}>
+  <section class="hero container-wide">
+    <a class="back mono" href={localizePath('/collections', lang)}>← {t('series.back')}</a>
+    <div class="hero-grid">
+      <div class="hero-text">
+        <p class="kicker">{t('series.region')} · {s.region[lang]}</p>
+        <h1 class="display">{s.name[lang]}</h1>
+        <p class="lead">{s.desc[lang]}</p>
+        <p class="mono count">{list.length} {t('series.works')}</p>
+      </div>
+      <figure class="hero-cover" style={`background:${s.color}`}>
+        <img src={cover.image} alt={cover.title[lang]} width={cover.width} height={cover.height} />
+      </figure>
+    </div>
+  </section>
+
+  <section class="container-wide grid">
+    {list.map((w, i) => <WorkCard work={w} lang={lang} eager={i < 2} />)}
+  </section>
+</BaseLayout>
+
+<style>
+  .hero {
+    padding-top: clamp(40px, 6vw, 80px);
+    padding-bottom: clamp(40px, 6vw, 80px);
+  }
+
+  .back {
+    color: var(--text-faint);
+    transition: color 0.3s var(--ease);
+  }
+
+  .back:hover {
+    color: var(--text);
+  }
+
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 0.85fr 1.15fr;
+    gap: clamp(30px, 5vw, 72px);
+    align-items: center;
+    margin-top: 32px;
+  }
+
+  .hero-text .display {
+    margin-top: 18px;
+  }
+
+  .hero-text .lead {
+    margin-top: 22px;
+  }
+
+  .count {
+    margin-top: 26px;
+    color: var(--text-faint);
+  }
+
+  .hero-cover {
+    margin: 0;
+    overflow: hidden;
+    aspect-ratio: 16 / 10;
+  }
+
+  .hero-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: clamp(20px, 3vw, 40px);
+    align-items: start;
+    padding-bottom: 40px;
+  }
+
+  @media (max-width: 860px) {
+    .hero-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

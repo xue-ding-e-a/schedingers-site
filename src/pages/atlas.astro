@@ -1,0 +1,219 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { series } from '../data/series';
+import { works } from '../data/works';
+import { useTranslations, localizePath } from '../i18n/utils';
+import type { Lang } from '../i18n/ui';
+
+const { lang = 'zh' } = Astro.props as { lang?: Lang };
+const t = useTranslations(lang);
+
+const points = series.map((s) => {
+  const items = works.filter((w) => w.series === s.slug);
+  return {
+    slug: s.slug,
+    name: s.name[lang],
+    region: s.region[lang],
+    coords: s.coords,
+    count: items.length,
+    href: localizePath(`/collections/${s.slug}`, lang),
+    cover: items[0]?.thumb,
+  };
+});
+---
+
+<BaseLayout lang={lang} title={t('atlas.title')} description={t('atlas.lead')} section="photo">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <section class="head container-wide">
+    <p class="kicker">{t('atlas.title')}</p>
+    <h1 class="display">{t('atlas.lead')}</h1>
+    <p class="mono hint">{t('atlas.hint')}</p>
+  </section>
+
+  <div class="map-wrap container-wide">
+    <div id="map" data-points={JSON.stringify(points)}></div>
+    <p class="map-fallback mono" id="map-fallback">{t('atlas.loading')}</p>
+  </div>
+
+  <section class="container-wide places">
+    {points.map((p) => (
+      <a class="place" href={p.href}>
+        <span class="place-coords mono">{p.coords[0].toFixed(2)}°N {p.coords[1].toFixed(2)}°E</span>
+        <span class="place-name">{p.name}</span>
+        <span class="place-region mono">{p.region} · {p.count} {t('series.works')}</span>
+      </a>
+    ))}
+  </section>
+
+  <script is:inline src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    const el = document.getElementById('map');
+    const fallback = document.getElementById('map-fallback');
+
+    const init = () => {
+      const L = (window as any).L;
+      if (!L || !el) {
+        if (fallback) fallback.textContent = '地图需要网络连接。以下为拍摄地列表。';
+        return;
+      }
+
+      const points = JSON.parse(el.dataset.points || '[]');
+      const map = L.map(el, {
+        zoomControl: true,
+        scrollWheelZoom: false,
+        attributionControl: true,
+      }).setView([34.4, 105.6], 5);
+
+      L.tileLayer(
+        'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+        {
+          attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
+          maxZoom: 16,
+        }
+      ).addTo(map);
+
+      for (const p of points) {
+        const marker = L.circleMarker([p.coords[0], p.coords[1]], {
+          radius: 7,
+          color: '#e6b17e',
+          weight: 1.5,
+          fillColor: '#e6b17e',
+          fillOpacity: 0.35,
+        }).addTo(map);
+
+        marker.bindPopup(
+          `<a href="${p.href}" style="color:#111;font-family:system-ui;text-decoration:none;">
+             <strong>${p.name}</strong><br/>
+             <span style="font-size:12px;opacity:.7">${p.region} · ${p.count}</span>
+           </a>`
+        );
+      }
+
+      if (fallback) fallback.remove();
+    };
+
+    if ((window as any).L) init();
+    else window.addEventListener('load', init, { once: true });
+  </script>
+</BaseLayout>
+
+<style>
+  .head {
+    padding-top: clamp(56px, 9vw, 110px);
+    padding-bottom: clamp(30px, 4vw, 48px);
+  }
+
+  .head .display {
+    margin-top: 20px;
+    max-width: 22ch;
+  }
+
+  .hint {
+    margin-top: 20px;
+    color: var(--text-faint);
+  }
+
+  .map-wrap {
+    position: relative;
+  }
+
+  #map {
+    height: clamp(360px, 58vh, 620px);
+    border: 1px solid var(--line);
+    background: #0a0d14;
+    z-index: 1;
+  }
+
+  #map :global(.leaflet-container) {
+    background: #0a0d14;
+  }
+
+  #map :global(.leaflet-popup-content-wrapper),
+  #map :global(.leaflet-popup-tip) {
+    background: #f3f4f8;
+    border-radius: 3px;
+  }
+
+  #map :global(.leaflet-control-attribution) {
+    background: rgba(6, 7, 11, 0.7);
+    color: #626a7d;
+    font-size: 10px;
+  }
+
+  #map :global(.leaflet-control-attribution a) {
+    color: #9aa2b4;
+  }
+
+  #map :global(.leaflet-bar a) {
+    background: #0c0f18;
+    color: #eef0f6;
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+
+  .map-fallback {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-faint);
+    pointer-events: none;
+  }
+
+  .places {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    border-top: 1px solid var(--line);
+    margin-top: clamp(30px, 4vw, 48px);
+  }
+
+  .place {
+    display: grid;
+    gap: 7px;
+    padding: 22px 20px 26px;
+    border-bottom: 1px solid var(--line);
+    border-right: 1px solid var(--line);
+    transition: background 0.4s var(--ease);
+  }
+
+  .place:first-child {
+    border-left: 1px solid var(--line);
+  }
+
+  .place:hover {
+    background: rgba(255, 255, 255, 0.025);
+  }
+
+  .place-coords {
+    color: var(--text-faint);
+    font-size: 10px;
+  }
+
+  .place-name {
+    font-size: 16px;
+  }
+
+  .place-region {
+    color: var(--text-dim);
+    font-size: 11px;
+  }
+
+  @media (max-width: 900px) {
+    .places {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .place:nth-child(3) {
+      border-left: 1px solid var(--line);
+    }
+  }
+
+  @media (max-width: 560px) {
+    .places {
+      grid-template-columns: 1fr;
+    }
+    .place {
+      border-left: 1px solid var(--line);
+    }
+  }
+</style>

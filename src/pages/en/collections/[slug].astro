@@ -1,0 +1,12 @@
+---
+import CollectionDetail from '../../collections/[slug].astro';
+import { series } from '../../../data/series';
+
+export function getStaticPaths() {
+  return series.map((s) => ({ params: { slug: s.slug }, props: { s } }));
+}
+
+const props = Astro.props;
+---
+
+<CollectionDetail {...props} lang="en" />

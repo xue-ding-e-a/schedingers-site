@@ -1,0 +1,269 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { projects, getProject } from '../../data/projects';
+import { useTranslations, localizePath } from '../../i18n/utils';
+import type { Lang } from '../../i18n/ui';
+
+export function getStaticPaths() {
+  return projects.map((p) => ({ params: { slug: p.slug }, props: { p } }));
+}
+
+const { p } = Astro.props;
+const { lang = 'zh' } = Astro.props as { lang?: Lang };
+const t = useTranslations(lang);
+const isSelf = p.slug === 'schrodingers-site';
+const liveHref = isSelf ? localizePath('/build', lang) : p.liveUrl;
+const related = projects.filter((x) => x.slug !== p.slug).slice(0, 3);
+---
+
+<BaseLayout lang={lang} title={p.name[lang]} description={p.tagline[lang]} section="dev" accent="cool">
+  <section class="head container-wide">
+    <a class="back mono" href={localizePath('/projects', lang)}>← {t('projects.back')}</a>
+
+    <div class="head-main">
+      <div class="head-text">
+        <p class="kicker">{t('projects.year')} {p.year} · {p.role[lang]}</p>
+        <h1 class="display">{p.name[lang]}</h1>
+        <p class="lead">{p.tagline[lang]}</p>
+
+        <div class="actions">
+          <a class="btn" href={liveHref} target={isSelf ? undefined : '_blank'} rel="noopener">
+            {isSelf ? t('dev.viewBuild') : t('projects.viewLive')}
+            <span class="arrow" aria-hidden="true">→</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="panel" style={`--tint:${p.color}`}>
+        <div class="panel-row">
+          <span class="mono">{t('projects.role')}</span>
+          <span>{p.role[lang]}</span>
+        </div>
+        <div class="panel-row">
+          <span class="mono">{t('projects.year')}</span>
+          <span>{p.year}</span>
+        </div>
+        <div class="panel-row stack-row">
+          <span class="mono">{t('projects.stack')}</span>
+          <span class="stack">
+            {p.stack.map((s) => <span class="tag mono">{s}</span>)}
+          </span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {p.overview && (
+    <section class="container-wide block">
+      <p class="kicker">{t('projects.overview')}</p>
+      <div class="prose block-body">
+        <p>{p.overview[lang]}</p>
+      </div>
+    </section>
+  )}
+
+  {p.highlights && p.highlights.length > 0 && (
+    <section class="container-wide block">
+      <p class="kicker">{t('projects.highlights')}</p>
+      <ol class="points">
+        {p.highlights.map((h, i) => (
+          <li class="point reveal">
+            <span class="point-num mono">{String(i + 1).padStart(2, '0')}</span>
+            <span class="point-text">{h[lang]}</span>
+          </li>
+        ))}
+      </ol>
+    </section>
+  )}
+
+  {p.note && (
+    <section class="container-wide block">
+      <div class="note-box">
+        <span class="mono">{p.status === 'draft' ? t('projects.draft') : t('projects.overview')}</span>
+        <p>{p.note[lang]}</p>
+      </div>
+    </section>
+  )}
+
+  <nav class="container-wide more">
+    <p class="kicker">{t('projects.title')}</p>
+    <div class="more-list">
+      {related.map((r) => (
+        <a href={localizePath(`/projects/${r.slug}`, lang)}>
+          <span class="more-name">{r.name[lang]}</span>
+          <span class="mono">{r.year}</span>
+        </a>
+      ))}
+    </div>
+  </nav>
+</BaseLayout>
+
+<style>
+  .head {
+    padding-top: clamp(40px, 6vw, 84px);
+  }
+
+  .back {
+    color: var(--text-faint);
+    transition: color 0.3s var(--ease);
+  }
+
+  .back:hover {
+    color: var(--text);
+  }
+
+  .head-main {
+    display: grid;
+    grid-template-columns: 1.35fr 0.65fr;
+    gap: clamp(32px, 5vw, 80px);
+    align-items: start;
+    margin-top: 30px;
+    padding-bottom: clamp(40px, 6vw, 80px);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .head-text .display {
+    margin-top: 20px;
+    max-width: 18ch;
+  }
+
+  .head-text .lead {
+    margin-top: 22px;
+  }
+
+  .actions {
+    margin-top: 32px;
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+
+  .panel {
+    border: 1px solid var(--line);
+    background: linear-gradient(160deg, var(--tint), #080a11 85%);
+    padding: 6px 20px;
+  }
+
+  .panel-row {
+    display: grid;
+    grid-template-columns: 84px 1fr;
+    gap: 14px;
+    padding-block: 14px;
+    border-bottom: 1px solid var(--line);
+    font-size: 13.5px;
+  }
+
+  .panel-row:last-child {
+    border-bottom: 0;
+  }
+
+  .panel-row .mono {
+    padding-top: 2px;
+  }
+
+  .stack-row {
+    align-items: start;
+  }
+
+  .stack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .tag {
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    color: var(--text-dim);
+    border: 1px solid var(--line);
+    padding: 3px 8px;
+    border-radius: 3px;
+  }
+
+  .block {
+    padding-block: clamp(36px, 5vw, 64px);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .block-body {
+    margin-top: 22px;
+    max-width: 68ch;
+  }
+
+  .points {
+    list-style: none;
+    margin: 22px 0 0;
+    padding: 0;
+    display: grid;
+    gap: 0;
+  }
+
+  .point {
+    display: grid;
+    grid-template-columns: 56px 1fr;
+    gap: 20px;
+    padding-block: 20px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .point:first-child {
+    border-top: 1px solid var(--line);
+  }
+
+  .point-num {
+    color: var(--cool);
+  }
+
+  .point-text {
+    font-size: 14.5px;
+    line-height: 1.8;
+    color: #c9d0e0;
+  }
+
+  .note-box {
+    border-left: 2px solid var(--line-strong);
+    padding: 18px 22px;
+    background: rgba(255, 255, 255, 0.02);
+    display: grid;
+    gap: 10px;
+  }
+
+  .note-box p {
+    font-size: 13.5px;
+    line-height: 1.8;
+    color: var(--text-dim);
+  }
+
+  .more {
+    padding-block: clamp(40px, 5vw, 64px) 40px;
+  }
+
+  .more-list {
+    margin-top: 18px;
+    display: grid;
+  }
+
+  .more-list a {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 20px;
+    padding-block: 16px;
+    border-bottom: 1px solid var(--line);
+    transition: color 0.3s var(--ease);
+  }
+
+  .more-list a:hover {
+    color: var(--cool);
+  }
+
+  .more-name {
+    font-size: 15px;
+  }
+
+  @media (max-width: 900px) {
+    .head-main {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
