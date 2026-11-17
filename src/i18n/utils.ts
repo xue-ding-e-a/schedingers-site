@@ -1,7 +1,19 @@
 import { ui, defaultLang, type Lang, type UIKey } from './ui';
 
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+export function withBase(path: string): string {
+  if (/^(https?:|mailto:|tel:|#|\/\/)/.test(path)) return path;
+  return `${BASE}${path.startsWith('/') ? path : `/${path}`}`;
+}
+
+export function stripBase(pathname: string): string {
+  if (BASE && pathname.startsWith(BASE)) return pathname.slice(BASE.length) || '/';
+  return pathname;
+}
+
 export function getLangFromUrl(url: URL): Lang {
-  const [, first] = url.pathname.split('/');
+  const [, first] = stripBase(url.pathname).split('/');
   return first === 'en' ? 'en' : defaultLang;
 }
 
@@ -11,8 +23,8 @@ export function useTranslations(lang: Lang) {
 
 export function localizePath(path: string, lang: Lang): string {
   const clean = path.startsWith('/') ? path : `/${path}`;
-  if (lang === defaultLang) return clean;
-  return clean === '/' ? '/en/' : `/en${clean}`;
+  const localized = lang === defaultLang ? clean : clean === '/' ? '/en/' : `/en${clean}`;
+  return withBase(localized);
 }
 
 export function formatDate(iso: string, lang: Lang): string {

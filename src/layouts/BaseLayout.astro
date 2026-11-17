@@ -1,7 +1,7 @@
 ---
 import '../styles/global.css';
 import { SITE, NAV, PHOTO_NAV, DEV_NAV } from '../consts';
-import { useTranslations, localizePath } from '../i18n/utils';
+import { useTranslations, localizePath, withBase, stripBase } from '../i18n/utils';
 import type { Lang } from '../i18n/ui';
 
 interface Props {
@@ -27,10 +27,10 @@ const {
 const t = useTranslations(lang);
 const nav = section === 'photo' ? PHOTO_NAV : section === 'dev' ? DEV_NAV : NAV;
 
-const path = Astro.url.pathname;
+const path = stripBase(Astro.url.pathname);
 const basePath = path.startsWith('/en') ? path.slice(3) || '/' : path;
 const otherLang: Lang = lang === 'zh' ? 'en' : 'zh';
-const switchHref = otherLang === 'en' ? (basePath === '/' ? '/en/' : `/en${basePath}`) : basePath;
+const switchHref = withBase(otherLang === 'en' ? (basePath === '/' ? '/en/' : `/en${basePath}`) : basePath);
 
 const crossTrack =
   section === 'photo'
@@ -51,14 +51,14 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
     <meta name="generator" content={Astro.generator} />
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
-    <link rel="canonical" href={new URL(basePath, Astro.site)} />
+    <link rel="canonical" href={new URL(withBase(basePath), Astro.site)} />
     <link rel="alternate" hreflang={otherLang === 'zh' ? 'zh-CN' : 'en'} href={new URL(switchHref, Astro.site)} />
     <meta property="og:type" content="website" />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
-    <meta property="og:image" content={new URL(image, Astro.site)} />
+    <meta property="og:image" content={new URL(withBase(image), Astro.site)} />
     <meta name="theme-color" content="#06070b" />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href={withBase('/favicon.svg')} type="image/svg+xml" />
   </head>
   <body class:list={['page', `accent-${accent}`]}>
     {

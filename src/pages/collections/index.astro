@@ -2,7 +2,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { series } from '../../data/series';
 import { works } from '../../data/works';
-import { useTranslations, localizePath } from '../../i18n/utils';
+import { useTranslations, localizePath, withBase } from '../../i18n/utils';
 import type { Lang } from '../../i18n/ui';
 
 const { lang = 'zh' } = Astro.props as { lang?: Lang };
@@ -24,7 +24,7 @@ const t = useTranslations(lang);
         <a class="row reveal" href={localizePath(`/collections/${s.slug}`, lang)}>
           <span class="num mono">{String(i + 1).padStart(2, '0')}</span>
           <span class="thumb" style={`background:${s.color}`}>
-            <img src={cover.thumb} alt={s.name[lang]} loading="lazy" decoding="async" />
+            <img src={withBase(cover.thumb)} alt={s.name[lang]} loading="lazy" decoding="async" />
           </span>
           <span class="text">
             <span class="name">{s.name[lang]}</span>

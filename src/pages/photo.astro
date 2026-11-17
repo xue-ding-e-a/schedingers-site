@@ -3,7 +3,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import WorkCard from '../components/WorkCard.astro';
 import { works, featuredWorks } from '../data/works';
 import { series } from '../data/series';
-import { useTranslations, localizePath } from '../i18n/utils';
+import { useTranslations, localizePath, withBase } from '../i18n/utils';
 import type { Lang } from '../i18n/ui';
 
 const { lang = 'zh' } = Astro.props as { lang?: Lang };
@@ -13,7 +13,7 @@ const hero = works.find((w) => w.slug === 'galactic-arch-snow-mountain')!;
 
 <BaseLayout lang={lang} title={t('nav.photo')} description={t('photo.lead')} section="photo">
   <section class="hero">
-    <img class="hero-img" src={hero.image} alt={hero.title[lang]} width={hero.width} height={hero.height} />
+    <img class="hero-img" src={withBase(hero.image)} alt={hero.title[lang]} width={hero.width} height={hero.height} />
     <div class="hero-veil" aria-hidden="true"></div>
     <div class="hero-inner container-wide">
       <p class="kicker">{t('photo.kicker')}</p>
@@ -67,7 +67,7 @@ const hero = works.find((w) => w.slug === 'galactic-arch-snow-mountain')!;
         return (
           <a class="series-card reveal" href={localizePath(`/collections/${s.slug}`, lang)}>
             <span class="series-media" style={`background:${s.color}`}>
-              <img src={cover.thumb} alt={s.name[lang]} loading="lazy" decoding="async" />
+              <img src={withBase(cover.thumb)} alt={s.name[lang]} loading="lazy" decoding="async" />
             </span>
             <span class="series-info">
               <span class="series-top">

@@ -2,7 +2,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { works } from '../../data/works';
 import { getSeries } from '../../data/series';
-import { useTranslations, localizePath, formatDate } from '../../i18n/utils';
+import { useTranslations, localizePath, formatDate, withBase } from '../../i18n/utils';
 import type { Lang } from '../../i18n/ui';
 
 export function getStaticPaths() {
@@ -46,7 +46,7 @@ const exifRows = [
 
     <figure class="stage container-wide">
       <img
-        src={work.image}
+        src={withBase(work.image)}
         alt={work.title[lang]}
         width={work.width}
         height={work.height}

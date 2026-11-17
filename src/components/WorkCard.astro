@@ -1,7 +1,7 @@
 ---
 import type { Work } from '../data/works';
 import type { Lang } from '../i18n/ui';
-import { localizePath } from '../i18n/utils';
+import { localizePath, withBase } from '../i18n/utils';
 
 interface Props {
   work: Work;
@@ -17,7 +17,7 @@ const year = work.date.slice(0, 4);
 <a class="work-card reveal" href={href} style={`--tint:${work.color}`}>
   <span class="media" style={`aspect-ratio:${work.width} / ${work.height}`}>
     <img
-      src={work.thumb}
+      src={withBase(work.thumb)}
       alt={work.title[lang]}
       width={work.width}
       height={work.height}

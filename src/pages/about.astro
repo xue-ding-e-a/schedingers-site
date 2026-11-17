@@ -2,7 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { SITE } from '../consts';
 import { works } from '../data/works';
-import { useTranslations, localizePath } from '../i18n/utils';
+import { useTranslations, localizePath, withBase } from '../i18n/utils';
 import type { Lang } from '../i18n/ui';
 
 const { lang = 'zh' } = Astro.props as { lang?: Lang };
@@ -27,7 +27,7 @@ const gear = [
       </p>
     </div>
     <figure class="head-photo" style={`background:${portrait.color}`}>
-      <img src={portrait.thumb} alt={portrait.title[lang]} loading="lazy" decoding="async" />
+      <img src={withBase(portrait.thumb)} alt={portrait.title[lang]} loading="lazy" decoding="async" />
       <figcaption class="mono">{portrait.title[lang]} · {portrait.region[lang]}</figcaption>
     </figure>
   </section>

@@ -1,11 +1,14 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { SITE } from '../consts';
-import { useTranslations } from '../i18n/utils';
+import { useTranslations, localizePath, withBase } from '../i18n/utils';
 import type { Lang } from '../i18n/ui';
 
 const { lang = 'zh' } = Astro.props as { lang?: Lang };
 const t = useTranslations(lang);
+const otherLang: Lang = lang === 'zh' ? 'en' : 'zh';
+const langHref = withBase(otherLang === 'en' ? '/en/' : '/');
+const langLabel = otherLang === 'zh' ? '中文' : 'EN';
 ---
 
 <BaseLayout lang={lang} title={t('portal.title')} chrome={false} accent="warm">
@@ -15,7 +18,7 @@ const t = useTranslations(lang);
 
     <header class="portal-top">
       <span class="mono">{t('portal.overline')}</span>
-      <a class="lang-mini" href="/en/" hreflang="en" lang="en">EN</a>
+      <a class="lang-mini" href={langHref} hreflang={otherLang} lang={otherLang}>{langLabel}</a>
     </header>
 
     <div class="portal-core">
@@ -25,7 +28,7 @@ const t = useTranslations(lang);
     </div>
 
     <nav class="doors" aria-label="Choose a track">
-      <a class="door door-photo" href="/photo">
+      <a class="door door-photo" href={localizePath('/photo', lang)}>
         <span class="door-index mono">01</span>
         <span class="door-body">
           <span class="door-en">{t('portal.photoEn')}</span>
@@ -35,7 +38,7 @@ const t = useTranslations(lang);
         <span class="door-arrow" aria-hidden="true">→</span>
       </a>
 
-      <a class="door door-dev" href="/dev">
+      <a class="door door-dev" href={localizePath('/dev', lang)}>
         <span class="door-index mono">02</span>
         <span class="door-body">
           <span class="door-en">{t('portal.devEn')}</span>

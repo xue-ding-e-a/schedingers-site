@@ -1,7 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { SITE } from '../consts';
-import { useTranslations } from '../i18n/utils';
+import { useTranslations, localizePath } from '../i18n/utils';
 import type { Lang } from '../i18n/ui';
 
 const { lang = 'zh' } = Astro.props as { lang?: Lang };
@@ -25,7 +25,7 @@ const t = useTranslations(lang);
     </div>
     <div class="item">
       <h2 class="h3">技术与致谢</h2>
-      <p>站点基于 Astro 构建，地图由 OpenStreetMap 与 CARTO 提供，字体使用系统字体。设计与实现过程记录在<a href="/build">制作手记</a>中。</p>
+      <p>站点基于 Astro 构建，地图由 OpenStreetMap 与 CARTO 提供，字体使用系统字体。设计与实现过程记录在<a href={localizePath('/build', lang)}>制作手记</a>中。</p>
     </div>
   </section>
 </BaseLayout>
