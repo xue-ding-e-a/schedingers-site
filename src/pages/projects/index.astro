@@ -1,0 +1,58 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ProjectCard from '../../components/ProjectCard.astro';
+import { projects } from '../../data/projects';
+import { useTranslations } from '../../i18n/utils';
+import type { Lang } from '../../i18n/ui';
+
+const { lang = 'zh' } = Astro.props as { lang?: Lang };
+const t = useTranslations(lang);
+const hasDrafts = projects.some((p) => p.status === 'draft');
+---
+
+<BaseLayout lang={lang} title={t('projects.title')} description={t('projects.lead')} section="dev" accent="cool">
+  <section class="page-head container-wide">
+    <p class="kicker">{t('nav.projects')}</p>
+    <h1 class="display">{t('projects.title')}</h1>
+    <p class="lead head-lead">{t('projects.lead')}</p>
+  </section>
+
+  <section class="container-wide grid">
+    {projects.map((p, i) => <ProjectCard project={p} lang={lang} index={i} />)}
+  </section>
+
+  {hasDrafts && <p class="container-wide note mono">{t('projects.statusNote')}</p>}
+</BaseLayout>
+
+<style>
+  .page-head {
+    padding-top: clamp(56px, 9vw, 110px);
+    padding-bottom: clamp(40px, 5vw, 64px);
+  }
+
+  .page-head .display {
+    margin-top: 20px;
+  }
+
+  .head-lead {
+    margin-top: 22px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: clamp(28px, 4vw, 64px);
+    padding-bottom: clamp(40px, 5vw, 64px);
+  }
+
+  .note {
+    color: var(--text-faint);
+    padding-bottom: 40px;
+  }
+
+  @media (max-width: 860px) {
+    .grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

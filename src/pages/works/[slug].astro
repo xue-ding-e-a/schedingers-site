@@ -1,0 +1,280 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { works } from '../../data/works';
+import { getSeries } from '../../data/series';
+import { useTranslations, localizePath, formatDate } from '../../i18n/utils';
+import type { Lang } from '../../i18n/ui';
+
+export function getStaticPaths() {
+  return works.map((work, i) => ({
+    params: { slug: work.slug },
+    props: { work, index: i },
+  }));
+}
+
+const { work, index } = Astro.props;
+const { lang = 'zh' } = Astro.props as { lang?: Lang };
+const t = useTranslations(lang);
+const s = getSeries(work.series);
+const prev = works[(index - 1 + works.length) % works.length];
+const next = works[(index + 1) % works.length];
+
+const exifRows = [
+  { label: t('work.camera'), value: work.gear.camera },
+  { label: t('work.lens'), value: work.gear.lens },
+  { label: t('work.aperture'), value: work.exif.aperture },
+  { label: t('work.iso'), value: work.exif.iso },
+  { label: t('work.shutter'), value: work.exif.shutter },
+  { label: t('work.focal'), value: work.exif.focal },
+  { label: t('work.frames'), value: work.exif.frames },
+  { label: t('work.technique'), value: work.technique[lang] },
+];
+---
+
+<BaseLayout lang={lang} title={work.title[lang]} description={work.story[lang].slice(0, 90)} section="photo" image={work.thumb}>
+  <article class="work">
+    <div class="container-wide work-top">
+      <a class="back mono" href={localizePath('/works', lang)}>← {t('work.back')}</a>
+      <div class="title-row">
+        <h1 class="display work-title">{work.title[lang]}</h1>
+        <div class="title-meta">
+          <span class="mono">{formatDate(work.date, lang)}</span>
+          <span class="mono">{work.location[lang]}</span>
+        </div>
+      </div>
+    </div>
+
+    <figure class="stage container-wide">
+      <img
+        src={work.image}
+        alt={work.title[lang]}
+        width={work.width}
+        height={work.height}
+        style={`background:${work.color}`}
+      />
+      <figcaption class="mono">{work.title[lang]} · {work.region[lang]}</figcaption>
+    </figure>
+
+    <div class="container-wide body">
+      <div class="story">
+        <p class="kicker">{t('work.story')}</p>
+        <div class="prose">
+          {work.story[lang].split('\n\n').map((p) => <p>{p}</p>)}
+        </div>
+      </div>
+
+      <aside class="aside">
+        <p class="kicker">{t('work.exif')}</p>
+        <dl class="exif">
+          {exifRows.map((row) => (
+            <div class="exif-row">
+              <dt class="mono">{row.label}</dt>
+              <dd>{row.value}</dd>
+            </div>
+          ))}
+        </dl>
+
+        {s && (
+          <a class="series-link" href={localizePath(`/collections/${s.slug}`, lang)}>
+            <span class="mono">{t('work.seriesOf')}</span>
+            <span class="series-link-name">{s.name[lang]} →</span>
+          </a>
+        )}
+
+        <div class="coords mono">
+          {work.coords[0].toFixed(2)}°N / {work.coords[1].toFixed(2)}°E
+        </div>
+      </aside>
+    </div>
+
+    <nav class="container-wide pager">
+      <a class="pager-link" href={localizePath(`/works/${prev.slug}`, lang)}>
+        <span class="mono">← {t('work.prev')}</span>
+        <span class="pager-name">{prev.title[lang]}</span>
+      </a>
+      <a class="pager-link right" href={localizePath(`/works/${next.slug}`, lang)}>
+        <span class="mono">{t('work.next')} →</span>
+        <span class="pager-name">{next.title[lang]}</span>
+      </a>
+    </nav>
+  </article>
+</BaseLayout>
+
+<style>
+  .work-top {
+    padding-top: clamp(40px, 6vw, 84px);
+    padding-bottom: clamp(28px, 3vw, 44px);
+  }
+
+  .back {
+    color: var(--text-faint);
+    transition: color 0.3s var(--ease);
+  }
+
+  .back:hover {
+    color: var(--text);
+  }
+
+  .title-row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 30px;
+    flex-wrap: wrap;
+    margin-top: 26px;
+  }
+
+  .work-title {
+    max-width: 20ch;
+  }
+
+  .title-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-end;
+    text-align: right;
+    padding-bottom: 10px;
+  }
+
+  .stage {
+    margin: 0 auto;
+  }
+
+  .stage img {
+    width: 100%;
+    height: auto;
+    max-height: 86svh;
+    object-fit: contain;
+    margin-inline: auto;
+  }
+
+  .stage figcaption {
+    margin-top: 14px;
+    color: var(--text-faint);
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .body {
+    display: grid;
+    grid-template-columns: minmax(0, 1.55fr) minmax(260px, 0.75fr);
+    gap: clamp(40px, 6vw, 100px);
+    padding-block: clamp(48px, 7vw, 96px);
+  }
+
+  .story .kicker {
+    margin-bottom: 26px;
+  }
+
+  .aside {
+    border-left: 1px solid var(--line);
+    padding-left: clamp(24px, 3vw, 44px);
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    align-self: start;
+    position: sticky;
+    top: calc(var(--nav-h) + 32px);
+  }
+
+  .exif {
+    display: grid;
+    gap: 0;
+    margin: 0;
+  }
+
+  .exif-row {
+    display: grid;
+    grid-template-columns: 76px 1fr;
+    gap: 14px;
+    padding-block: 11px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .exif-row:first-child {
+    border-top: 1px solid var(--line);
+  }
+
+  .exif-row dt {
+    color: var(--text-faint);
+    font-size: 11px;
+    padding-top: 2px;
+  }
+
+  .exif-row dd {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #cdd3e1;
+  }
+
+  .series-link {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 14px 16px;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    transition: border-color 0.4s var(--ease), background 0.4s var(--ease);
+  }
+
+  .series-link:hover {
+    border-color: var(--line-strong);
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  .series-link-name {
+    font-size: 14px;
+  }
+
+  .coords {
+    color: var(--text-faint);
+  }
+
+  .pager {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    border-top: 1px solid var(--line);
+    padding-block: 36px 60px;
+  }
+
+  .pager-link {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: color 0.3s var(--ease);
+  }
+
+  .pager-link.right {
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  .pager-name {
+    font-size: 17px;
+    transition: color 0.3s var(--ease);
+  }
+
+  .pager-link:hover .pager-name {
+    color: var(--warm);
+  }
+
+  @media (max-width: 900px) {
+    .body {
+      grid-template-columns: 1fr;
+    }
+    .aside {
+      position: static;
+      border-left: 0;
+      border-top: 1px solid var(--line);
+      padding-left: 0;
+      padding-top: 28px;
+    }
+    .title-meta {
+      align-items: flex-start;
+      text-align: left;
+    }
+  }
+</style>

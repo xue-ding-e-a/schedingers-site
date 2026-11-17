@@ -1,0 +1,82 @@
+{
+  "winter-milky-way": {
+    "width": 2400,
+    "height": 1600,
+    "thumbWidth": 1100,
+    "thumbHeight": 733,
+    "ratio": 1.5,
+    "color": "#444f5c"
+  },
+  "star-trails-river": {
+    "width": 2400,
+    "height": 1600,
+    "thumbWidth": 1100,
+    "thumbHeight": 733,
+    "ratio": 1.5,
+    "color": "#536275"
+  },
+  "galactic-arch-snow-mountain": {
+    "width": 3000,
+    "height": 1400,
+    "thumbWidth": 1100,
+    "thumbHeight": 513,
+    "ratio": 2.143,
+    "color": "#404d5f"
+  },
+  "under-the-milky-way": {
+    "width": 2400,
+    "height": 3600,
+    "thumbWidth": 1100,
+    "thumbHeight": 1650,
+    "ratio": 0.667,
+    "color": "#4b4651"
+  },
+  "prairie-starry-night": {
+    "width": 2400,
+    "height": 1600,
+    "thumbWidth": 1100,
+    "thumbHeight": 733,
+    "ratio": 1.5,
+    "color": "#575863"
+  },
+  "twin-arches-jade": {
+    "width": 2400,
+    "height": 1434,
+    "thumbWidth": 1100,
+    "thumbHeight": 657,
+    "ratio": 1.674,
+    "color": "#373c45"
+  },
+  "meteor-over-ridge": {
+    "width": 2400,
+    "height": 3598,
+    "thumbWidth": 1100,
+    "thumbHeight": 1649,
+    "ratio": 0.667,
+    "color": "#28282c"
+  },
+  "stars-fall-on-village": {
+    "width": 2400,
+    "height": 2179,
+    "thumbWidth": 1100,
+    "thumbHeight": 999,
+    "ratio": 1.101,
+    "color": "#2a2927"
+  },
+  "plank-road-star-bridge": {
+    "width": 2400,
+    "height": 1433,
+    "thumbWidth": 1100,
+    "thumbHeight": 657,
+    "ratio": 1.675,
+    "color": "#46442f"
+  },
+  "eaves-of-time": {
+    "width": 2400,
+    "height": 1600,
+    "thumbWidth": 1100,
+    "thumbHeight": 733,
+    "ratio": 1.5,
+    "color": "#2f5771"
+  }
+}

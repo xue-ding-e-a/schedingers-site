@@ -1,0 +1,172 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import WorkCard from '../../components/WorkCard.astro';
+import { works, sortByDate } from '../../data/works';
+import { series } from '../../data/series';
+import { useTranslations, localizePath } from '../../i18n/utils';
+import type { Lang } from '../../i18n/ui';
+
+const { lang = 'zh' } = Astro.props as { lang?: Lang };
+const t = useTranslations(lang);
+const list = sortByDate(works);
+---
+
+<BaseLayout lang={lang} title={t('works.title')} description={t('works.lead')} section="photo">
+  <section class="page-head container-wide">
+    <p class="kicker">{t('photo.kicker')}</p>
+    <h1 class="display">{t('works.title')}</h1>
+    <p class="lead head-lead">{t('works.lead')}</p>
+  </section>
+
+  <div class="filter-bar">
+    <div class="container-wide filter-inner">
+      <span class="mono filter-label">{t('works.filter')}</span>
+      <div class="chips" role="group" aria-label={t('works.filter')}>
+        <button class="chip is-active" data-filter="all" aria-pressed="true">{t('works.all')}</button>
+        {series.map((s) => (
+          <button class="chip" data-filter={s.slug} aria-pressed="false">{s.name[lang]}</button>
+        ))}
+      </div>
+      <span class="mono count">{list.length} {t('works.count')}</span>
+    </div>
+  </div>
+
+  <section class="container-wide works-wrap">
+    <div class="masonry" id="works-grid">
+      {list.map((w, i) => (
+        <div class="masonry-item" data-series={w.series}>
+          <WorkCard work={w} lang={lang} eager={i < 3} />
+        </div>
+      ))}
+    </div>
+    <p class="empty" id="empty" hidden>{t('works.empty')}</p>
+  </section>
+
+  <p class="container-wide note mono">{t('works.sortNote')}</p>
+</BaseLayout>
+
+<script>
+  const chips = Array.from(document.querySelectorAll<HTMLButtonElement>('.chip[data-filter]'));
+  const items = Array.from(document.querySelectorAll<HTMLElement>('.masonry-item'));
+  const empty = document.getElementById('empty');
+
+  const apply = (filter: string) => {
+    let visible = 0;
+    for (const item of items) {
+      const show = filter === 'all' || item.dataset.series === filter;
+      item.hidden = !show;
+      if (show) visible += 1;
+    }
+    if (empty) empty.hidden = visible > 0;
+  };
+
+  for (const chip of chips) {
+    chip.addEventListener('click', () => {
+      chips.forEach((c) => {
+        c.classList.toggle('is-active', c === chip);
+        c.setAttribute('aria-pressed', String(c === chip));
+      });
+      apply(chip.dataset.filter || 'all');
+    });
+  }
+</script>
+
+<style>
+  .page-head {
+    padding-top: clamp(56px, 9vw, 110px);
+    padding-bottom: clamp(36px, 5vw, 60px);
+  }
+
+  .page-head .display {
+    margin-top: 20px;
+  }
+
+  .head-lead {
+    margin-top: 22px;
+  }
+
+  .filter-bar {
+    position: sticky;
+    top: var(--nav-h);
+    z-index: 40;
+    background: rgba(6, 7, 11, 0.82);
+    backdrop-filter: blur(16px);
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .filter-inner {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    padding-block: 14px;
+  }
+
+  .filter-label {
+    flex-shrink: 0;
+  }
+
+  .chips {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-block: 2px;
+  }
+
+  .chips::-webkit-scrollbar {
+    display: none;
+  }
+
+  .count {
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  .works-wrap {
+    padding-top: clamp(32px, 4vw, 56px);
+  }
+
+  .masonry {
+    column-count: 3;
+    column-gap: clamp(16px, 2vw, 28px);
+  }
+
+  .masonry-item {
+    break-inside: avoid;
+    margin-bottom: clamp(24px, 3vw, 44px);
+  }
+
+  .masonry-item[hidden] {
+    display: none;
+  }
+
+  .empty {
+    padding-block: 80px;
+    text-align: center;
+    color: var(--text-faint);
+    font-size: 14px;
+  }
+
+  .note {
+    padding-bottom: 40px;
+    text-align: right;
+    color: var(--text-faint);
+  }
+
+  @media (max-width: 1080px) {
+    .masonry {
+      column-count: 2;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .masonry {
+      column-count: 1;
+    }
+    .filter-label,
+    .count {
+      display: none;
+    }
+  }
+</style>

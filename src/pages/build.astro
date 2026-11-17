@@ -1,0 +1,448 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { useTranslations, localizePath } from '../i18n/utils';
+import type { Lang } from '../i18n/ui';
+import type { Localized } from '../data/works';
+
+const { lang = 'zh' } = Astro.props as { lang?: Lang };
+const t = useTranslations(lang);
+
+const stack: { name: string; why: Localized }[] = [
+  {
+    name: 'Astro 5',
+    why: {
+      zh: '内容多、交互少。默认零 JS 输出，只有星空画布按需加载，首屏不必为框架买单。',
+      en: 'Content-heavy, interaction-light. Zero JS by default; only the starfield loads on demand, so the first screen pays no framework tax.',
+    },
+  },
+  {
+    name: 'TypeScript',
+    why: {
+      zh: '10 幅作品的字段一旦写错，页面会静默变丑。用类型把 EXIF、坐标、双语字段锁死。',
+      en: 'A typo in the 10-work data silently breaks a page. Types lock down EXIF, coordinates and bilingual fields.',
+    },
+  },
+  {
+    name: '原生 CSS',
+    why: {
+      zh: '画幅比例差异极大，从 0.67 到 2.14。自己写栅格和列布局，比调框架的断点更直接。',
+      en: 'Aspect ratios run from 0.67 to 2.14. Hand-written grids beat fighting a framework’s breakpoints.',
+    },
+  },
+  {
+    name: 'Canvas 2D',
+    why: {
+      zh: '门户页的星野只有两百多个点，2D 足够，不需要引入 Three.js 的几百 KB。',
+      en: 'The portal starfield is a few hundred dots. 2D is enough — no need for hundreds of KB of Three.js.',
+    },
+  },
+  {
+    name: 'Python / Pillow',
+    why: {
+      zh: '原始文件最大 144MB、1.68 亿像素。构建前用脚本批量生成 WebP 与缩略图，别让构建器去啃它。',
+      en: 'The largest original is 144MB at 168 megapixels. A script pre-generates WebP and thumbnails so the bundler never has to chew on it.',
+    },
+  },
+];
+
+const flow: { step: Localized; ai: Localized; me: Localized }[] = [
+  {
+    step: { zh: '需求拆解与调研', en: 'Requirements & research' },
+    ai: { zh: '检索 2026 年摄影作品集模板、真实星空摄影站与设计趋势，输出带取舍理由的清单。', en: 'Searched 2026 portfolio templates, real astrophotography sites and design trends, and produced a shortlist with trade-offs.' },
+    me: { zh: '判断「不套模板」，把项目定位定在「可写进简历的作品」。', en: 'Decided against a template and positioned the project as a résumé-grade work.' },
+  },
+  {
+    step: { zh: '信息架构', en: 'Information architecture' },
+    ai: { zh: '把「摄影 + 工程」两条线展开成路由树、页面清单与优先级。', en: 'Expanded the photo/engineering split into a route tree, page list and priorities.' },
+    me: { zh: '否掉融合式首页，选择双入口分流，并确定导航不再加第七项。', en: 'Rejected a merged homepage for dual entry, and capped navigation at six items.' },
+  },
+  {
+    step: { zh: '内容建模', en: 'Content modelling' },
+    ai: { zh: '把 10 张作品的描述整理成结构化字段：地点、坐标、机身、镜头、EXIF、堆栈方式。', en: 'Restructured ten descriptions into fields: place, coordinates, camera, lens, EXIF, stacking method.' },
+    me: { zh: '校对参数与作品标题，补写英文版本，统一术语。', en: 'Verified settings and titles, wrote the English versions, normalised terminology.' },
+  },
+  {
+    step: { zh: '实现与自测', en: 'Build & self-test' },
+    ai: { zh: '按页生成组件、样式与数据绑定，处理双语路由镜像。', en: 'Generated components, styles and data binding per page, and mirrored the bilingual routes.' },
+    me: { zh: '逐页在浏览器里看间距、断点与图片裁切，改掉不合适的地方。', en: 'Reviewed spacing, breakpoints and cropping page by page in the browser and fixed what did not hold up.' },
+  },
+];
+
+const timeline: { date: string; title: Localized; desc: Localized }[] = [
+  {
+    date: '2026.11',
+    title: { zh: '先看别人怎么做', en: 'Look at what exists' },
+    desc: {
+      zh: '把 Framer、Webflow 模板和真实的星空摄影站放在一起看，结论是：模板能做出好看的页面，但做不出可讲述的过程。',
+      en: 'Put Framer and Webflow templates next to real astrophotography sites. Conclusion: templates produce good-looking pages, not a story worth telling.',
+    },
+  },
+  {
+    date: '2026.11',
+    title: { zh: '从单主线改成双主线', en: 'From one track to two' },
+    desc: {
+      zh: '最初只有摄影。加上三个线上项目后，站点重新定为双入口门户，摄影与工程各自拥有独立导航。',
+      en: 'The first version was photography only. With three live projects added, it became a dual-entry portal with independent navigation per track.',
+    },
+  },
+  {
+    date: '2026.11',
+    title: { zh: '先处理素材，再写代码', en: 'Assets first, code second' },
+    desc: {
+      zh: '扫描 10 张原图，读出尺寸、比例与平均色，生成 WebP 与缩略图。最大的一张从 144MB 压到 700KB。',
+      en: 'Scanned ten originals for size, ratio and average colour, then generated WebP and thumbnails. The largest went from 144MB to 700KB.',
+    },
+  },
+  {
+    date: '2026.11',
+    title: { zh: '内容先于视觉', en: 'Content before visuals' },
+    desc: {
+      zh: '先把 10 段拍摄故事和参数录进数据文件，再设计页面。这样布局是被内容推出来的，不是反过来。',
+      en: 'Loaded all ten stories and settings into data first, then designed. The layout follows the content, not the other way around.',
+    },
+  },
+  {
+    date: '2026.11',
+    title: { zh: '双语镜像', en: 'Bilingual mirror' },
+    desc: {
+      zh: '中文为默认语言、无前缀；英文走 /en 前缀。内容字段一律成对，避免上线后补翻译。',
+      en: 'Chinese as default without a prefix, English under /en. Every content field is paired from the start, so no after-the-fact translation.',
+    },
+  },
+];
+
+const lessons: { q: Localized; a: Localized }[] = [
+  {
+    q: { zh: '144MB、1.68 亿像素的原图怎么处理？', en: 'What do you do with a 144MB, 168-megapixel original?' },
+    a: {
+      zh: '不在构建期处理。用 Pillow 离线生成 2400–3000px 的 WebP 与 1100px 缩略图，并顺带取出平均色作为占位底色，图片加载前不会闪白。',
+      en: 'Not at build time. Pillow pre-generates 2400–3000px WebP files plus 1100px thumbnails offline, and extracts an average colour so images never flash white while loading.',
+    },
+  },
+  {
+    q: { zh: '画幅从竖幅 0.67 到横幅 2.14，网格怎么排？', en: 'Ratios from 0.67 portrait to 2.14 panorama — how do you grid that?' },
+    a: {
+      zh: '作品总览用 CSS 多列布局，让不同高度自然咬合；系列页用等宽栅格并保留原始比例；详情页统一 contain，不裁掉任何一颗星。',
+      en: 'The index uses CSS multi-column so heights interlock naturally; series pages use an even grid with native ratios; detail pages use contain, so no star gets cropped away.',
+    },
+  },
+  {
+    q: { zh: '三个项目都没有公开仓库，GitHub 作品集怎么做？', en: 'No public repos for the three projects — how does the GitHub portfolio work?' },
+    a: {
+      zh: '放弃实时 API，改用策展式卡片：手写定位、角色、技术栈与线上链接，卡片用浏览器窗口框架统一视觉。数据字段里保留仓库地址，日后公开可直接点亮。',
+      en: 'Drop the live API and curate instead: positioning, role, stack and live link are written by hand, with a shared browser-frame treatment. The repo field stays in the model and can light up later.',
+    },
+  },
+];
+
+const facts = [
+  { k: { zh: '作品', en: 'Works' }, v: '10' },
+  { k: { zh: '系列', en: 'Series' }, v: '4' },
+  { k: { zh: '路由', en: 'Routes' }, v: '14' },
+  { k: { zh: '语言', en: 'Languages' }, v: '2' },
+];
+---
+
+<BaseLayout lang={lang} title={t('build.title')} description={t('build.lead')} section="dev" accent="cool">
+  <section class="head container-wide">
+    <p class="kicker">Build Log / 2026.11</p>
+    <h1 class="display-lg head-title">{t('build.title')}</h1>
+    <p class="lead head-lead">{t('build.lead')}</p>
+
+    <div class="facts">
+      {facts.map((f) => (
+        <div class="fact">
+          <span class="fact-v">{f.v}</span>
+          <span class="mono">{f.k[lang]}</span>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <section class="container-wide block">
+    <div class="block-head">
+      <span class="mono num">01</span>
+      <h2 class="h2">{t('build.stackTitle')}</h2>
+    </div>
+    <div class="stack-table">
+      {stack.map((s) => (
+        <div class="stack-row reveal">
+          <span class="stack-name">{s.name}</span>
+          <span class="stack-why">{s.why[lang]}</span>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <section class="container-wide block">
+    <div class="block-head">
+      <span class="mono num">02</span>
+      <h2 class="h2">{t('build.flowTitle')}</h2>
+    </div>
+    <div class="flow">
+      {flow.map((f, i) => (
+        <div class="flow-row reveal">
+          <span class="flow-step mono">{String(i + 1).padStart(2, '0')} / {f.step[lang]}</span>
+          <div class="flow-col">
+            <span class="flow-label mono">AI</span>
+            <p>{f.ai[lang]}</p>
+          </div>
+          <div class="flow-col">
+            <span class="flow-label mono">ME</span>
+            <p>{f.me[lang]}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <section class="container-wide block">
+    <div class="block-head">
+      <span class="mono num">03</span>
+      <h2 class="h2">{t('build.timelineTitle')}</h2>
+    </div>
+    <div class="timeline">
+      {timeline.map((item) => (
+        <div class="tl-item reveal">
+          <span class="tl-date mono">{item.date}</span>
+          <div class="tl-body">
+            <h3 class="tl-title">{item.title[lang]}</h3>
+            <p>{item.desc[lang]}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <section class="container-wide block">
+    <div class="block-head">
+      <span class="mono num">04</span>
+      <h2 class="h2">{t('build.lessonsTitle')}</h2>
+    </div>
+    <div class="qa">
+      {lessons.map((l) => (
+        <div class="qa-item reveal">
+          <h3 class="qa-q">{l.q[lang]}</h3>
+          <p class="qa-a">{l.a[lang]}</p>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <section class="container-wide cta">
+    <div class="cta-inner">
+      <p class="kicker">{t('nav.projects')}</p>
+      <h2 class="h2">{t('projects.lead')}</h2>
+      <a class="btn" href={localizePath('/projects', lang)}>
+        {t('nav.projects')}
+        <span class="arrow" aria-hidden="true">→</span>
+      </a>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .head {
+    padding-top: clamp(56px, 9vw, 110px);
+    padding-bottom: clamp(40px, 5vw, 64px);
+  }
+
+  .head-title {
+    margin-top: 22px;
+  }
+
+  .head-lead {
+    margin-top: 24px;
+  }
+
+  .facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: clamp(28px, 5vw, 72px);
+    margin-top: clamp(36px, 5vw, 60px);
+    padding-top: 26px;
+    border-top: 1px solid var(--line);
+  }
+
+  .fact {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  .fact-v {
+    font-size: clamp(1.6rem, 2.6vw, 2.2rem);
+    letter-spacing: -0.02em;
+    color: var(--cool);
+  }
+
+  .block {
+    padding-block: clamp(40px, 6vw, 76px);
+    border-top: 1px solid var(--line);
+  }
+
+  .block-head {
+    display: flex;
+    align-items: baseline;
+    gap: 20px;
+    margin-bottom: clamp(28px, 3.5vw, 46px);
+  }
+
+  .num {
+    color: var(--cool);
+  }
+
+  .stack-row {
+    display: grid;
+    grid-template-columns: 190px 1fr;
+    gap: 28px;
+    padding-block: 20px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .stack-row:first-child {
+    border-top: 1px solid var(--line);
+  }
+
+  .stack-name {
+    font-size: 14px;
+    color: var(--text);
+  }
+
+  .stack-why {
+    font-size: 13.5px;
+    line-height: 1.85;
+    color: var(--text-dim);
+    max-width: 70ch;
+  }
+
+  .flow {
+    display: grid;
+    gap: 0;
+  }
+
+  .flow-row {
+    display: grid;
+    grid-template-columns: 200px 1fr 1fr;
+    gap: clamp(20px, 3vw, 44px);
+    padding-block: 24px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .flow-row:first-child {
+    border-top: 1px solid var(--line);
+  }
+
+  .flow-step {
+    color: var(--text-dim);
+  }
+
+  .flow-col {
+    display: grid;
+    gap: 8px;
+    align-content: start;
+  }
+
+  .flow-label {
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    color: var(--cool);
+  }
+
+  .flow-col p {
+    font-size: 13.5px;
+    line-height: 1.85;
+    color: var(--text-dim);
+  }
+
+  .timeline {
+    display: grid;
+    position: relative;
+  }
+
+  .tl-item {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    gap: clamp(20px, 3vw, 44px);
+    padding-block: 22px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .tl-item:first-child {
+    border-top: 1px solid var(--line);
+  }
+
+  .tl-date {
+    color: var(--text-faint);
+    padding-top: 5px;
+  }
+
+  .tl-title {
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 8px;
+  }
+
+  .tl-body p {
+    font-size: 13.5px;
+    line-height: 1.85;
+    color: var(--text-dim);
+    max-width: 72ch;
+  }
+
+  .qa {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: clamp(20px, 3vw, 40px);
+  }
+
+  .qa-item {
+    border-top: 1px solid var(--line);
+    padding-top: 22px;
+    display: grid;
+    gap: 12px;
+    align-content: start;
+  }
+
+  .qa-q {
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.6;
+  }
+
+  .qa-a {
+    font-size: 13.5px;
+    line-height: 1.9;
+    color: var(--text-dim);
+  }
+
+  .cta {
+    padding-block: clamp(44px, 6vw, 80px);
+  }
+
+  .cta-inner {
+    border-top: 1px solid var(--line);
+    padding-top: clamp(28px, 3vw, 44px);
+    display: grid;
+    gap: 18px;
+    justify-items: start;
+  }
+
+  .cta-inner .h2 {
+    max-width: 28ch;
+    font-weight: 500;
+    color: var(--text-dim);
+  }
+
+  @media (max-width: 900px) {
+    .flow-row,
+    .stack-row {
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    .tl-item {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+  }
+</style>

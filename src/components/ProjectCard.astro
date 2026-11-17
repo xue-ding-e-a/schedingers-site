@@ -1,0 +1,211 @@
+---
+import type { Project } from '../data/projects';
+import type { Lang } from '../i18n/ui';
+import { localizePath, useTranslations } from '../i18n/utils';
+
+interface Props {
+  project: Project;
+  lang: Lang;
+  index: number;
+}
+
+const { project, lang, index } = Astro.props;
+const t = useTranslations(lang);
+const href = localizePath(`/projects/${project.slug}`, lang);
+const monogram = project.name[lang].slice(0, 1);
+---
+
+<a class="project-card reveal" href={href} style={`--tint:${project.color}`}>
+  <span class="frame">
+    <span class="bar" aria-hidden="true">
+      <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+      <span class="url mono">{project.slug}</span>
+    </span>
+    <span class="screen">
+      <span class="mark" aria-hidden="true">{monogram}</span>
+      <span class="mock" aria-hidden="true">
+        <span class="mock-line l1"></span>
+        <span class="mock-line l2"></span>
+      </span>
+      {project.status === 'draft' && <span class="badge mono">{t('projects.draft')}</span>}
+    </span>
+  </span>
+
+  <span class="info">
+    <span class="line">
+      <span class="index mono">{String(index + 1).padStart(2, '0')}</span>
+      <span class="name">{project.name[lang]}</span>
+      <span class="year mono">{project.year}</span>
+    </span>
+    <span class="tagline">{project.tagline[lang]}</span>
+    <span class="stack">
+      {project.stack.map((s) => <span class="tag mono">{s}</span>)}
+    </span>
+  </span>
+</a>
+
+<style>
+  .project-card {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .frame {
+    display: block;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+    background: #0a0d14;
+    transition: border-color 0.5s var(--ease), transform 0.6s var(--ease);
+  }
+
+  .project-card:hover .frame {
+    border-color: rgba(255, 255, 255, 0.24);
+    transform: translateY(-4px);
+  }
+
+  .bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--line);
+    background: #090b11;
+  }
+
+  .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #232a38;
+  }
+
+  .url {
+    margin-left: 10px;
+    font-size: 10px;
+    color: var(--text-faint);
+    letter-spacing: 0.06em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .screen {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    aspect-ratio: 16 / 10;
+    background:
+      radial-gradient(70% 80% at 28% 8%, rgba(255, 255, 255, 0.1), transparent 62%),
+      linear-gradient(160deg, var(--tint), #06080e 82%);
+    overflow: hidden;
+  }
+
+  .mark {
+    display: grid;
+    place-items: center;
+    width: 56px;
+    height: 56px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.035);
+    font-size: 21px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.62);
+    transition: border-color 0.5s var(--ease), color 0.5s var(--ease),
+      transform 0.7s var(--ease);
+  }
+
+  .project-card:hover .mark {
+    border-color: rgba(255, 255, 255, 0.32);
+    color: rgba(255, 255, 255, 0.9);
+    transform: translateY(-2px);
+  }
+
+  .mock {
+    display: grid;
+    gap: 7px;
+    width: 116px;
+  }
+
+  .mock-line {
+    height: 4px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .mock-line.l1 {
+    width: 100%;
+  }
+
+  .mock-line.l2 {
+    width: 64%;
+  }
+
+  .badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    font-size: 9.5px;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    padding: 4px 9px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: rgba(6, 7, 11, 0.6);
+  }
+
+  .info {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .line {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  .index {
+    font-size: 10.5px;
+    color: var(--text-faint);
+  }
+
+  .name {
+    font-size: 16px;
+    letter-spacing: 0.01em;
+  }
+
+  .year {
+    margin-left: auto;
+    font-size: 10.5px;
+    color: var(--text-faint);
+  }
+
+  .tagline {
+    font-size: 13.5px;
+    line-height: 1.7;
+    color: var(--text-dim);
+  }
+
+  .stack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-top: 2px;
+  }
+
+  .tag {
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    color: var(--text-faint);
+    border: 1px solid var(--line);
+    padding: 3px 8px;
+    border-radius: 3px;
+  }
+</style>
