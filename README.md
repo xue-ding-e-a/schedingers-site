@@ -19,13 +19,20 @@
 
 ## 功能
 
-- 双主线门户：摄影与工程各自拥有独立导航、首页节奏与主题色。
-- 10 幅星空作品、4 个系列、4 个工程项目，全部中英双语镜像。
-- 精选作品按原始文件体积排序，文件越大卡片越大；仅保留横向滑动。
-- 作品详情页展示拍摄地坐标、机身、镜头、EXIF 与堆栈方式。
-- 导航栏在纯色背景上仍有毛玻璃、颗粒与浮起阴影。
-- 默认零框架 JS；Three.js 粒子背景只在首页按需加载。
-- 图片离线预处理为 WebP 与缩略图，并提取平均色作为加载占位，避免闪白。
+- 双主线门户：[摄影线](https://xue-ding-e-a.github.io/schedingers-site/photo/)与[工程线](https://xue-ding-e-a.github.io/schedingers-site/dev/)各自拥有独立导航、首页节奏与主题色。
+- [10 幅星空作品](https://xue-ding-e-a.github.io/schedingers-site/works/)、[4 个系列](https://xue-ding-e-a.github.io/schedingers-site/collections/)、[4 个工程项目](https://xue-ding-e-a.github.io/schedingers-site/projects/)，全部中英双语镜像。
+- 精选作品按原始文件体积排序，文件越大卡片越大；仅保留横向滑动，见 [photo.astro](src/pages/photo.astro)。
+- [作品详情页](https://xue-ding-e-a.github.io/schedingers-site/works/galactic-arch-snow-mountain/)展示拍摄地坐标、机身、镜头、EXIF 与堆栈方式。
+- 导航栏在纯色背景上仍有毛玻璃、颗粒与浮起阴影，见 [BaseLayout.astro](src/layouts/BaseLayout.astro)。
+- 默认零框架 JS；Three.js 粒子背景只在[首页](src/pages/index.astro)按需加载。
+- 图片离线预处理为 WebP 与缩略图，并提取平均色作为加载占位，避免闪白，见 [public/images/works](public/images/works)。
+
+## 界面
+
+| 摄影首页 | 作品详情 | 工程首页 |
+| --- | --- | --- |
+| ![摄影首页](docs/screenshots/photo-home.jpg) | ![作品详情](docs/screenshots/work-detail.jpg) | ![工程首页](docs/screenshots/dev-home.jpg) |
+| 双拱主视觉、精选横滑与系列索引 | 拍摄坐标、器材、EXIF 与双语故事 | 工程首页的项目矩阵与终端信息卡 |
 
 ## 技术栈
 

@@ -91,8 +91,8 @@ export const projects: Project[] = [
     },
     highlights: [
       {
-        zh: '双主线信息架构：门户分流 + 两套导航，14 个路由，中英双语镜像',
-        en: 'Dual-track IA: portal split, two navigations, 14 routes, mirrored in Chinese and English',
+        zh: '双主线信息架构：门户分流 + 两套导航，16 个路由，中英双语镜像',
+        en: 'Dual-track IA: portal split, two navigations, 16 routes, mirrored in Chinese and English',
       },
       {
         zh: '10 幅作品的完整内容模型：拍摄地点、坐标、机身镜头、EXIF、堆栈方式、中英双语故事',
