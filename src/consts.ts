@@ -3,7 +3,7 @@ export const SITE = {
   author: { zh: '薛广俭', en: 'Xue Guangjian' },
   handle: 'schedinger',
   role: { zh: '星空摄影师 / 物理专业学生', en: 'Astrophotographer / Physics Student' },
-  location: { zh: '陕西 · 西安', en: "Xi'an, Shaanxi" },
+  location: { zh: '中国 · 杭州 · 济南 · 西安', en: "Hangzhou / Jinan / Xi'an, China" },
   email: '2543165843@qq.com',
   wechat: 'schedinger',
   github: 'https://github.com/xue-ding-e-a',
@@ -25,6 +25,7 @@ export const PHOTO_NAV = [
   { key: 'series', href: '/collections' },
   { key: 'atlas', href: '/atlas' },
   { key: 'about', href: '/about' },
+  { key: 'contact', href: '/contact' },
 ] as const;
 
 export const DEV_NAV = [

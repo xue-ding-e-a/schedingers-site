@@ -109,6 +109,54 @@ const timeline: { date: string; title: Localized; desc: Localized }[] = [
       en: 'Chinese as default without a prefix, English under /en. Every content field is paired from the start, so no after-the-fact translation.',
     },
   },
+  {
+    date: '2026.11.17',
+    title: { zh: '先让部署跑通', en: 'Ship the pipeline first' },
+    desc: {
+      zh: '确定 GitHub Pages 子路径 /schedingers-site，接入 Actions 推送即构建。先把 base 与资源路径对齐，再谈视觉，避免上线后整站 404。',
+      en: 'Fixed the GitHub Pages subpath /schedingers-site and wired Actions to build on every push — aligning base and asset paths before touching visuals, so the launch would not 404.',
+    },
+  },
+  {
+    date: '2026.11.17',
+    title: { zh: '换掉通用深色模板', en: 'Replace the generic dark template' },
+    desc: {
+      zh: '改为玻璃按钮、蓝紫配色与 Space Grotesk / DM Sans 的 Darkness 体系，首页加 Three.js 粒子背景；随后把背景限制为仅首页按需加载，不让每页为它付包体成本。',
+      en: 'Moved to a Darkness system of glass buttons, blue-violet accents and Space Grotesk / DM Sans, with a Three.js particle backdrop on the homepage — then limited it to on-demand homepage loading so every page did not pay the bundle cost.',
+    },
+  },
+  {
+    date: '2026.11.17',
+    title: { zh: '中文字体不再「混血」', en: 'Stop mixed Chinese glyphs' },
+    desc: {
+      zh: '回退链补进 Noto Sans SC，并把标题、正文、数字、等宽拆成四套字体栈。子集字体缺字导致同一字段出现两种字形，最终换回全量字体解决。',
+      en: 'Added Noto Sans SC to the fallback chain and split heading, body, numeric and mono into four stacks. Subset fonts dropped glyphs and mixed two shapes in one field, so full fonts replaced them.',
+    },
+  },
+  {
+    date: '2026.11.17',
+    title: { zh: '拆成两条主线', en: 'Split into two tracks' },
+    desc: {
+      zh: '摄影黑、工程白，各自拥有独立导航与首页节奏，只共享字体、栅格、页脚与索引页。摄影导航统一毛玻璃与浮起阴影，并让首屏图覆盖到导航顶部。',
+      en: 'Photography in black, engineering in white, each with its own navigation and homepage rhythm, sharing only type, grid, footer and the neutral index. Photo navigation gained a consistent glass and lift effect, with the hero image extending under it.',
+    },
+  },
+  {
+    date: '2026.11.18',
+    title: { zh: '精选作品只保留横滑', en: 'Curated works, horizontal only' },
+    desc: {
+      zh: '取消摄影精选作品的上下入场动效与对应导航条，只保留横向滑动；卡片尺寸继续按原始照片的存储体积排序，文件越大卡片越大。',
+      en: 'Removed the vertical entrance motion and its rail from the curated works, keeping horizontal scrolling only; card size still follows original file weight, larger files getting larger cards.',
+    },
+  },
+  {
+    date: '2026.11.18',
+    title: { zh: '补上「联系」入口', en: 'Add the contact entry' },
+    desc: {
+      zh: '摄影导航增加到六项，末位补「联系」，与工程导航保持一致；门户页脚同步更新城市与身份信息。',
+      en: 'The photo navigation now has six items, ending with Contact to match engineering, while the portal footer updated its locations and credentials.',
+    },
+  },
 ];
 
 const lessons: { q: Localized; a: Localized }[] = [
@@ -138,7 +186,7 @@ const lessons: { q: Localized; a: Localized }[] = [
 const facts = [
   { k: { zh: '作品', en: 'Works' }, v: '10' },
   { k: { zh: '系列', en: 'Series' }, v: '4' },
-  { k: { zh: '路由', en: 'Routes' }, v: '14' },
+  { k: { zh: '路由', en: 'Routes' }, v: '16' },
   { k: { zh: '语言', en: 'Languages' }, v: '2' },
 ];
 ---

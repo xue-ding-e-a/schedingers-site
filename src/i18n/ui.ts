@@ -35,7 +35,7 @@ export const ui = {
     'portal.devEn': 'ENGINEERING',
     'portal.devDesc': '线上项目、技术选择，以及这个站点是怎么被造出来的。',
     'portal.enter': '进入',
-    'portal.footer': '陕西 · 西安　|　星龄 8 年　|　CSVA 星空摄影师',
+    'portal.footer': '中国 · 杭州 · 济南 · 西安　|　CSVA 星空摄影师 / TRAE 校园大使',
 
     'index.kicker': 'INDEX / 2018—2026',
     'index.title': '全部记录',
@@ -188,7 +188,7 @@ export const ui = {
     'portal.devEn': 'ENGINEERING',
     'portal.devDesc': 'Live projects, technical choices, and how this site was built.',
     'portal.enter': 'Enter',
-    'portal.footer': "Xi'an, China　|　8 years under the stars　|　CSVA Astrophotographer",
+    'portal.footer': "Hangzhou / Jinan / Xi'an, China　|　CSVA Astrophotographer / TRAE Campus Ambassador",
 
     'index.kicker': 'INDEX / 2018—2026',
     'index.title': 'Everything, indexed',
