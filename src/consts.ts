@@ -23,7 +23,6 @@ export const PHOTO_NAV = [
   { key: 'photo', href: '/photo' },
   { key: 'works', href: '/works' },
   { key: 'series', href: '/collections' },
-  { key: 'atlas', href: '/atlas' },
   { key: 'about', href: '/about' },
   { key: 'contact', href: '/contact' },
 ] as const;

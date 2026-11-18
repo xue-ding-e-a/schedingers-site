@@ -26,8 +26,15 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
 ---
 
 <BaseLayout lang={lang} title={t('nav.photo')} description={t('photo.lead')} section="photo">
-  <section class="hero">
+  <section class="hero" data-hero>
     <img class="hero-img" src={withBase(hero.image)} alt={hero.title[lang]} width={hero.width} height={hero.height} />
+    <canvas
+      class="hero-flow"
+      data-hero-flow
+      data-flow-src={withBase('/images/works/star-trails-river-flow.webp')}
+      aria-hidden="true"
+    ></canvas>
+    <div class="hero-veil" aria-hidden="true"></div>
     <div class="hero-inner container-wide">
       <p class="kicker">{t('photo.kicker')}</p>
       <h1 class="display-lg hero-title">{t('photo.title')}</h1>
@@ -53,11 +60,17 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
     </div>
 
     <div class="strip">
-      {featuredByOrder.map((w) => (
-        <div class="strip-item" style={`--ratio:${(w.width / w.height).toFixed(3)}`}>
-          <WorkCard work={w} lang={lang} reveal={false} />
-        </div>
-      ))}
+      <div class="strip-track">
+        {[false, true].map((duplicate) => (
+          <div class="strip-group" aria-hidden={duplicate ? 'true' : undefined}>
+            {featuredByOrder.map((w) => (
+              <div class="strip-item" style={`--ratio:${(w.width / w.height).toFixed(3)}`}>
+                <WorkCard work={w} lang={lang} reveal={false} />
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
     </div>
   </section>
 
@@ -102,7 +115,7 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
         <p class="kicker">{t('photo.atlasTitle')}</p>
         <h2 class="h2">{t('photo.atlasDesc')}</h2>
       </div>
-      <a class="btn" href={localizePath('/atlas', lang)}>
+      <a class="btn" href={`${localizePath('/collections', lang)}#map`}>
         {t('photo.atlasTitle')}
         <span class="arrow" aria-hidden="true">→</span>
       </a>
@@ -129,7 +142,25 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
     width: 100%;
     height: 100%;
     object-fit: cover;
-    opacity: 0.75;
+  }
+
+  /* 首屏图的压暗层：替代原 img 的 0.75 透明度，让星轨层可以完全不透明地叠在地景之上 */
+  .hero-veil {
+    position: absolute;
+    inset: 0;
+    background: #000;
+    opacity: 0.25;
+    pointer-events: none;
+  }
+
+  /* 星空流动层：逐像素沿各自星轨切线方向流动，地景不参与 */
+  .hero-flow {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    pointer-events: none;
   }
 
   .hero-inner {
@@ -188,24 +219,47 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
     text-wrap: balance;
   }
 
+  /* 精选条自动向左匀速滚动：内容成组复制一份，位移一组宽度后无缝衔接 */
   .strip {
-    display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: max-content;
-    align-items: start;
-    gap: clamp(16px, 2vw, 28px);
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
+    --strip-gap: clamp(16px, 2vw, 28px);
+    overflow: hidden;
     padding-bottom: 18px;
     margin-inline: calc(var(--gutter) * -1);
     padding-inline: var(--gutter);
-    scrollbar-width: none;
+  }
+
+  .strip-track {
+    display: flex;
+    width: max-content;
+    animation: strip-scroll 60s linear infinite;
+  }
+
+  .strip-group {
+    display: flex;
+    align-items: start;
+    gap: var(--strip-gap);
+    padding-right: var(--strip-gap);
+  }
+
+  @keyframes strip-scroll {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .strip-track {
+      animation: none;
+    }
   }
 
   .strip-item {
     --card-h: 427px;
+    flex: 0 0 auto;
     width: calc(var(--card-h) * var(--ratio, 1));
-    scroll-snap-align: start;
   }
 
   /* 精选条内统一为单行说明，避免文字折行影响卡片整体高度 */
@@ -214,10 +268,6 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
   }
 
   .strip-item :global(.meta > .sub:not(.dim)) {
-    display: none;
-  }
-
-  .strip::-webkit-scrollbar {
     display: none;
   }
 
@@ -333,3 +383,207 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
     }
   }
 </style>
+
+<script>
+  // 首屏星轨流动：用逐像素方向场让每根星轨沿自己的弧线滑动，地景不参与（完全不位移）
+  (() => {
+    const hero = document.querySelector<HTMLElement>('[data-hero]');
+    const canvas = document.querySelector<HTMLCanvasElement>('[data-hero-flow]');
+    const photoEl = hero?.querySelector<HTMLImageElement>('.hero-img');
+    if (!hero || !canvas || !photoEl) return;
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const flowSrc = canvas.dataset.flowSrc;
+    const photoSrc = photoEl.currentSrc || photoEl.src;
+    if (!flowSrc || !photoSrc) return;
+
+    const IMG_W = 2400;
+    const IMG_H = 1600;
+    const PERIOD = 2.6;
+    const AMP = 42;
+
+    const VERT = `#version 300 es
+      in vec2 aPos;
+      out vec2 vUv;
+      void main() {
+        vUv = vec2(aPos.x * 0.5 + 0.5, 0.5 - aPos.y * 0.5);
+        gl_Position = vec4(aPos, 0.0, 1.0);
+      }
+    `;
+
+    const FRAG = `#version 300 es
+      precision highp float;
+      in vec2 vUv;
+      out vec4 outColor;
+      uniform sampler2D uPhoto;
+      uniform sampler2D uFlow;
+      uniform vec2 uCss;
+      uniform vec2 uImg;
+      uniform vec2 uOffset;
+      uniform float uScale;
+      uniform float uTime;
+      uniform float uPeriod;
+      uniform float uAmp;
+      uniform float uLod;
+
+      void main() {
+        vec2 px = (vUv * uCss - uOffset) / uScale;
+        vec4 f = texture(uFlow, px / uImg);
+        if (f.a < 0.003) discard;
+
+        // 方向分量带置信度（长度），平坦区域趋零，避免用噪声方向去采样
+        vec2 d = f.rg * 2.0 - 1.0;
+        float len = length(d);
+        vec2 dir = len > 1e-3 ? d * (min(len, 1.0) / len) : vec2(0.0);
+
+        // 固定 LOD 采样：相位回绕处不会因为导数突变被推到高层 mip 而糊成一片
+        float u = fract(uTime / uPeriod + f.b);
+        vec3 a = textureLod(uPhoto, (px + dir * (u * uAmp)) / uImg, uLod).rgb;
+        vec3 b = textureLod(uPhoto, (px + dir * ((u - 1.0) * uAmp)) / uImg, uLod).rgb;
+        outColor = vec4(mix(a, b, u), f.a);
+      }
+    `;
+
+    // WebGL2：NPOT 纹理也能生成 mipmap，缩小时用三线性 + 各向异性过滤，避免摩尔纹
+    const gl = canvas.getContext('webgl2', {
+      alpha: true,
+      antialias: false,
+      depth: false,
+      stencil: false,
+      premultipliedAlpha: false,
+      powerPreference: 'low-power',
+    });
+    if (!gl) return;
+
+    const compile = (type: number, src: string) => {
+      const shader = gl.createShader(type)!;
+      gl.shaderSource(shader, src);
+      gl.compileShader(shader);
+      return shader;
+    };
+
+    const program = gl.createProgram()!;
+    gl.attachShader(program, compile(gl.VERTEX_SHADER, VERT));
+    gl.attachShader(program, compile(gl.FRAGMENT_SHADER, FRAG));
+    gl.linkProgram(program);
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) return;
+    gl.useProgram(program);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+    const aPos = gl.getAttribLocation(program, 'aPos');
+    gl.enableVertexAttribArray(aPos);
+    gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+    const u = {
+      photo: gl.getUniformLocation(program, 'uPhoto'),
+      flow: gl.getUniformLocation(program, 'uFlow'),
+      css: gl.getUniformLocation(program, 'uCss'),
+      img: gl.getUniformLocation(program, 'uImg'),
+      offset: gl.getUniformLocation(program, 'uOffset'),
+      scale: gl.getUniformLocation(program, 'uScale'),
+      time: gl.getUniformLocation(program, 'uTime'),
+      period: gl.getUniformLocation(program, 'uPeriod'),
+      amp: gl.getUniformLocation(program, 'uAmp'),
+      lod: gl.getUniformLocation(program, 'uLod'),
+    };
+    gl.uniform1f(u.period, PERIOD);
+    gl.uniform1f(u.amp, AMP);
+    gl.uniform2f(u.img, IMG_W, IMG_H);
+
+    const loadTexture = (unit: number, src: string, mipmap: boolean) => {
+      const tex = gl.createTexture();
+      const image = new Image();
+      image.decoding = 'async';
+      image.src = src;
+      return new Promise<WebGLTexture>((resolve, reject) => {
+        image.onload = () => {
+          gl.activeTexture(gl.TEXTURE0 + unit);
+          gl.bindTexture(gl.TEXTURE_2D, tex);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+          gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+          gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+          if (mipmap) {
+            gl.generateMipmap(gl.TEXTURE_2D);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+            const aniso = gl.getExtension('EXT_texture_filter_anisotropic');
+            if (aniso) {
+              const max = gl.getParameter(aniso.MAX_TEXTURE_MAX_ANISOTROPY_EXT);
+              gl.texParameteri(gl.TEXTURE_2D, aniso.TEXTURE_MAX_ANISOTROPY_EXT, Math.min(8, max));
+            }
+          } else {
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+          }
+          resolve(tex);
+        };
+        image.onerror = reject;
+      });
+    };
+
+    let running = false;
+    let visible = true;
+    let startTime = 0;
+
+    const resize = () => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const w = hero.clientWidth;
+      const h = hero.clientHeight;
+      if (!w || !h) return;
+      const cw = Math.round(w * dpr);
+      const ch = Math.round(h * dpr);
+      if (canvas.width !== cw || canvas.height !== ch) {
+        canvas.width = cw;
+        canvas.height = ch;
+        gl.viewport(0, 0, cw, ch);
+      }
+      const scale = Math.max(w / IMG_W, h / IMG_H);
+      gl.uniform2f(u.css, w, h);
+      gl.uniform1f(u.scale, scale);
+      gl.uniform1f(u.lod, Math.max(0, Math.log2(1 / (scale * dpr))));
+      gl.uniform2f(u.offset, (w - IMG_W * scale) / 2, (h - IMG_H * scale) / 2);
+    };
+
+    const frame = (now: number) => {
+      if (!running) return;
+      if (!startTime) startTime = now;
+      gl.uniform1f(u.time, (now - startTime) / 1000);
+      gl.clearColor(0, 0, 0, 0);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      requestAnimationFrame(frame);
+    };
+
+    const sync = () => {
+      const next = visible && !document.hidden;
+      if (next && !running) {
+        running = true;
+        requestAnimationFrame(frame);
+      } else if (!next) {
+        running = false;
+      }
+    };
+
+    Promise.all([loadTexture(0, photoSrc, true), loadTexture(1, flowSrc, false)])
+      .then(() => {
+        gl.uniform1i(u.photo, 0);
+        gl.uniform1i(u.flow, 1);
+        resize();
+        new ResizeObserver(resize).observe(hero);
+        new IntersectionObserver(
+          (entries) => {
+            visible = entries[0].isIntersecting;
+            sync();
+          },
+          { threshold: 0 }
+        ).observe(hero);
+        document.addEventListener('visibilitychange', sync);
+        sync();
+      })
+      .catch(() => {
+        /* 资源加载失败时保留静态首屏图 */
+      });
+  })();
+</script>
+
