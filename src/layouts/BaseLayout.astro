@@ -88,6 +88,36 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
             if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
               root.classList.add('logo-arrived');
               var playArrival = function () {
+                // 接住过渡层里的全屏 logo：先收缩回顶部 logo 的位置，再展开文字与正文
+                var settled = new Promise(function (resolve) {
+                  var finish = function () {
+                    root.classList.add('logo-arrived--settled');
+                    resolve();
+                  };
+                  requestAnimationFrame(function () {
+                    requestAnimationFrame(function () {
+                      var mark = document.querySelector('.arrive-mark svg');
+                      var slot = document.querySelector('.brand-slot--mark');
+                      if (!mark || !slot) {
+                        finish();
+                        return;
+                      }
+                      var from = mark.getBoundingClientRect();
+                      var to = slot.getBoundingClientRect();
+                      if (!from.width || !to.width) {
+                        finish();
+                        return;
+                      }
+                      var scale = to.width / from.width;
+                      var dx = to.left + to.width / 2 - (from.left + from.width / 2);
+                      var dy = to.top + to.height / 2 - (from.top + from.height / 2);
+                      mark.style.transform =
+                        'translate(' + dx + 'px,' + dy + 'px) scale(' + scale + ')';
+                      setTimeout(finish, 340);
+                    });
+                  });
+                });
+
                 var revealed = false;
                 var reveal = function () {
                   if (revealed) return;
@@ -99,11 +129,12 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
                       setTimeout(function () {
                         root.classList.remove('logo-arrived');
                         root.classList.remove('logo-arrived--play');
+                        root.classList.remove('logo-arrived--settled');
                       }, 1000);
                     });
                   });
                 };
-                var ready = [];
+                var ready = [settled];
                 if (document.fonts && document.fonts.ready) ready.push(document.fonts.ready);
                 ready.push(new Promise(function (resolve) {
                   if (document.readyState === 'complete') resolve();
@@ -159,6 +190,35 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
     <slot name="head" />
   </head>
   <body class:list={['page', `accent-${accent}`, { 'world-aware': preserveWorldNav }]}>
+    {
+      /* 主线切换抵达时的接续 logo：首帧与过渡层最后一帧完全一致，随后收缩回顶部 logo */
+      chrome && (
+        <div class="arrive-mark" aria-hidden="true">
+          <svg viewBox="0 0 64 64" focusable="false">
+            <g transform="rotate(30 32 32)">
+              <ellipse
+                class="arrive-orbit arrive-orbit--photo"
+                cx="32"
+                cy="32"
+                rx="27"
+                ry="10.5"
+              />
+            </g>
+            <g transform="rotate(-30 32 32)">
+              <ellipse class="arrive-orbit arrive-orbit--dev" cx="32" cy="32" rx="27" ry="10.5" />
+            </g>
+            <circle class="arrive-core" cx="32" cy="32" r="8" />
+            <circle
+              class="arrive-dot"
+              cx="32"
+              cy={section === 'dev' ? '43.83' : '20.17'}
+              r="3.4"
+              style={`color: ${section === 'dev' ? '#7c67e4' : '#e4ab63'}`}
+            />
+          </svg>
+        </div>
+      )
+    }
     {
       chrome && (
         <header
@@ -552,33 +612,14 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
             requestAnimationFrame(frame);
           });
 
+          // 轨道走完立刻发起真实导航：目标页的加载发生在过渡层仍是全屏 logo 的时候，
+          // 浏览器加载条因此属于过渡页本身，而不是过渡结束后再闪一下。
+          // logo 回归顶部的动画交由目标页接续完成（目标页首帧即为过渡层最后一帧）。
           travelDone.then(() => {
-            const mark = warp.querySelector('.world-warp-mark');
-            const brandRect = brandMark.getBoundingClientRect();
-            const markRect = mark.getBoundingClientRect();
-
-            const go = () => {
-              try {
-                sessionStorage.setItem('sch-logo-arrived', target);
-              } catch (e) {}
-              window.location.assign(link.href);
-            };
-
-            if (!brandRect.width || !markRect.width) {
-              go();
-              return;
-            }
-
-            // 共享元素：全屏 logo 收缩回 header 中的 logo 位置
-            const scale = brandRect.width / markRect.width;
-            const dx =
-              brandRect.left + brandRect.width / 2 - (markRect.left + markRect.width / 2);
-            const dy =
-              brandRect.top + brandRect.height / 2 - (markRect.top + markRect.height / 2);
-            mark.style.transformOrigin = 'center';
-            mark.style.transition = 'transform 0.34s cubic-bezier(0.22, 1, 0.36, 1)';
-            mark.style.transform = `translate(${dx}px, ${dy}px) scale(${scale})`;
-            setTimeout(go, 340);
+            try {
+              sessionStorage.setItem('sch-logo-arrived', target);
+            } catch (e) {}
+            window.location.assign(link.href);
           });
         };
 
@@ -813,7 +854,15 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
       /* 主线切换抵达后：先停在图案态，等到首屏绘制后再展开回文字（只播放一次） */
       html.logo-arrived:not(.logo-arrived--play) .brand-slot--mark {
         width: 26px;
+        opacity: 0;
+        transition: none;
+      }
+
+      /* 全屏 logo 收缩到顶部后就位，瞬间换成顶部 logo，避免双影 */
+      html.logo-arrived--settled:not(.logo-arrived--play) .brand-slot--mark {
+        width: 26px;
         opacity: 1;
+        transition: none;
       }
 
       html.logo-arrived:not(.logo-arrived--play) .brand-slot--word {
@@ -929,16 +978,12 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
         fill: #7c67e4;
       }
 
-      /* 摄影高亮左轨道，工程保留原轨道；门户页两轨并重 */
+      /* 摄影高亮左轨道，工程保留原轨道；门户页取两条高亮轨道的叠加 */
       html[data-world='photo'] .mark-track--photo .mark-orbit,
-      html[data-world='dev'] .mark-track--dev .mark-orbit {
+      html[data-world='dev'] .mark-track--dev .mark-orbit,
+      html[data-world='neutral'] .mark-track .mark-orbit {
         opacity: 0.86;
         stroke-width: 3;
-      }
-
-      html[data-world='neutral'] .mark-track .mark-orbit {
-        opacity: 0.5;
-        stroke-width: 2.7;
       }
 
       html[data-world='photo'] .mark-track--photo .mark-dot,
@@ -1017,6 +1062,56 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
         html.logo-arrived main {
           opacity: 1;
         }
+      }
+
+      /* ---------- 抵达后接住过渡层 logo ---------- */
+      .arrive-mark {
+        position: fixed;
+        inset: 0;
+        z-index: 200;
+        display: none;
+        place-items: center;
+        pointer-events: none;
+        color: #f6f4f0;
+      }
+
+      html.logo-arrived:not(.logo-arrived--settled) .arrive-mark {
+        display: grid;
+      }
+
+      html[data-world='dev'] .arrive-mark {
+        color: #1d1a2b;
+      }
+
+      .arrive-mark svg {
+        width: min(46vmin, 420px);
+        height: auto;
+        overflow: visible;
+        transform-origin: center;
+        transition: transform 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+      }
+
+      .arrive-orbit {
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2.4;
+        stroke-linecap: round;
+        opacity: 0.24;
+      }
+
+      html[data-world='photo'] .arrive-orbit--photo,
+      html[data-world='dev'] .arrive-orbit--dev {
+        opacity: 0.75;
+      }
+
+      .arrive-core {
+        fill: currentColor;
+        opacity: 0.9;
+      }
+
+      .arrive-dot {
+        fill: currentColor;
+        filter: drop-shadow(0 0 1.2vmin currentColor);
       }
 
       /* ---------- 全屏轨道过渡 ---------- */

@@ -38,11 +38,11 @@ const langLabel = otherLang === 'zh' ? '中文' : 'EN';
           aria-hidden="true"
           focusable="false"
         >
-          <g transform="rotate(30 32 32)">
+          <g class="mark-track mark-track--photo" transform="rotate(30 32 32)">
             <ellipse class="mark-orbit" cx="32" cy="32" rx="27" ry="10.5" />
             <circle class="mark-dot mark-dot--photo" cx="5" cy="32" r="3.4" />
           </g>
-          <g transform="rotate(-30 32 32)">
+          <g class="mark-track mark-track--dev" transform="rotate(-30 32 32)">
             <ellipse class="mark-orbit" cx="32" cy="32" rx="27" ry="10.5" />
             <circle class="mark-dot mark-dot--dev" cx="59" cy="32" r="3.4" />
           </g>
@@ -226,16 +226,22 @@ const langLabel = otherLang === 'zh' ? '中文' : 'EN';
     overflow: visible;
   }
 
+  /* 门户标识 = 摄影与工程两条高亮轨道的叠加 */
   .portal-mark .mark-orbit {
     fill: none;
     stroke: currentColor;
     stroke-linecap: round;
-    stroke-width: 2.7;
-    opacity: 0.5;
+    stroke-width: 3;
+    opacity: 0.86;
   }
 
   .portal-mark .mark-core {
     fill: currentColor;
+  }
+
+  /* 两轨叠加同样包含两枚主题色轨道点，覆盖全局默认的隐藏态 */
+  .portal-mark .mark-dot {
+    opacity: 1;
   }
 
   .portal-mark .mark-dot--photo {
