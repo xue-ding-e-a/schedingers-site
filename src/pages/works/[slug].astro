@@ -29,9 +29,22 @@ const exifRows = [
   { label: t('work.frames'), value: work.exif.frames },
   { label: t('work.technique'), value: work.technique[lang] },
 ];
+
+// 详情页按视口挑档：手机用已有缩略图，桌面用 1600 中间档，只有大屏才取原图
+const stageSrcset = [
+  `${withBase(work.thumb)} 1100w`,
+  work.width > 1600 ? `${withBase(work.image.replace(/\.webp$/, '-1600.webp'))} 1600w` : null,
+  `${withBase(work.image)} ${work.width}w`,
+]
+  .filter(Boolean)
+  .join(', ');
 ---
 
 <BaseLayout lang={lang} title={work.title[lang]} description={work.story[lang].slice(0, 90)} section="photo" image={work.thumb}>
+  <Fragment slot="head">
+    <script is:inline>document.documentElement.classList.add('js');</script>
+  </Fragment>
+
   <article class="work">
     <div class="container-wide work-top">
       <a class="back mono" href={localizePath('/works', lang)}>← {t('work.back')}</a>
@@ -47,9 +60,13 @@ const exifRows = [
     <figure class="stage container-wide">
       <img
         src={withBase(work.image)}
+        srcset={stageSrcset}
+        sizes="(min-width: 1728px) 1600px, (min-width: 1280px) calc(100vw - 128px), calc(100vw - 40px)"
         alt={work.title[lang]}
         width={work.width}
         height={work.height}
+        fetchpriority="high"
+        decoding="async"
         style={`background:${work.color}`}
       />
       <figcaption class="mono">{work.title[lang]} · {work.region[lang]}</figcaption>
@@ -98,6 +115,98 @@ const exifRows = [
       </a>
     </nav>
   </article>
+
+  <div class="work-loader" id="work-loader" aria-hidden="true">
+    <div class="loader-inner">
+      <div class="loader-meta mono">
+        <span>{lang === 'zh' ? '正在显影' : 'DEVELOPING'}</span>
+        <span class="loader-pct">00</span>
+      </div>
+      <div class="loader-track"><i></i></div>
+    </div>
+  </div>
+
+  <script is:inline>
+    (() => {
+      const loader = document.getElementById('work-loader');
+      const img = document.querySelector('.stage img');
+      if (!loader || !img) return;
+
+      const stage = img.closest('.stage');
+      const fill = loader.querySelector('.loader-track i');
+      const pct = loader.querySelector('.loader-pct');
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const startedAt = performance.now();
+
+      let raf = 0;
+      let done = false;
+      let timer = 0;
+
+      const render = (value) => {
+        fill.style.width = value + '%';
+        pct.textContent = String(Math.round(value)).padStart(2, '0');
+      };
+
+      const markReady = () => stage.classList.add('is-ready');
+
+      const hideLoader = (instant) => {
+        if (done) return;
+        done = true;
+        cancelAnimationFrame(raf);
+        clearTimeout(timer);
+        if (instant) loader.style.transition = 'none';
+        loader.classList.add('is-done');
+      };
+
+      const finish = () => {
+        render(100);
+        // 最短展示 420ms，避免过渡层一闪而过
+        setTimeout(() => hideLoader(false), Math.max(0, 420 - (performance.now() - startedAt)));
+      };
+
+      if (reduce) {
+        markReady();
+        hideLoader(true);
+        return;
+      }
+
+      stage.classList.add('is-gated');
+
+      // 命中缓存：直接放行，不播过渡
+      if (img.complete && img.naturalWidth) {
+        markReady();
+        hideLoader(true);
+        return;
+      }
+
+      img.addEventListener(
+        'load',
+        () => {
+          markReady();
+          finish();
+        },
+        { once: true }
+      );
+      img.addEventListener(
+        'error',
+        () => {
+          markReady();
+          finish();
+        },
+        { once: true }
+      );
+
+      const step = (now) => {
+        const t = Math.min(1, (now - startedAt) / 2400);
+        render(Math.min(92, 6 + 86 * (1 - Math.pow(1 - t, 3))));
+        if (t < 1) raf = requestAnimationFrame(step);
+      };
+      raf = requestAnimationFrame(step);
+
+      // 慢网兜底：最多遮 4s，先放正文出来，图片继续加载
+      timer = setTimeout(() => hideLoader(false), 4000);
+    })();
+  </script>
 </BaseLayout>
 
 <style>
@@ -276,5 +385,70 @@ const exifRows = [
       align-items: flex-start;
       text-align: left;
     }
+  }
+
+  /* ---------- 进入详情页的全屏显影过渡 ---------- */
+  .work-loader {
+    position: fixed;
+    inset: 0;
+    z-index: 300;
+    display: grid;
+    place-items: center;
+    background: #000000;
+    transition: opacity 0.55s var(--ease), visibility 0.55s var(--ease);
+  }
+
+  /* 无脚本时直接放行内容 */
+  html:not(.js) .work-loader {
+    display: none;
+  }
+
+  .work-loader.is-done {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .loader-inner {
+    width: min(420px, 62vw);
+    display: grid;
+    gap: 14px;
+  }
+
+  .loader-meta {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    color: var(--text-dim);
+  }
+
+  .loader-pct {
+    color: var(--primary);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .loader-track {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.16);
+    overflow: hidden;
+  }
+
+  .loader-track i {
+    display: block;
+    width: 0;
+    height: 100%;
+    background: var(--primary);
+    box-shadow: 0 0 14px rgba(229, 201, 164, 0.55);
+  }
+
+  .stage.is-gated img {
+    opacity: 0;
+    transition: opacity 0.9s var(--ease);
+  }
+
+  .stage.is-gated.is-ready img {
+    opacity: 1;
   }
 </style>

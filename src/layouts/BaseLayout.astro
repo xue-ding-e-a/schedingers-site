@@ -80,6 +80,12 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
             var stored = localStorage.getItem('sch-world');
             if (stored === 'dev' || stored === 'photo') root.dataset.world = stored;
           }
+          // 从过渡动画跳转过来时，抑制 header 里 logo 点的入场动画
+          var arrived = sessionStorage.getItem('sch-logo-arrived');
+          if (arrived && arrived === section) {
+            root.classList.add('logo-arrived');
+            sessionStorage.removeItem('sch-logo-arrived');
+          }
           var meta = document.querySelector('meta[name="theme-color"]');
           if (meta) {
             meta.setAttribute(
@@ -90,15 +96,44 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
         } catch (e) {}
       })();
     </script>
+    <slot name="head" />
   </head>
   <body class:list={['page', `accent-${accent}`]}>
     {
       chrome && (
-        <header class:list={['site-head', { 'preserve-world-nav': preserveWorldNav }]}>
+        <header
+          class:list={['site-head', { 'preserve-world-nav': preserveWorldNav }]}
+          data-section={section}
+        >
           <div class="head-inner">
             <a class="brand" href={localizePath('/', lang)} aria-label={siteName}>
-              <img class="brand-mark" src={withBase('/logo-mark.svg')} alt="" width="26" height="26" aria-hidden="true" />
-              <span class="brand-text">{siteName}</span>
+              <span class="brand-slot brand-slot--mark">
+                <svg
+                  class="brand-mark"
+                  viewBox="0 0 64 64"
+                  width="26"
+                  height="26"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <g class="mark-track mark-track--photo" transform="rotate(30 32 32)">
+                    <ellipse class="mark-orbit" cx="32" cy="32" rx="27" ry="10.5" />
+                    <g class="mark-dot-swing">
+                      <circle class="mark-dot mark-dot--photo" cx="5" cy="32" r="3.4" />
+                    </g>
+                  </g>
+                  <g class="mark-track mark-track--dev" transform="rotate(-30 32 32)">
+                    <ellipse class="mark-orbit" cx="32" cy="32" rx="27" ry="10.5" />
+                    <g class="mark-dot-swing">
+                      <circle class="mark-dot mark-dot--dev" cx="59" cy="32" r="3.4" />
+                    </g>
+                  </g>
+                  <circle class="mark-core" cx="32" cy="32" r="8" />
+                </svg>
+              </span>
+              <span class="brand-slot brand-slot--word">
+                <span class="brand-word" aria-hidden="true"><span class="brand-glyph" style="--i:0">S</span><span class="brand-glyph" style="--i:1"><span class="brand-cut">C</span></span><span class="brand-glyph" style="--i:2">H</span><span class="brand-glyph" style="--i:3"><span class="brand-cut">E</span></span><span class="brand-glyph" style="--i:4">D</span><span class="brand-glyph" style="--i:5">I</span><span class="brand-glyph" style="--i:6">N</span><span class="brand-glyph" style="--i:7">G</span><span class="brand-glyph" style="--i:8">E</span><span class="brand-glyph" style="--i:9">R</span></span>
+              </span>
             </a>
 
             {navVariants.map(({ world, items }) => (
@@ -187,9 +222,31 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
         document.querySelectorAll('.reveal').forEach((el) => el.classList.add('is-in'));
       }
 
+      // logo：顶部为文字，悬停或下拉后文字左滚卷起、图案横向展开
+      const brandEl = document.querySelector('.brand');
+      let brandHovered = false;
+      const syncBrand = () => {
+        if (!brandEl) return;
+        brandEl.classList.toggle('is-marked', brandHovered || window.scrollY > 24);
+      };
+      if (brandEl) {
+        brandEl.addEventListener('pointerenter', (event) => {
+          if (event.pointerType !== 'mouse') return;
+          brandHovered = true;
+          syncBrand();
+        });
+        brandEl.addEventListener('pointerleave', () => {
+          brandHovered = false;
+          syncBrand();
+        });
+      }
+
       const head = document.querySelector('.site-head');
       if (head) {
-        const onScroll = () => head.classList.toggle('is-scrolled', window.scrollY > 24);
+        const onScroll = () => {
+          head.classList.toggle('is-scrolled', window.scrollY > 24);
+          syncBrand();
+        };
         onScroll();
         window.addEventListener('scroll', onScroll, { passive: true });
 
@@ -199,6 +256,293 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
         syncHeadH();
         window.addEventListener('resize', syncHeadH, { passive: true });
         window.addEventListener('load', syncHeadH);
+      }
+
+      // 轨道切换：全屏轨道过渡，动画期间预加载目标页面
+      const brandMark = document.querySelector('.brand-mark');
+      if (brandMark) {
+        const switchLinks = document.querySelectorAll('.track-switch');
+        const CENTER = 32;
+        const RX = 27;
+        const RY = 10.5;
+        const TAU = Math.PI * 2;
+        const WORLDS = {
+          photo: { dot: [228, 171, 99] },
+          dev: { dot: [124, 103, 228] }
+        };
+        let switching = false;
+        let warpEl = null;
+        let warmFrameEl = null;
+        const warmed = new Map();
+
+        const rad = (deg) => (deg * Math.PI) / 180;
+        const easeInOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+        const mix = (a, b, t) => a + (b - a) * t;
+
+        const ellipsePoint = (rot, angle) => {
+          const c = Math.cos(rad(rot));
+          const s = Math.sin(rad(rot));
+          const x = RX * Math.cos(angle);
+          const y = RY * Math.sin(angle);
+          return {
+            x: CENTER + x * c - y * s,
+            y: CENTER + x * s + y * c
+          };
+        };
+
+        const angleOnTrack = (rot, x, y) => {
+          const c = Math.cos(rad(rot));
+          const s = Math.sin(rad(rot));
+          const dx = x - CENTER;
+          const dy = y - CENTER;
+          const lx = dx * c + dy * s;
+          const ly = -dx * s + dy * c;
+          return Math.atan2(ly / RY, lx / RX);
+        };
+
+        // 两条椭圆在上、下方各有一个真实交点
+        const topY = CENTER - 11.83;
+        const bottomY = CENTER + 11.83;
+        const photoBottom = angleOnTrack(30, CENTER, bottomY);
+        const photoTop = angleOnTrack(30, CENTER, topY);
+        const devBottom = angleOnTrack(-30, CENTER, bottomY);
+        const devTop = angleOnTrack(-30, CENTER, topY);
+
+        // 摄影 → 工程走下方交点，工程 → 摄影走上方交点
+        const plans = {
+          'photo-dev': {
+            from: { rot: 30, a: -Math.PI, b: photoBottom - TAU },
+            to: { rot: -30, a: devBottom, b: 0 }
+          },
+          'dev-photo': {
+            from: { rot: -30, a: 0, b: devTop },
+            to: { rot: 30, a: photoTop, b: -Math.PI }
+          }
+        };
+
+        // 抓取目标页面 HTML，并预加载其中靠前的图片
+        const warmTarget = (href) => {
+          if (warmed.has(href)) return warmed.get(href);
+          const job = (async () => {
+            let html = '';
+            try {
+              const res = await fetch(href, { credentials: 'same-origin' });
+              if (res.ok) html = await res.text();
+            } catch (e) {}
+            if (!html) return;
+
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+            const urls = [];
+            doc.querySelectorAll('img').forEach((img) => {
+              const src = img.getAttribute('src');
+              if (src) urls.push(src);
+              const srcset = img.getAttribute('srcset');
+              if (srcset) {
+                const first = srcset.split(',')[0].trim().split(/\s+/)[0];
+                if (first) urls.push(first);
+              }
+            });
+            doc.querySelectorAll('link[rel="preload"][as="image"]').forEach((link) => {
+              const src = link.getAttribute('href');
+              if (src) urls.push(src);
+            });
+
+            const unique = Array.from(new Set(urls)).slice(0, 8);
+            await Promise.all(
+              unique.map(
+                (src) =>
+                  new Promise((resolve) => {
+                    const img = new Image();
+                    img.onload = resolve;
+                    img.onerror = resolve;
+                    img.fetchPriority = 'high';
+                    img.src = src;
+                  })
+              )
+            );
+          })();
+          warmed.set(href, job);
+          return job;
+        };
+
+        // 点击瞬间用隐藏 iframe 预渲染目标页面：HTML、样式、字体与首屏图片都会提前就位
+        const buildFrame = (href) => {
+          if (warmFrameEl) warmFrameEl.remove();
+          const frame = document.createElement('iframe');
+          frame.className = 'warm-frame';
+          frame.setAttribute('aria-hidden', 'true');
+          frame.setAttribute('tabindex', '-1');
+          frame.setAttribute('sandbox', 'allow-same-origin');
+          frame.src = href;
+          document.body.appendChild(frame);
+          warmFrameEl = frame;
+        };
+
+        const buildWarp = () => {
+          if (warpEl) return warpEl;
+          warpEl = document.createElement('div');
+          warpEl.className = 'world-warp';
+          warpEl.setAttribute('aria-hidden', 'true');
+          warpEl.innerHTML = [
+            '<svg class="world-warp-mark" viewBox="0 0 64 64" focusable="false">',
+            '<g transform="rotate(30 32 32)"><ellipse class="warp-orbit warp-orbit--photo" cx="32" cy="32" rx="27" ry="10.5" /></g>',
+            '<g transform="rotate(-30 32 32)"><ellipse class="warp-orbit warp-orbit--dev" cx="32" cy="32" rx="27" ry="10.5" /></g>',
+            '<circle class="warp-core" cx="32" cy="32" r="8" />',
+            '<circle class="warp-dot" cx="8.62" cy="18.5" r="3.4" />',
+            '</svg>'
+          ].join('');
+          document.body.appendChild(warpEl);
+          return warpEl;
+        };
+
+        const startSwitch = (event, link) => {
+          if (
+            event.defaultPrevented ||
+            event.button !== 0 ||
+            event.metaKey ||
+            event.ctrlKey ||
+            event.shiftKey ||
+            event.altKey ||
+            (link.target && link.target !== '_self')
+          ) {
+            return;
+          }
+
+          const current = document.documentElement.dataset.world;
+          if (current !== 'photo' && current !== 'dev') return;
+          if (switching) {
+            event.preventDefault();
+            return;
+          }
+
+          const target = current === 'photo' ? 'dev' : 'photo';
+          const plan = plans[`${current}-${target}`];
+          if (!plan) return;
+
+          event.preventDefault();
+          switching = true;
+          document.documentElement.style.overflow = 'hidden';
+          if (brandEl) brandEl.classList.add('is-marked');
+
+          // 点击瞬间同时启动：图片预热 + 隐藏 iframe 预渲染 + 过渡动画
+          warmTarget(link.href);
+          buildFrame(link.href);
+
+          const warp = buildWarp();
+          const dot = warp.querySelector('.warp-dot');
+          warp.classList.add('is-reset');
+          warp.dataset.world = current;
+          void warp.offsetWidth;
+          warp.classList.remove('is-reset');
+
+          const paintDot = (point, colorT) => {
+            dot.setAttribute('cx', point.x.toFixed(2));
+            dot.setAttribute('cy', point.y.toFixed(2));
+            const from = WORLDS[current].dot;
+            const to = WORLDS[target].dot;
+            dot.style.color = `rgb(${Math.round(mix(from[0], to[0], colorT))},${Math.round(
+              mix(from[1], to[1], colorT)
+            )},${Math.round(mix(from[2], to[2], colorT))})`;
+          };
+
+          paintDot(ellipsePoint(plan.from.rot, plan.from.a), 0);
+
+          void warp.offsetWidth;
+          warp.classList.add('is-on');
+          requestAnimationFrame(() => warp.classList.add('is-armed'));
+
+          const phaseA = 440;
+          const hold = 150;
+          const phaseB = 470;
+          const travel = phaseA + hold + phaseB;
+          const begin = performance.now();
+          let crossed = false;
+
+          const travelDone = new Promise((resolve) => {
+            const frame = (now) => {
+              const elapsed = now - begin;
+              let point;
+              let colorT = 0;
+
+              if (elapsed < phaseA) {
+                const t = easeInOut(elapsed / phaseA);
+                point = ellipsePoint(plan.from.rot, mix(plan.from.a, plan.from.b, t));
+              } else if (elapsed < phaseA + hold) {
+                point = ellipsePoint(plan.to.rot, plan.to.a);
+                if (!crossed) {
+                  crossed = true;
+                  warp.dataset.world = target;
+                }
+              } else {
+                const t = easeInOut(Math.min(1, (elapsed - phaseA - hold) / phaseB));
+                point = ellipsePoint(plan.to.rot, mix(plan.to.a, plan.to.b, t));
+                colorT = Math.min(1, t / 0.55);
+              }
+
+              paintDot(point, colorT);
+
+              if (elapsed < travel) {
+                requestAnimationFrame(frame);
+              } else {
+                resolve();
+              }
+            };
+
+            requestAnimationFrame(frame);
+          });
+
+          travelDone.then(() => {
+            const mark = warp.querySelector('.world-warp-mark');
+            const brandRect = brandMark.getBoundingClientRect();
+            const markRect = mark.getBoundingClientRect();
+
+            const go = () => {
+              try {
+                sessionStorage.setItem('sch-logo-arrived', target);
+              } catch (e) {}
+              window.location.assign(link.href);
+            };
+
+            if (!brandRect.width || !markRect.width) {
+              go();
+              return;
+            }
+
+            // 共享元素：全屏 logo 收缩回 header 中的 logo 位置
+            const scale = brandRect.width / markRect.width;
+            const dx =
+              brandRect.left + brandRect.width / 2 - (markRect.left + markRect.width / 2);
+            const dy =
+              brandRect.top + brandRect.height / 2 - (markRect.top + markRect.height / 2);
+            mark.style.transformOrigin = 'center';
+            mark.style.transition = 'transform 0.34s cubic-bezier(0.22, 1, 0.36, 1)';
+            mark.style.transform = `translate(${dx}px, ${dy}px) scale(${scale})`;
+            setTimeout(go, 340);
+          });
+        };
+
+        if (!reduced) {
+          switchLinks.forEach((link) => {
+            link.addEventListener('click', (event) => startSwitch(event, link));
+            link.addEventListener('pointerenter', () => warmTarget(link.href), { passive: true });
+            link.addEventListener('focus', () => warmTarget(link.href));
+          });
+
+          // bfcache 返回时清理过渡层
+          window.addEventListener('pageshow', (event) => {
+            if (!event.persisted) return;
+            switching = false;
+            document.documentElement.style.overflow = '';
+            if (warpEl) {
+              warpEl.remove();
+              warpEl = null;
+            }
+            if (warmFrameEl) {
+              warmFrameEl.remove();
+              warmFrameEl = null;
+            }
+          });
+        }
       }
     </script>
 
@@ -212,8 +556,8 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
         align-items: center;
         isolation: isolate;
         background: var(--glass-bg);
-        -webkit-backdrop-filter: blur(22px) saturate(180%);
-        backdrop-filter: blur(22px) saturate(180%);
+        -webkit-backdrop-filter: blur(36px) saturate(200%);
+        backdrop-filter: blur(36px) saturate(200%);
         border-bottom: 1px solid var(--glass-border);
         box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-highlight);
         transition: background 0.4s var(--ease), border-color 0.4s var(--ease),
@@ -231,6 +575,7 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
         background-size: 180px 180px;
         opacity: var(--grain-opacity);
         mix-blend-mode: overlay;
+        transition: opacity 0.35s var(--ease);
       }
 
       /* 顶部斜向高光：玻璃边缘的反射 */
@@ -244,14 +589,52 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
           linear-gradient(180deg, var(--glass-sheen), transparent 46%),
           linear-gradient(104deg, transparent 28%, var(--glass-streak) 44%, transparent 62%);
         background-repeat: no-repeat;
+        opacity: 1;
+        transition: opacity 0.35s var(--ease);
       }
 
       .site-head.is-scrolled {
         background: var(--glass-bg-scrolled);
-        -webkit-backdrop-filter: blur(28px) saturate(190%);
-        backdrop-filter: blur(28px) saturate(190%);
+        -webkit-backdrop-filter: blur(42px) saturate(210%);
+        backdrop-filter: blur(42px) saturate(210%);
         box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-highlight),
-          0 12px 28px -22px rgba(0, 0, 0, 0.6);
+          0 12px 28px -22px rgba(0, 0, 0, 0.5);
+      }
+
+      /* 首屏：摄影 / 工程主线导航完全透明，下拉后恢复磨砂玻璃 */
+      .site-head[data-section='photo']:not(.is-scrolled),
+      .site-head[data-section='dev']:not(.is-scrolled) {
+        background: transparent;
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+        border-bottom-color: transparent;
+        box-shadow: none;
+      }
+
+      .site-head[data-section='photo']:not(.is-scrolled)::before,
+      .site-head[data-section='photo']:not(.is-scrolled)::after,
+      .site-head[data-section='dev']:not(.is-scrolled)::before,
+      .site-head[data-section='dev']:not(.is-scrolled)::after {
+        opacity: 0;
+      }
+
+      /* 导航按钮的磨砂玻璃底 */
+      .site-head[data-section='photo'] {
+        --chip-bg: rgba(255, 255, 255, 0.06);
+        --chip-bg-hover: rgba(255, 255, 255, 0.13);
+        --chip-highlight: rgba(255, 255, 255, 0.16);
+      }
+
+      .site-head[data-section='dev'] {
+        --chip-bg: rgba(255, 255, 255, 0.55);
+        --chip-bg-hover: #ffffff;
+        --chip-highlight: rgba(255, 255, 255, 0.9);
+      }
+
+      .site-head[data-section='neutral'] {
+        --chip-bg: rgba(255, 255, 255, 0.05);
+        --chip-bg-hover: rgba(255, 255, 255, 0.1);
+        --chip-highlight: rgba(255, 255, 255, 0.14);
       }
 
       @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
@@ -276,8 +659,9 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
       .brand {
         display: inline-flex;
         align-items: center;
-        gap: 10px;
+        gap: 0;
         flex-shrink: 0;
+        color: var(--text);
       }
 
       .brand-mark {
@@ -285,6 +669,265 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
         height: 26px;
         display: block;
         flex-shrink: 0;
+        overflow: visible;
+      }
+
+      /* logo：文字左滚卷起，图案从左侧横向展开 */
+      .brand-slot {
+        display: inline-flex;
+        align-items: center;
+        overflow: hidden;
+      }
+
+      .brand-slot--mark {
+        width: 0;
+        height: 26px;
+        flex-shrink: 0;
+        opacity: 0;
+        transition: width 0.42s var(--ease), opacity 0.3s var(--ease);
+      }
+
+      .brand-slot--word {
+        max-width: 120px;
+        transition: max-width 0.34s var(--ease) 0.16s;
+      }
+
+      .brand-mark {
+        transform: scale(0.4) rotate(-70deg);
+        transition: transform 0.5s var(--ease);
+      }
+
+      .brand-glyph {
+        display: inline-block;
+        transition: transform 0.34s var(--ease), opacity 0.26s var(--ease);
+        transition-delay: calc(var(--i, 0) * 20ms);
+      }
+
+      .brand.is-marked .brand-slot--mark {
+        width: 26px;
+        opacity: 1;
+      }
+
+      .brand.is-marked .brand-slot--word {
+        max-width: 0;
+      }
+
+      .brand.is-marked .brand-mark {
+        transform: none;
+      }
+
+      .brand.is-marked .brand-glyph {
+        transform: translateX(-16px) scaleX(0.7) scaleY(0.5);
+        opacity: 0;
+      }
+
+      .mark-orbit {
+        fill: none;
+        stroke: currentColor;
+        stroke-linecap: round;
+        stroke-width: 2.4;
+        opacity: 0.3;
+        transition: opacity 0.45s var(--ease), stroke-width 0.45s var(--ease);
+      }
+
+      .mark-core {
+        fill: currentColor;
+      }
+
+      .mark-dot {
+        opacity: 0;
+        transition: opacity 0.45s var(--ease);
+      }
+
+      .mark-dot--photo {
+        fill: #e4ab63;
+      }
+
+      .mark-dot--dev {
+        fill: #7c67e4;
+      }
+
+      /* 摄影高亮左轨道，工程保留原轨道；门户页两轨并重 */
+      html[data-world='photo'] .mark-track--photo .mark-orbit,
+      html[data-world='dev'] .mark-track--dev .mark-orbit {
+        opacity: 0.86;
+        stroke-width: 3;
+      }
+
+      html[data-world='neutral'] .mark-track .mark-orbit {
+        opacity: 0.5;
+        stroke-width: 2.7;
+      }
+
+      html[data-world='photo'] .mark-track--photo .mark-dot,
+      html[data-world='dev'] .mark-track--dev .mark-dot,
+      html[data-world='neutral'] .mark-track .mark-dot {
+        opacity: 1;
+      }
+
+      .mark-dot-swing {
+        transform-box: view-box;
+        transform-origin: 32px 32px;
+        animation: brand-dot-settle 1.5s var(--ease) both;
+      }
+
+      .mark-track--photo .mark-dot-swing {
+        --logo-enter: -26deg;
+      }
+
+      .mark-track--dev .mark-dot-swing {
+        --logo-enter: 26deg;
+      }
+
+      @keyframes brand-dot-settle {
+        from {
+          transform: rotate(var(--logo-enter));
+          opacity: 0.2;
+        }
+        to {
+          transform: rotate(0deg);
+          opacity: 1;
+        }
+      }
+
+      .brand-word {
+        font-family: var(--font-heading);
+        font-size: 12.5px;
+        font-weight: 600;
+        letter-spacing: 0.16em;
+        line-height: 1;
+        white-space: nowrap;
+      }
+
+      /* 与主轨道同角度的开口：只切 C 与 E，不破坏字标整体识别 */
+      .brand-cut {
+        display: inline-block;
+        -webkit-mask-image: linear-gradient(60deg, #000 0 45%, transparent 45.1% 55%, #000 55.1%);
+        mask-image: linear-gradient(60deg, #000 0 45%, transparent 45.1% 55%, #000 55.1%);
+      }
+
+      html.logo-arrived .mark-dot-swing {
+        animation: none;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .mark-dot-swing {
+          animation: none;
+        }
+        .brand-slot--mark,
+        .brand-slot--word,
+        .brand-mark,
+        .brand-glyph {
+          transition: none;
+        }
+      }
+
+      /* ---------- 全屏轨道过渡 ---------- */
+      .world-warp {
+        position: fixed;
+        inset: 0;
+        z-index: 200;
+        display: grid;
+        place-items: center;
+        background-color: #000000;
+        color: #f6f4f0;
+        opacity: 0;
+        pointer-events: none;
+        will-change: opacity;
+        transition: opacity 0.26s var(--ease), color 0.9s cubic-bezier(0.45, 0, 0.25, 1);
+      }
+
+      /* 黑白之间用交叉淡入淡出，避免直接插值背景色产生的灰雾感 */
+      .world-warp::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-color: #fffdf8;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.9s cubic-bezier(0.45, 0, 0.25, 1);
+      }
+
+      .world-warp.is-on {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .world-warp[data-world='photo'] {
+        color: #f6f4f0;
+      }
+
+      .world-warp[data-world='dev'] {
+        color: #1d1a2b;
+      }
+
+      .world-warp[data-world='dev']::before {
+        opacity: 1;
+      }
+
+      /* 重置底色时不要走过渡，避免刚点击就提前变色 */
+      .world-warp.is-reset,
+      .world-warp.is-reset::before {
+        transition: none;
+      }
+
+      .world-warp-mark {
+        position: relative;
+        z-index: 1;
+        width: min(46vmin, 420px);
+        height: auto;
+        overflow: visible;
+        opacity: 0;
+        transform: scale(0.94);
+        transition: opacity 0.5s var(--ease), transform 0.95s var(--ease);
+      }
+
+      .world-warp.is-armed .world-warp-mark {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      .warp-orbit {
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2.4;
+        stroke-linecap: round;
+        opacity: 0.24;
+        transition: opacity 0.75s cubic-bezier(0.45, 0, 0.25, 1);
+      }
+
+      .world-warp[data-world='photo'] .warp-orbit--photo,
+      .world-warp[data-world='dev'] .warp-orbit--dev {
+        opacity: 0.75;
+      }
+
+      .warp-core {
+        fill: currentColor;
+        opacity: 0.9;
+      }
+
+      .warp-dot {
+        fill: currentColor;
+        filter: drop-shadow(0 0 1.2vmin currentColor);
+      }
+
+      /* 点击切换时隐藏预渲染的目标页，只用来提前抓取和布局，不可见也不可交互 */
+      .warm-frame {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        border: 0;
+        opacity: 0;
+        pointer-events: none;
+        z-index: -1;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .world-warp,
+        .world-warp-mark {
+          transition: none;
+        }
       }
 
       .brand-text {
@@ -296,42 +939,31 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
 
       .site-nav {
         display: flex;
-        gap: 26px;
+        gap: 8px;
         margin-left: auto;
       }
 
+      /* 导航按钮：磨砂玻璃胶囊，无描边、无强调线 */
       .nav-link {
         font-size: 13px;
         color: var(--text-dim);
-        padding-block: 6px;
-        position: relative;
-        transition: color 0.3s var(--ease);
+        padding: 6px 13px;
+        border: 0;
+        border-radius: 999px;
+        background: var(--chip-bg, transparent);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        backdrop-filter: blur(20px) saturate(180%);
+        box-shadow: inset 0 1px 0 var(--chip-highlight, transparent);
+        transition: color 0.3s var(--ease), background 0.3s var(--ease),
+          box-shadow 0.3s var(--ease);
       }
 
-      .nav-link::after {
-        content: '';
-        position: absolute;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        height: 1px;
-        background: var(--accent, var(--warm));
-        transform: scaleX(0);
-        transform-origin: left;
-        transition: transform 0.4s var(--ease);
-      }
-
-      .nav-link:hover {
-        color: var(--text);
-      }
-
-      .nav-link:hover::after,
-      .nav-link.is-active::after {
-        transform: scaleX(1);
-      }
-
+      .nav-link:hover,
       .nav-link.is-active {
         color: var(--text);
+        background: var(--chip-bg-hover, transparent);
+        box-shadow: inset 0 1px 0 var(--chip-highlight, transparent),
+          0 6px 16px -12px rgba(0, 0, 0, 0.55);
       }
 
       .head-tools {
@@ -353,15 +985,18 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
         font-size: 12.5px;
         color: var(--text-dim);
         padding: 6px 12px;
-        border: 1px solid var(--line);
+        border: 0;
         border-radius: 999px;
-        transition: color 0.3s var(--ease), border-color 0.3s var(--ease);
+        background: var(--chip-bg, transparent);
+        -webkit-backdrop-filter: blur(16px) saturate(180%);
+        backdrop-filter: blur(16px) saturate(180%);
+        box-shadow: inset 0 1px 0 var(--chip-highlight, transparent);
+        transition: color 0.3s var(--ease), background 0.3s var(--ease);
       }
 
       .track-switch:hover {
         color: var(--text);
-        border-color: var(--accent, var(--primary));
-        background: var(--accent-soft, rgba(59, 130, 246, 0.12));
+        background: var(--chip-bg-hover, var(--accent-soft, rgba(59, 130, 246, 0.12)));
       }
 
       .track-icon {
@@ -396,11 +1031,17 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
         font-size: 11px;
         letter-spacing: 0.1em;
         color: var(--text-faint);
-        transition: color 0.3s var(--ease);
+        padding: 5px 9px;
+        border-radius: 999px;
+        background: var(--chip-bg, transparent);
+        -webkit-backdrop-filter: blur(16px) saturate(180%);
+        backdrop-filter: blur(16px) saturate(180%);
+        transition: color 0.3s var(--ease), background 0.3s var(--ease);
       }
 
       .lang-switch:hover {
         color: var(--text);
+        background: var(--chip-bg-hover, transparent);
       }
 
       .site-foot {
@@ -466,7 +1107,7 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
           order: 3;
           width: 100%;
           margin-left: 0;
-          gap: 20px;
+          gap: 8px;
           overflow-x: auto;
           padding-bottom: 4px;
           scrollbar-width: none;

@@ -26,6 +26,10 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
 ---
 
 <BaseLayout lang={lang} title={t('nav.photo')} description={t('photo.lead')} section="photo">
+  <Fragment slot="head">
+    <link rel="preload" as="image" href={withBase(hero.image)} fetchpriority="high" />
+  </Fragment>
+
   <section class="hero" data-hero>
     <script is:inline>
       // The first photo paint must include the low-light layer.

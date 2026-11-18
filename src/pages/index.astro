@@ -3,6 +3,8 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import { SITE } from '../consts';
 import { useTranslations, localizePath, withBase } from '../i18n/utils';
 import type { Lang } from '../i18n/ui';
+import headingFont from '../assets/fonts/up-job-heading-subset.woff2';
+import numericFont from '../assets/fonts/up-job-numeric-subset.woff2';
 
 const { lang = 'zh' } = Astro.props as { lang?: Lang };
 const t = useTranslations(lang);
@@ -12,6 +14,11 @@ const langLabel = otherLang === 'zh' ? '中文' : 'EN';
 ---
 
 <BaseLayout lang={lang} title={t('portal.title')} chrome={false} accent="warm">
+  <Fragment slot="head">
+    <link rel="preload" as="script" href={withBase('/vendor/three-bg.js')} crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href={headingFont} crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href={numericFont} crossorigin />
+  </Fragment>
   <canvas id="three-canvas" aria-hidden="true"></canvas>
   <div class="portal">
     <div class="veil" aria-hidden="true"></div>

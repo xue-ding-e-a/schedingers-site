@@ -3,7 +3,7 @@
   font-style: normal;
   font-weight: 400 900;
   font-display: swap;
-  src: url('../assets/fonts/up-job-heading-v2.woff2') format('woff2');
+  src: url('../assets/fonts/up-job-heading-subset.woff2') format('woff2');
 }
 
 @font-face {
@@ -11,7 +11,7 @@
   font-style: normal;
   font-weight: 200 700;
   font-display: swap;
-  src: url('../assets/fonts/up-job-numeric-v1.woff2') format('woff2');
+  src: url('../assets/fonts/up-job-numeric-subset.woff2') format('woff2');
 }
 
 :root {
@@ -46,9 +46,9 @@
   --radius: 8px;
   --radius-lg: 16px;
 
-  /* glass surface (neutral / portal) */
-  --glass-bg: rgba(19, 27, 44, 0.55);
-  --glass-bg-scrolled: rgba(17, 24, 39, 0.76);
+  /* glass surface (neutral / portal) — 低 alpha 让 blur 真正透出来 */
+  --glass-bg: rgba(19, 27, 44, 0.25);
+  --glass-bg-scrolled: rgba(17, 24, 39, 0.45);
   --glass-border: rgba(255, 255, 255, 0.1);
   --glass-highlight: rgba(255, 255, 255, 0.18);
   --glass-sheen: rgba(255, 255, 255, 0.05);
@@ -81,15 +81,15 @@ html[data-world='photo'] {
   --cool: #e5c9a4;
   --cool-soft: rgba(229, 201, 164, 0.1);
   --scroll-thumb: linear-gradient(180deg, #6d6a64, #2a2926);
-  /* 顶部与滚动状态共用同一色相，仅透明度递进，保证滚动时平滑过渡 */
-  --glass-bg: rgba(12, 12, 14, 0.46);
-  --glass-bg-scrolled: rgba(12, 12, 14, 0.74);
-  --glass-border: rgba(255, 255, 255, 0.12);
-  --glass-highlight: rgba(255, 255, 255, 0.22);
-  --glass-sheen: rgba(255, 255, 255, 0.07);
-  --glass-streak: rgba(255, 255, 255, 0.08);
-  --glass-shadow: 0 20px 48px -24px #000000;
-  --grain-opacity: 0.1;
+  /* 低 alpha 让黑色背景上 blur 出的星光/星轨真正透出来 */
+  --glass-bg: rgba(12, 12, 14, 0.18);
+  --glass-bg-scrolled: rgba(12, 12, 14, 0.35);
+  --glass-border: rgba(255, 255, 255, 0.22);
+  --glass-highlight: rgba(255, 255, 255, 0.32);
+  --glass-sheen: rgba(255, 255, 255, 0.14);
+  --glass-streak: rgba(255, 255, 255, 0.16);
+  --glass-shadow: 0 24px 56px -20px rgba(0, 0, 0, 0.6), 0 2px 6px rgba(0, 0, 0, 0.4);
+  --grain-opacity: 0.2;
   --btn-bg: rgba(255, 255, 255, 0.04);
   --btn-hover-bg: rgba(229, 201, 164, 0.12);
   --on-accent: #0a0a0b;
@@ -120,14 +120,15 @@ html[data-world='dev'] {
   --radius: 10px;
   --radius-lg: 18px;
   --scroll-thumb: linear-gradient(180deg, #b7a9ff, #ffc2d3);
-  --glass-bg: rgba(255, 252, 246, 0.4);
-  --glass-bg-scrolled: rgba(255, 252, 246, 0.62);
-  --glass-border: rgba(29, 26, 43, 0.09);
-  --glass-highlight: rgba(255, 255, 255, 0.9);
-  --glass-sheen: rgba(255, 255, 255, 0.2);
-  --glass-streak: rgba(255, 255, 255, 0.26);
-  --glass-shadow: 0 16px 40px -26px rgba(29, 26, 43, 0.45);
-  --grain-opacity: 0.04;
+  /* 低 alpha 让奶油色背景的光斑 blur 真正透出来 */
+  --glass-bg: rgba(255, 252, 246, 0.15);
+  --glass-bg-scrolled: rgba(255, 252, 246, 0.3);
+  --glass-border: rgba(29, 26, 43, 0.18);
+  --glass-highlight: rgba(255, 255, 255, 0.95);
+  --glass-sheen: rgba(255, 255, 255, 0.32);
+  --glass-streak: rgba(255, 255, 255, 0.4);
+  --glass-shadow: 0 20px 48px -22px rgba(29, 26, 43, 0.5), 0 2px 6px rgba(29, 26, 43, 0.08);
+  --grain-opacity: 0.14;
   --btn-bg: #ffffff;
   --btn-hover-bg: #f4efff;
   --on-accent: #ffffff;

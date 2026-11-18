@@ -380,7 +380,7 @@ export function getWork(slug: string) {
 }
 
 export function sortByDate(list: Work[]) {
-  return [...list].sort((a, b) => (a.date < b.date ? 1 : -1));
+  return [...list].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
 }
 
 export const featuredWorks = sortByDate(works.filter((w) => w.featured));

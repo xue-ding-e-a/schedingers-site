@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "subset:fonts": "python scripts/subset-fonts.py",
+    "responsive:images": "python scripts/build-responsive-images.py"
   },
   "dependencies": {
     "astro": "^5.0.0"
