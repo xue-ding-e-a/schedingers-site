@@ -80,11 +80,30 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
             var stored = localStorage.getItem('sch-world');
             if (stored === 'dev' || stored === 'photo') root.dataset.world = stored;
           }
-          // 从过渡动画跳转过来时，抑制 header 里 logo 点的入场动画
+          // 从过渡动画跳转过来时：先停在「图案 + 目标页背景」的画面，
+          // 等首屏绘制完成后再展开回文字，避免整页重绘的生硬切换
           var arrived = sessionStorage.getItem('sch-logo-arrived');
           if (arrived && arrived === section) {
-            root.classList.add('logo-arrived');
             sessionStorage.removeItem('sch-logo-arrived');
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+              root.classList.add('logo-arrived');
+              var playArrival = function () {
+                requestAnimationFrame(function () {
+                  requestAnimationFrame(function () {
+                    root.classList.add('logo-arrived--play');
+                    setTimeout(function () {
+                      root.classList.remove('logo-arrived');
+                      root.classList.remove('logo-arrived--play');
+                    }, 1000);
+                  });
+                });
+              };
+              if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', playArrival);
+              } else {
+                playArrival();
+              }
+            }
           }
           var meta = document.querySelector('meta[name="theme-color"]');
           if (meta) {
@@ -432,6 +451,7 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
           const dot = warp.querySelector('.warp-dot');
           warp.classList.add('is-reset');
           warp.dataset.world = current;
+          warp.dataset.target = target;
           void warp.offsetWidth;
           warp.classList.remove('is-reset');
 
@@ -657,11 +677,20 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
       }
 
       .brand {
+        position: relative;
         display: inline-flex;
         align-items: center;
         gap: 0;
         flex-shrink: 0;
+        min-width: 100px;
         color: var(--text);
+      }
+
+      /* 稳定的悬停命中区：文字收起为图案时宽度变化也不会丢失 hover，避免反复滚动 */
+      .brand::after {
+        content: '';
+        position: absolute;
+        inset: -10px -8px;
       }
 
       .brand-mark {
@@ -719,6 +748,99 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
       .brand.is-marked .brand-glyph {
         transform: translateX(-16px) scaleX(0.7) scaleY(0.5);
         opacity: 0;
+      }
+
+      /* 主线切换抵达后：先停在图案态，等到首屏绘制后再展开回文字（只播放一次） */
+      html.logo-arrived:not(.logo-arrived--play) .brand-slot--mark {
+        width: 26px;
+        opacity: 1;
+      }
+
+      html.logo-arrived:not(.logo-arrived--play) .brand-slot--word {
+        max-width: 0;
+      }
+
+      html.logo-arrived:not(.logo-arrived--play) .brand-mark {
+        transform: none;
+      }
+
+      html.logo-arrived:not(.logo-arrived--play) .brand-glyph {
+        transform: translateX(-16px) scaleX(0.7) scaleY(0.5);
+        opacity: 0;
+      }
+
+      html.logo-arrived:not(.logo-arrived--play) main {
+        opacity: 0;
+      }
+
+      html.logo-arrived--play .brand-slot--mark {
+        animation: logo-mark-collapse 0.42s var(--ease) backwards;
+      }
+
+      html.logo-arrived--play .brand-slot--word {
+        animation: logo-word-unfold 0.34s var(--ease) 0.16s backwards;
+      }
+
+      html.logo-arrived--play .brand-mark {
+        animation: logo-mark-unfold 0.5s var(--ease) backwards;
+      }
+
+      html.logo-arrived--play .brand-glyph {
+        animation: logo-glyph-unfold 0.34s var(--ease) backwards;
+        animation-delay: calc(180ms + var(--i, 0) * 22ms);
+      }
+
+      html.logo-arrived--play main {
+        animation: page-arrive 0.5s var(--ease) 0.1s backwards;
+      }
+
+      @keyframes logo-mark-collapse {
+        from {
+          width: 26px;
+          opacity: 1;
+        }
+        to {
+          width: 0;
+          opacity: 0;
+        }
+      }
+
+      @keyframes logo-word-unfold {
+        from {
+          max-width: 0;
+        }
+        to {
+          max-width: 120px;
+        }
+      }
+
+      @keyframes logo-mark-unfold {
+        from {
+          transform: none;
+        }
+        to {
+          transform: scale(0.4) rotate(-70deg);
+        }
+      }
+
+      @keyframes logo-glyph-unfold {
+        from {
+          transform: translateX(-16px) scaleX(0.7) scaleY(0.5);
+          opacity: 0;
+        }
+        to {
+          transform: none;
+          opacity: 1;
+        }
+      }
+
+      @keyframes page-arrive {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
       }
 
       .mark-orbit {
@@ -820,6 +942,21 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
         .brand-glyph {
           transition: none;
         }
+        html.logo-arrived .brand-slot--mark,
+        html.logo-arrived .brand-slot--word,
+        html.logo-arrived .brand-mark,
+        html.logo-arrived .brand-glyph,
+        html.logo-arrived main,
+        html.logo-arrived--play .brand-slot--mark,
+        html.logo-arrived--play .brand-slot--word,
+        html.logo-arrived--play .brand-mark,
+        html.logo-arrived--play .brand-glyph,
+        html.logo-arrived--play main {
+          animation: none;
+        }
+        html.logo-arrived main {
+          opacity: 1;
+        }
       }
 
       /* ---------- 全屏轨道过渡 ---------- */
@@ -837,15 +974,9 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
         transition: opacity 0.26s var(--ease), color 0.9s cubic-bezier(0.45, 0, 0.25, 1);
       }
 
-      /* 黑白之间用交叉淡入淡出，避免直接插值背景色产生的灰雾感 */
-      .world-warp::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background-color: #fffdf8;
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.9s cubic-bezier(0.45, 0, 0.25, 1);
+      /* 过渡层底色直接用目标页面的背景色，避免切换时出现色差 */
+      .world-warp[data-target='dev'] {
+        background-color: #fbf7ef;
       }
 
       .world-warp.is-on {
@@ -861,13 +992,8 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
         color: #1d1a2b;
       }
 
-      .world-warp[data-world='dev']::before {
-        opacity: 1;
-      }
-
       /* 重置底色时不要走过渡，避免刚点击就提前变色 */
-      .world-warp.is-reset,
-      .world-warp.is-reset::before {
+      .world-warp.is-reset {
         transition: none;
       }
 
