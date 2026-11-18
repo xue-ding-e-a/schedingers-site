@@ -28,6 +28,9 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
 <BaseLayout lang={lang} title={t('nav.photo')} description={t('photo.lead')} section="photo">
   <Fragment slot="head">
     <link rel="preload" as="image" href={withBase(hero.image)} fetchpriority="high" />
+    <link rel="preload" as="image" href={withBase('/images/works/star-trails-river-highlight.png')} />
+    <link rel="preload" as="image" href={withBase('/images/works/star-trails-river-lamp-dim.webp')} />
+    <link rel="preload" as="image" href={withBase('/images/works/star-trails-river-lamp-glow.webp')} />
   </Fragment>
 
   <section class="hero" data-hero>
@@ -547,6 +550,7 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
       const results = await Promise.allSettled([firstFrame, ...loading]);
       scene = results.every(({ status }) => status === 'fulfilled') ? 'ready' : 'failed';
       sync();
+      hero.setAttribute('data-photo-settled', '');
     };
 
     toggle.addEventListener('click', () => {

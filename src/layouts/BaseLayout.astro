@@ -88,15 +88,56 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
             if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
               root.classList.add('logo-arrived');
               var playArrival = function () {
-                requestAnimationFrame(function () {
+                var revealed = false;
+                var reveal = function () {
+                  if (revealed) return;
+                  revealed = true;
+                  // 等布局、绘制各完成一帧，再一次性展开，避免首帧解码与 Logo 动画抢主线程
                   requestAnimationFrame(function () {
-                    root.classList.add('logo-arrived--play');
-                    setTimeout(function () {
-                      root.classList.remove('logo-arrived');
-                      root.classList.remove('logo-arrived--play');
-                    }, 1000);
+                    requestAnimationFrame(function () {
+                      root.classList.add('logo-arrived--play');
+                      setTimeout(function () {
+                        root.classList.remove('logo-arrived');
+                        root.classList.remove('logo-arrived--play');
+                      }, 1000);
+                    });
                   });
-                });
+                };
+                var ready = [];
+                if (document.fonts && document.fonts.ready) ready.push(document.fonts.ready);
+                ready.push(new Promise(function (resolve) {
+                  if (document.readyState === 'complete') resolve();
+                  else window.addEventListener('load', resolve, { once: true });
+                }));
+                if (section === 'photo') {
+                  ready.push(new Promise(function (resolve) {
+                    var hero = document.querySelector('[data-hero]');
+                    if (!hero) {
+                      resolve();
+                      return;
+                    }
+                    var isSettled = function () {
+                      return hero.hasAttribute('data-photo-settled') ||
+                        (!hero.hasAttribute('data-photo-initialized') && !hero.hasAttribute('data-photo-loading'));
+                    };
+                    if (isSettled()) {
+                      resolve();
+                      return;
+                    }
+                    var observer = new MutationObserver(function () {
+                      if (!isSettled()) return;
+                      observer.disconnect();
+                      resolve();
+                    });
+                    observer.observe(hero, {
+                      attributes: true,
+                      attributeFilter: ['data-photo-settled', 'data-photo-initialized', 'data-photo-loading']
+                    });
+                  }));
+                }
+                Promise.all(ready).then(reveal, reveal);
+                // 资源异常时也不能让正文一直停留在隐藏状态
+                setTimeout(reveal, 4000);
               };
               if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', playArrival);
