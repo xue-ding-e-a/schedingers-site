@@ -9,6 +9,10 @@ import type { Lang } from '../../i18n/ui';
 const { lang = 'zh' } = Astro.props as { lang?: Lang };
 const t = useTranslations(lang);
 const list = sortByDate(works);
+
+// 按原图存储体积分三档：≥50MB 大图、20–50MB 中图、<20MB 小图
+const sizeTier = (mb: number) => (mb >= 50 ? 'lg' : mb >= 20 ? 'md' : 'sm');
+const orientation = (w: { width: number; height: number }) => (w.width >= w.height ? 'land' : 'port');
 ---
 
 <BaseLayout lang={lang} title={t('works.title')} description={t('works.lead')} section="photo">
@@ -32,9 +36,12 @@ const list = sortByDate(works);
   </div>
 
   <section class="container-wide works-wrap">
-    <div class="masonry" id="works-grid">
+    <div class="works-grid" id="works-grid">
       {list.map((w, i) => (
-        <div class="masonry-item" data-series={w.series}>
+        <div
+          class:list={['work-item', `tier-${sizeTier(w.sizeMB)}`, `orient-${orientation(w)}`]}
+          data-series={w.series}
+        >
           <WorkCard work={w} lang={lang} eager={i < 3} />
         </div>
       ))}
@@ -47,7 +54,7 @@ const list = sortByDate(works);
 
 <script>
   const chips = Array.from(document.querySelectorAll<HTMLButtonElement>('.chip[data-filter]'));
-  const items = Array.from(document.querySelectorAll<HTMLElement>('.masonry-item'));
+  const items = Array.from(document.querySelectorAll<HTMLElement>('.work-item'));
   const empty = document.getElementById('empty');
 
   const apply = (filter: string) => {
@@ -127,17 +134,41 @@ const list = sortByDate(works);
     padding-top: clamp(32px, 4vw, 56px);
   }
 
-  .masonry {
-    column-count: 3;
-    column-gap: clamp(16px, 2vw, 28px);
+  /* 12 栅格：档位只决定跨列数，横竖构图再各降一档，保证面积关系为 大 > 中 > 小 */
+  .works-grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    grid-auto-flow: row dense;
+    align-items: start;
+    gap: clamp(20px, 2.4vw, 36px);
   }
 
-  .masonry-item {
-    break-inside: avoid;
-    margin-bottom: clamp(24px, 3vw, 44px);
+  .work-item {
+    --span: 4;
+    grid-column: span var(--span);
+    min-width: 0;
   }
 
-  .masonry-item[hidden] {
+  .work-item.tier-lg.orient-land {
+    --span: 8;
+  }
+  .work-item.tier-lg.orient-port {
+    --span: 6;
+  }
+  .work-item.tier-md.orient-land {
+    --span: 6;
+  }
+  .work-item.tier-md.orient-port {
+    --span: 4;
+  }
+  .work-item.tier-sm.orient-land {
+    --span: 4;
+  }
+  .work-item.tier-sm.orient-port {
+    --span: 3;
+  }
+
+  .work-item[hidden] {
     display: none;
   }
 
@@ -155,14 +186,34 @@ const list = sortByDate(works);
   }
 
   @media (max-width: 1080px) {
-    .masonry {
-      column-count: 2;
+    .works-grid {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+    .work-item.tier-lg.orient-land {
+      --span: 4;
+    }
+    .work-item.tier-lg.orient-port {
+      --span: 3;
+    }
+    .work-item.tier-md.orient-land {
+      --span: 3;
+    }
+    .work-item.tier-md.orient-port {
+      --span: 2;
+    }
+    .work-item.tier-sm.orient-land,
+    .work-item.tier-sm.orient-port {
+      --span: 2;
     }
   }
 
   @media (max-width: 640px) {
-    .masonry {
-      column-count: 1;
+    .works-grid {
+      grid-template-columns: 1fr;
+      gap: 28px;
+    }
+    .works-grid .work-item {
+      --span: 1;
     }
     .filter-label,
     .count {
