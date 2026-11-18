@@ -2,7 +2,7 @@
   <img src="docs/brand/logo.svg" width="120" height="120" alt="薛定谔的站点标识">
 </p>
 
-<h1 align="center">薛定谔的站点<br><sub>SCHRÖDINGER'S SITE</sub></h1>
+<h1 align="center">薛定谔的站点<br><sub>SCHEDINGER'S SITE</sub></h1>
 
 <p align="center">
   一个星空摄影师与物理学生的双重作品集：摄影一条线，工程一条线，各自独立，又共用同一套字体、栅格与动效节奏。
@@ -25,7 +25,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/photo-home.jpg" width="880" alt="摄影首页：星空长曝光与精选作品">
+  <img src="docs/screenshots/portal-home.jpg" width="880" alt="门户首页：摄影与工程双入口">
 </p>
 
 ## 为什么做这个站
@@ -39,7 +39,7 @@
 
 ## 界面
 
-![门户首页：摄影与工程双入口](docs/screenshots/portal-home.jpg)
+![摄影首页：星空长曝光与精选作品](docs/screenshots/photo-home.jpg)
 
 | 作品详情 | 工程首页 |
 | --- | --- |

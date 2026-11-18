@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="docs/brand/logo.svg" width="120" height="120" alt="Schrödinger's Site logo">
+  <img src="docs/brand/logo.svg" width="120" height="120" alt="Schedinger's Site logo">
 </p>
 
-<h1 align="center">Schrödinger's Site<br><sub>ASTROPHOTOGRAPHY &amp; ENGINEERING PORTFOLIO</sub></h1>
+<h1 align="center">Schedinger's Site<br><sub>ASTROPHOTOGRAPHY &amp; ENGINEERING PORTFOLIO</sub></h1>
 
 <p align="center">
   A dual portfolio of an astrophotographer and physics student: one photography track, one engineering track — independent in rhythm and colour, sharing the same type, grid and motion language.
@@ -25,7 +25,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/photo-home.jpg" width="880" alt="Photography home: long-exposure night sky and curated works">
+  <img src="docs/screenshots/portal-home.jpg" width="880" alt="Portal home: two entries for photography and engineering">
 </p>
 
 ## Why This Site
@@ -39,7 +39,7 @@ So the site splits into two entries: photography in black, engineering in white,
 
 ## Screens
 
-![Portal home: two entries for photography and engineering](docs/screenshots/portal-home.jpg)
+![Photography home: long-exposure night sky and curated works](docs/screenshots/photo-home.jpg)
 
 | Work detail | Engineering home |
 | --- | --- |
