@@ -1,12 +1,32 @@
-# 薛定谔的站点 / Schrödinger's Site
+<p align="center">
+  <img src="docs/brand/logo.svg" width="120" height="120" alt="薛定谔的站点标识">
+</p>
 
-> 一个星空摄影师与物理学生的双重作品集：摄影一条线，工程一条线，各自独立，又共用同一套字体、栅格与动效节奏。
+<h1 align="center">薛定谔的站点<br><sub>SCHRÖDINGER'S SITE</sub></h1>
 
-[在线站点](https://xue-ding-e-a.github.io/schedingers-site/) · [制作手记](https://xue-ding-e-a.github.io/schedingers-site/build/) · [联系作者](#联系)
+<p align="center">
+  一个星空摄影师与物理学生的双重作品集：摄影一条线，工程一条线，各自独立，又共用同一套字体、栅格与动效节奏。
+</p>
 
-![银河拱桥与雪山](public/images/works/galactic-arch-snow-mountain-thumb.webp)
+<p align="center">
+  <a href="https://astro.build"><img src="https://img.shields.io/badge/Astro-5-FF5D01?logo=astro&amp;logoColor=white" alt="Astro 5"></a>
+  <a href="https://www.typescriptlang.org"><img src="https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&amp;logoColor=white" alt="TypeScript"></a>
+  <a href="https://github.com/xue-ding-e-a/schedingers-site/actions/workflows/deploy.yml"><img src="https://github.com/xue-ding-e-a/schedingers-site/actions/workflows/deploy.yml/badge.svg?branch=main" alt="Deploy status"></a>
+  <a href="README.en.md"><img src="https://img.shields.io/badge/language-%E4%B8%AD%20%2F%20EN-6b4eff" alt="中文 / English"></a>
+  <a href="#许可与致谢"><img src="https://img.shields.io/badge/license-All%20Rights%20Reserved-1d1a2b" alt="All Rights Reserved"></a>
+</p>
 
-`Astro 5` · `TypeScript` · `原生 CSS` · `中 / EN` · `GitHub Pages`
+<p align="center">
+  <a href="https://xue-ding-e-a.github.io/schedingers-site/">在线站点</a> ·
+  <a href="https://xue-ding-e-a.github.io/schedingers-site/photo/">摄影</a> ·
+  <a href="https://xue-ding-e-a.github.io/schedingers-site/dev/">工程</a> ·
+  <a href="https://xue-ding-e-a.github.io/schedingers-site/build/">制作手记</a> ·
+  <a href="README.en.md">English</a>
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/photo-home.jpg" width="880" alt="摄影首页：星空长曝光与精选作品">
+</p>
 
 ## 为什么做这个站
 
@@ -17,6 +37,15 @@
 
 所以站点被拆成双入口：摄影线用黑色，工程线用白色，只在字体、栅格、页脚与中立索引页上保持统一。
 
+## 界面
+
+![门户首页：摄影与工程双入口](docs/screenshots/portal-home.jpg)
+
+| 作品详情 | 工程首页 |
+| --- | --- |
+| ![作品详情](docs/screenshots/work-detail.jpg) | ![工程首页](docs/screenshots/dev-home.jpg) |
+| 拍摄坐标、器材、EXIF 与双语故事 | 项目矩阵与终端信息卡 |
+
 ## 功能
 
 - 双主线门户：[摄影线](https://xue-ding-e-a.github.io/schedingers-site/photo/)与[工程线](https://xue-ding-e-a.github.io/schedingers-site/dev/)各自拥有独立导航、首页节奏与主题色。
@@ -26,13 +55,6 @@
 - 导航栏在纯色背景上仍有毛玻璃、颗粒与浮起阴影，见 [BaseLayout.astro](src/layouts/BaseLayout.astro)。
 - 默认零框架 JS；Three.js 粒子背景只在[首页](src/pages/index.astro)按需加载。
 - 图片离线预处理为 WebP 与缩略图，并提取平均色作为加载占位，避免闪白，见 [public/images/works](public/images/works)。
-
-## 界面
-
-| 摄影首页 | 作品详情 | 工程首页 |
-| --- | --- | --- |
-| ![摄影首页](docs/screenshots/photo-home.jpg) | ![作品详情](docs/screenshots/work-detail.jpg) | ![工程首页](docs/screenshots/dev-home.jpg) |
-| 双拱主视觉、精选横滑与系列索引 | 拍摄坐标、器材、EXIF 与双语故事 | 工程首页的项目矩阵与终端信息卡 |
 
 ## 技术栈
 
@@ -77,7 +99,7 @@ public/
 - 新增系列：编辑 [src/data/series.ts](src/data/series.ts)，详情路由由 `src/pages/collections/[slug].astro` 自动生成。
 - 新增项目：编辑 [src/data/projects.ts](src/data/projects.ts)。
 - 调整导航：编辑 [src/consts.ts](src/consts.ts)，摄影与工程分别使用 `PHOTO_NAV`、`DEV_NAV`。
-- 修改文案：编辑 [src/i18n/ui.ts](src/i18n/ui.ts)，同一 key 必须同时提供 `zh` 与 `en`。
+- 修改文案：编辑 [src/i18n/ui.ts](src/i18n/ui.ts)，同一 key 必须同时提供 `zh` 与 `en`；README 改动同步更新 `README.en.md`。
 
 ## 部署
 
