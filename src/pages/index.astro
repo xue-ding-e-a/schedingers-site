@@ -15,11 +15,17 @@ const langLabel = otherLang === 'zh' ? '中文' : 'EN';
 
 <BaseLayout lang={lang} title={t('portal.title')} chrome={false} accent="warm">
   <Fragment slot="head">
+    <script is:inline>document.documentElement.classList.add('portal-boot');</script>
     <link rel="preload" as="script" href={withBase('/vendor/three-bg.js')} crossorigin />
     <link rel="preload" as="font" type="font/woff2" href={headingFont} crossorigin />
     <link rel="preload" as="font" type="font/woff2" href={numericFont} crossorigin />
   </Fragment>
-  <canvas id="three-canvas" aria-hidden="true"></canvas>
+  <canvas
+    id="three-canvas"
+    aria-hidden="true"
+    data-warm-page={localizePath('/photo/', lang)}
+    data-warm-hero={withBase('/images/works/star-trails-river.webp')}
+  ></canvas>
   <div class="portal">
     <div class="veil" aria-hidden="true"></div>
 
@@ -68,6 +74,65 @@ const langLabel = otherLang === 'zh' ? '中文' : 'EN';
   </div>
 
   <script src={withBase('/vendor/three-bg.js')} type="module" is:inline></script>
+  <script is:inline>
+    (() => {
+      const root = document.documentElement;
+      const canvas = document.getElementById('three-canvas');
+      if (!canvas) return;
+
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      // three-bg 初始化 WebGL 后，等首帧真正绘制完成再放出入口卡片
+      let revealed = false;
+      const reveal = () => {
+        if (revealed) return;
+        revealed = true;
+        root.classList.add('stars-ready');
+      };
+
+      // three-bg 完成 setSize 后画布尺寸会离开默认 300×150，作为首帧就绪的信号；不要调用 getContext，会抢占上下文
+      const hasSized = () => canvas.width > 300 || canvas.height > 150;
+
+      const started = performance.now();
+      const waitForStars = () => {
+        if (reduced) {
+          requestAnimationFrame(reveal);
+          return;
+        }
+        if (hasSized()) {
+          requestAnimationFrame(() => requestAnimationFrame(reveal));
+          return;
+        }
+        if (performance.now() - started > 4000) {
+          reveal();
+          return;
+        }
+        setTimeout(waitForStars, 40);
+      };
+      waitForStars();
+
+      // 门户全部元素加载完成后，立即预热摄影首页
+      const loaded = new Promise((resolve) => {
+        if (document.readyState === 'complete') resolve();
+        else window.addEventListener('load', resolve, { once: true });
+      });
+      const fonts = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
+
+      Promise.all([loaded, fonts]).then(() => {
+        const conn = navigator.connection;
+        if (conn && (conn.saveData || /2g$/.test(conn.effectiveType || ''))) return;
+
+        const link = document.createElement('link');
+        link.rel = 'prefetch';
+        link.href = canvas.dataset.warmPage;
+        document.head.appendChild(link);
+
+        const hero = new Image();
+        hero.fetchPriority = 'high';
+        hero.src = canvas.dataset.warmHero;
+      });
+    })();
+  </script>
   <script>
     const el = document.getElementById('typewriter');
     if (el) {
@@ -228,6 +293,16 @@ const langLabel = otherLang === 'zh' ? '中文' : 'EN';
     grid-template-columns: 1fr 1fr;
     gap: 16px;
     animation: rise 1.1s var(--ease) 0.18s both;
+  }
+
+  /* 星空首帧绘制完成后再显示入口，保证磨砂质感与星空同时出现 */
+  :global(.portal-boot) .doors {
+    opacity: 0;
+    animation: none;
+  }
+
+  :global(.portal-boot.stars-ready) .doors {
+    opacity: 1;
   }
 
   .door {
