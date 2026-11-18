@@ -158,7 +158,7 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
     </script>
     <slot name="head" />
   </head>
-  <body class:list={['page', `accent-${accent}`]}>
+  <body class:list={['page', `accent-${accent}`, { 'world-aware': preserveWorldNav }]}>
     {
       chrome && (
         <header
@@ -664,7 +664,9 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
 
       /* 首屏：摄影 / 工程主线导航完全透明，下拉后恢复磨砂玻璃 */
       .site-head[data-section='photo']:not(.is-scrolled),
-      .site-head[data-section='dev']:not(.is-scrolled) {
+      .site-head[data-section='dev']:not(.is-scrolled),
+      html[data-world='photo'] .site-head.preserve-world-nav:not(.is-scrolled),
+      html[data-world='dev'] .site-head.preserve-world-nav:not(.is-scrolled) {
         background: transparent;
         -webkit-backdrop-filter: none;
         backdrop-filter: none;
@@ -675,7 +677,11 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
       .site-head[data-section='photo']:not(.is-scrolled)::before,
       .site-head[data-section='photo']:not(.is-scrolled)::after,
       .site-head[data-section='dev']:not(.is-scrolled)::before,
-      .site-head[data-section='dev']:not(.is-scrolled)::after {
+      .site-head[data-section='dev']:not(.is-scrolled)::after,
+      html[data-world='photo'] .site-head.preserve-world-nav:not(.is-scrolled)::before,
+      html[data-world='photo'] .site-head.preserve-world-nav:not(.is-scrolled)::after,
+      html[data-world='dev'] .site-head.preserve-world-nav:not(.is-scrolled)::before,
+      html[data-world='dev'] .site-head.preserve-world-nav:not(.is-scrolled)::after {
         opacity: 0;
       }
 
@@ -687,6 +693,19 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
       }
 
       .site-head[data-section='dev'] {
+        --chip-bg: rgba(255, 255, 255, 0.55);
+        --chip-bg-hover: #ffffff;
+        --chip-highlight: rgba(255, 255, 255, 0.9);
+      }
+
+      /* 关于 / 联系：完全沿用当前主线的导航栏外观 */
+      html[data-world='photo'] .site-head.preserve-world-nav {
+        --chip-bg: rgba(255, 255, 255, 0.06);
+        --chip-bg-hover: rgba(255, 255, 255, 0.13);
+        --chip-highlight: rgba(255, 255, 255, 0.16);
+      }
+
+      html[data-world='dev'] .site-head.preserve-world-nav {
         --chip-bg: rgba(255, 255, 255, 0.55);
         --chip-bg-hover: #ffffff;
         --chip-highlight: rgba(255, 255, 255, 0.9);
@@ -1189,6 +1208,12 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
       }
 
       html[data-world='dev'] .site-head.preserve-world-nav {
+        --accent: var(--cool);
+        --accent-soft: var(--cool-soft);
+      }
+
+      /* 关于 / 联系：内容强调色跟随工程主线 */
+      html[data-world='dev'] body.world-aware {
         --accent: var(--cool);
         --accent-soft: var(--cool-soft);
       }
