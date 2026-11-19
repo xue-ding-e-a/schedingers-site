@@ -57,7 +57,7 @@
   --grain-opacity: 0.06;
   --scroll-thumb: linear-gradient(180deg, var(--purple), var(--pink));
   --btn-bg: rgba(30, 41, 59, 0.35);
-  --btn-hover-bg: rgba(59, 130, 246, 0.14);
+  --btn-hover-bg: rgba(255, 255, 255, 0.1);
   --on-accent: #ffffff;
   --btn-shadow: none;
   --card-shadow: none;
@@ -91,7 +91,7 @@ html[data-world='photo'] {
   --glass-shadow: 0 24px 56px -20px rgba(0, 0, 0, 0.6), 0 2px 6px rgba(0, 0, 0, 0.4);
   --grain-opacity: 0.2;
   --btn-bg: rgba(255, 255, 255, 0.04);
-  --btn-hover-bg: rgba(229, 201, 164, 0.12);
+  --btn-hover-bg: rgba(255, 255, 255, 0.08);
   --on-accent: #0a0a0b;
   --btn-shadow: none;
   --card-shadow: none;
@@ -130,7 +130,7 @@ html[data-world='dev'] {
   --glass-shadow: 0 20px 48px -22px rgba(29, 26, 43, 0.5), 0 2px 6px rgba(29, 26, 43, 0.08);
   --grain-opacity: 0.14;
   --btn-bg: #ffffff;
-  --btn-hover-bg: #f4efff;
+  --btn-hover-bg: rgba(29, 26, 43, 0.05);
   --on-accent: #ffffff;
   --btn-shadow: 0 1px 2px rgba(29, 26, 43, 0.06), 0 10px 24px -16px rgba(29, 26, 43, 0.4);
   --card-shadow: 0 1px 2px rgba(29, 26, 43, 0.05), 0 18px 40px -24px rgba(29, 26, 43, 0.35);
@@ -386,7 +386,7 @@ h4 {
   align-items: center;
   gap: 10px;
   padding: 13px 24px;
-  border: 1px solid var(--line);
+  border: 0;
   border-radius: var(--radius);
   background: var(--btn-bg);
   -webkit-backdrop-filter: blur(8px);
@@ -397,13 +397,12 @@ h4 {
   font-weight: 600;
   letter-spacing: 0.01em;
   color: var(--text);
-  transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease,
-    transform 0.25s ease, box-shadow 0.25s ease;
+  transition: background 0.25s ease, color 0.25s ease, transform 0.25s ease,
+    box-shadow 0.25s ease;
 }
 
 .btn:hover {
   background: var(--btn-hover-bg);
-  border-color: var(--accent, var(--primary));
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
 }
@@ -432,14 +431,12 @@ h4 {
 
 .btn-ghost {
   background: transparent;
-  border-color: var(--line-strong);
   color: var(--text-dim);
   box-shadow: none;
 }
 
 .btn-ghost:hover {
   background: var(--btn-hover-bg);
-  border-color: var(--accent, var(--primary));
   color: var(--text);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
 }
@@ -452,26 +449,24 @@ h4 {
   display: inline-flex;
   align-items: center;
   padding: 7px 15px;
-  border: 1px solid var(--line);
+  border: 0;
   border-radius: 999px;
   background: var(--btn-bg);
   font-size: 12.5px;
   color: var(--text-dim);
-  transition: color 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+  transition: color 0.25s ease, background 0.25s ease;
   white-space: nowrap;
 }
 
 .chip:hover {
   color: var(--text);
-  border-color: var(--accent, var(--primary));
   background: var(--btn-hover-bg);
 }
 
 .chip[aria-pressed='true'],
 .chip.is-active {
-  color: var(--on-accent);
-  background: var(--accent, var(--primary));
-  border-color: var(--accent, var(--primary));
+  color: var(--text);
+  background: color-mix(in srgb, var(--text) 12%, transparent);
 }
 
 /* ---------- background canvas ---------- */
