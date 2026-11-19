@@ -9,6 +9,7 @@ export type Project = {
   stack: string[];
   liveUrl: string;
   repoUrl?: string;
+  cover?: string;
   color: string;
   status: 'ready' | 'draft';
   note?: Localized;
@@ -16,6 +17,7 @@ export type Project = {
   overview?: Localized;
 };
 
+// 数组按录入先后排列，对外统一反转，让最新的项目排在前面
 export const projects: Project[] = [
   {
     slug: 'smart-sleep-alarm',
@@ -28,6 +30,7 @@ export const projects: Project[] = [
     role: { zh: '独立开发', en: 'Solo developer' },
     stack: ['Vue', '前端路由', 'GitHub Pages'],
     liveUrl: 'https://xue-ding-e-a.github.io/smart-sleep-alarm/',
+    cover: '/images/projects/smart-sleep-alarm.jpg',
     color: '#1b2537',
     status: 'draft',
     note: {
@@ -46,6 +49,7 @@ export const projects: Project[] = [
     role: { zh: '开发者', en: 'Developer' },
     stack: ['Web 应用'],
     liveUrl: 'https://xdf-sd-student-center.app.workbuddy.host',
+    cover: '/images/projects/xdf-student-center.jpg',
     color: '#1c2430',
     status: 'draft',
     note: {
@@ -64,6 +68,7 @@ export const projects: Project[] = [
     role: { zh: '设计 + 实现', en: 'Design & implementation' },
     stack: ['TRAE', 'HTML', 'CSS'],
     liveUrl: 'https://share.traecontent.cn/artifact/T9CU023H2EJ1C7',
+    cover: '/images/projects/trae-artifact.jpg',
     color: '#241d33',
     status: 'draft',
     note: {
@@ -83,6 +88,7 @@ export const projects: Project[] = [
     stack: ['Astro', 'TypeScript', 'CSS', 'Canvas'],
     liveUrl: '/',
     repoUrl: 'https://github.com/xue-ding-e-a/schedingers-site',
+    cover: '/images/projects/schrodingers-site.jpg',
     color: '#101827',
     status: 'ready',
     overview: {
@@ -104,7 +110,7 @@ export const projects: Project[] = [
       },
     ],
   },
-];
+].reverse();
 
 export function getProject(slug: string) {
   return projects.find((p) => p.slug === slug);
