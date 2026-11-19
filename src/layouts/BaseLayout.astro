@@ -275,16 +275,23 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
                 };
 
                 var displayed = startProgress;
+                var smooth = startProgress;
                 var last = performance.now();
+                var animStart = last;
+                // 最短播放时长：加载再快也让轨道完整走完，避免手机上只剩首尾两帧；
+                // 加载慢时 cap 先行到 1，画面仍由真实进度决定，不会假装加载完成
+                var MIN_TRAVEL = 1200;
                 var tick = function (now) {
                   if (finished) return;
                   // DOMContentLoaded 已发生（占 0.15），其余由图片、字体、load、首屏图共同推进
                   var t = Math.max(startProgress,
                     0.15 + 0.45 * imgRatio + 0.15 * fontsDone + 0.15 * loadDone + 0.10 * heroDone);
-                  displayed += (t - displayed) * Math.min(1, (now - last) / (t >= 1 ? 50 : 125));
+                  smooth += (t - smooth) * Math.min(1, (now - last) / (t >= 1 ? 50 : 125));
                   last = now;
+                  var cap = startProgress + (1 - startProgress) * Math.min(1, (now - animStart) / MIN_TRAVEL);
+                  displayed = Math.min(smooth, cap);
                   paintAlong(Math.min(1, displayed));
-                  if (t >= 1 && displayed > 0.995) {
+                  if (t >= 1 && cap >= 1 && displayed > 0.995) {
                     finished = true;
                     paintAlong(1);
                     shrinkAndReveal();
