@@ -9,13 +9,13 @@ const t = useTranslations(lang);
 ---
 
 <BaseLayout lang={lang} title={t('contact.title')} description={t('contact.lead')} section="neutral" preserveWorldNav={true}>
-  <section class="container-wide head">
+  <section class="container-wide head reveal">
     <p class="kicker">{t('contact.title')}</p>
     <h1 class="display">{t('contact.lead')}</h1>
   </section>
 
   <section class="container-wide rows">
-    <div class="row">
+    <div class="row reveal">
       <span class="mono label">{t('contact.email')}</span>
       <a class="value" href={`mailto:${SITE.email}`}>{SITE.email}</a>
       <button class="copy mono" data-copy={SITE.email} data-label={t('contact.copy')} data-done={t('contact.copied')}>
@@ -23,7 +23,7 @@ const t = useTranslations(lang);
       </button>
     </div>
 
-    <div class="row">
+    <div class="row reveal">
       <span class="mono label">{t('contact.wechat')}</span>
       <span class="value">{SITE.wechat}</span>
       <button class="copy mono" data-copy={SITE.wechat} data-label={t('contact.copy')} data-done={t('contact.copied')}>
@@ -31,20 +31,20 @@ const t = useTranslations(lang);
       </button>
     </div>
 
-    <div class="row">
+    <div class="row reveal">
       <span class="mono label">GITHUB</span>
       <a class="value" href={SITE.github} target="_blank" rel="noopener">xue-ding-e-a</a>
       <span class="copy mono"></span>
     </div>
 
-    <div class="row">
+    <div class="row reveal">
       <span class="mono label">LOCATION</span>
       <span class="value">{SITE.location[lang]}</span>
       <span class="copy mono"></span>
     </div>
   </section>
 
-  <section class="container-wide note">
+  <section class="container-wide note reveal">
     <p>{t('contact.note')}</p>
   </section>
 </BaseLayout>

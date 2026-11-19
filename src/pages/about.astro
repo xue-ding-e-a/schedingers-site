@@ -18,7 +18,7 @@ const gear = [
 
 <BaseLayout lang={lang} title={t('about.title')} description={t('about.lead')} section="neutral" preserveWorldNav={true}>
   <section class="head container-wide">
-    <div class="head-text">
+    <div class="head-text reveal">
       <p class="kicker">{t('about.title')}</p>
       <h1 class="display">{SITE.author[lang]}</h1>
       <p class="role mono">{t('about.lead')}</p>
@@ -26,7 +26,7 @@ const gear = [
         星空摄影是严谨理性的极致追求，也是感性浪漫的终极表达，更是一群人的双向奔赴。
       </p>
     </div>
-    <figure class="head-photo" style={`background:${portrait.color}`}>
+    <figure class="head-photo reveal" style={`background:${portrait.color}`}>
       <img src={withBase(portrait.thumb)} alt={portrait.title[lang]} loading="lazy" decoding="async" />
       <figcaption class="mono">{portrait.title[lang]} · {portrait.region[lang]}</figcaption>
     </figure>
