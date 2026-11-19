@@ -140,6 +140,15 @@ export const ui = {
     'about.nowTitle': '现在',
     'about.contactTitle': '聊聊',
 
+    'aboutDev.kicker': 'About / 2022—2026',
+    'aboutDev.bioTitle': '我怎么走到工程这条线',
+    'aboutDev.expTitle': '经历与结果',
+    'aboutDev.howTitle': '我怎么做事',
+    'aboutDev.credTitle': '证书与语言',
+    'aboutDev.nowTitle': '现在',
+    'aboutDev.projectsCta': '看看我做的项目',
+    'aboutDev.buildCta': '读制作手记',
+
     'contact.title': '联系',
     'contact.lead': '合作、授权、约拍，或者只是聊聊星空。',
     'contact.email': '邮箱',
@@ -293,6 +302,15 @@ export const ui = {
     'about.gearTitle': 'Gear',
     'about.nowTitle': 'Now',
     'about.contactTitle': 'Say hello',
+
+    'aboutDev.kicker': 'About / 2022—2026',
+    'aboutDev.bioTitle': 'How I ended up in engineering',
+    'aboutDev.expTitle': 'Experience & outcomes',
+    'aboutDev.howTitle': 'How I work',
+    'aboutDev.credTitle': 'Certifications & languages',
+    'aboutDev.nowTitle': 'Now',
+    'aboutDev.projectsCta': 'See the projects',
+    'aboutDev.buildCta': 'Read the build log',
 
     'contact.title': 'Contact',
     'contact.lead': 'Collaboration, licensing, shoots — or just talk about the sky.',

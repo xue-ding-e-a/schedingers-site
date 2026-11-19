@@ -31,6 +31,6 @@ export const DEV_NAV = [
   { key: 'dev', href: '/dev' },
   { key: 'projects', href: '/projects' },
   { key: 'build', href: '/build' },
-  { key: 'about', href: '/about' },
+  { key: 'about', href: '/dev/about' },
   { key: 'contact', href: '/contact' },
 ] as const;

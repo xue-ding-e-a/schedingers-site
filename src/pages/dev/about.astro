@@ -1,0 +1,518 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { SITE } from '../../consts';
+import { useTranslations, localizePath } from '../../i18n/utils';
+import type { Lang } from '../../i18n/ui';
+import type { Localized } from '../../data/works';
+
+const { lang = 'zh' } = Astro.props as { lang?: Lang };
+const t = useTranslations(lang);
+
+const role: Localized = {
+  zh: '产品运营 · 应用物理学',
+  en: 'Product Operations · Applied Physics',
+};
+
+const lead: Localized = {
+  zh: '把重复的事情交给自动化，把模糊的需求拆成结构，再用代码把它变成能上线的东西。',
+  en: 'Hand the repetitive work to automation, break vague requirements into structure, then ship it as code.',
+};
+
+const spec: { k: Localized; v: Localized | string; href?: string }[] = [
+  { k: { zh: '身份', en: 'Identity' }, v: { zh: 'TRAE 校园大使 · 抖音AI创变者计划社长 · 大模型工程师（ACA）', en: 'TRAE Campus Ambassador · President, Douyin AI Changemaker Plan · Large Model Engineer (ACA)' } },
+  { k: { zh: '所在地', en: 'Based' }, v: SITE.location },
+  { k: { zh: '入学', en: 'Since' }, v: '2022' },
+  { k: { zh: '毕业', en: 'Class' }, v: { zh: '2027 届', en: 'Class of 2027' } },
+  { k: { zh: 'GitHub', en: 'GitHub' }, v: 'xue-ding-e-a', href: SITE.github },
+];
+
+const bio: Localized[] = [
+  {
+    zh: '我是西安石油大学应用物理学专业 2027 届本科生。工程这条线从 2026 年担任字节跳动 TRAE 校园大使开始：我把活动拉新、流程设计到社群运营都先沉淀成 SOP 再执行，先把「让事情更省力」变成可复用的做法。',
+    en: "I'm a Class of 2027 undergraduate in Applied Physics at Xi'an Shiyou University. My engineering track started in 2026 as a ByteDance TRAE campus ambassador: I turned acquisition, event design and community operations into SOPs before executing — first turning 'making things easier' into a reusable practice.",
+  },
+  {
+    zh: '大四在新东方做产品运营实习时，我把学员分配、跨部门交接和资料查询这些重复流程，拆成字段、自动化规则和一个可直接检索的站点，体会到代码不只是跑通，更能替团队省下时间。目前在山东向上信息科技继续做产品运营，负责需求调研、Demo 设计与竞品分析。日常深度使用 Codex、TRAE、WorkBuddy 等 Agent，持有阿里巴巴大模型工程师 ACA 证书，了解 RAG、MCP、SFT。',
+    en: 'In my senior year, during a product-operations internship at New Oriental, I broke repetitive flows — student assignment, cross-department handoff and material lookup — into fields, automation rules and a searchable site, and learned that code is not just about running, but about saving a team time. I am now doing product operations at Shandong Xiangshang Information Technology, owning requirement research, demo design and competitive analysis. I use agents like Codex, TRAE and WorkBuddy daily, hold the Alibaba Cloud ACA Large Model Engineer certificate, and am familiar with RAG, MCP and SFT.',
+  },
+];
+
+const experience: {
+  period: string;
+  org: Localized;
+  role: Localized;
+  bullets: Localized[];
+}[] = [
+  {
+    period: '2026.10 — 至今',
+    org: { zh: '山东向上信息科技有限公司', en: 'Shandong Xiangshang Information Technology' },
+    role: { zh: '产品运营实习生', en: 'Product Operations Intern' },
+    bullets: [
+      {
+        zh: '需求调研：在 UP 简历的 KOC/KOL 合作推广场景中，发现合作方仅凭产品 Brief 难以理解核心功能与使用路径，梳理快速体验需求，推动设计产品上手引导模块。',
+        en: 'Research: in UP Resume\u2019s KOC/KOL co-promotion flow, partners could not grasp core features and usage from the product brief alone; defined a quick-experience need and drove the design of an onboarding module.',
+      },
+      {
+        zh: '产品设计与推进：用 Codex 辅助开发 3 套可交互 Demo，与 PM、研发对比开发成本后确定采用交互式演示；负责需求梳理与 Demo 设计，协同研发完成接入，推进至测试环境验证。',
+        en: 'Design & delivery: used Codex to build 3 interactive demos; compared dev cost with the PM and engineers, then settled on the interactive demo. Owned requirement scoping and demo design, collaborated with engineers on integration, and pushed it to a test environment for validation.',
+      },
+      {
+        zh: '竞品分析：围绕 Boss 直聘、超级简历、牛客输出 5 份系统性竞品分析报告，提出 8 条产品体验优化需求，其中 3 条已上线、4 条进入开发排期。',
+        en: 'Competitive analysis: produced 5 systematic reports on Boss Zhipin, Super Resume and Niuke; proposed 8 UX optimization requests, of which 3 are live and 4 are in the dev pipeline.',
+      },
+    ],
+  },
+  {
+    period: '2026.06 — 2026.10',
+    org: { zh: '新东方教育科技集团 · 大学事业部', en: 'New Oriental · University Business Division' },
+    role: { zh: '产品运营实习生', en: 'Product Operations Intern' },
+    bullets: [
+      {
+        zh: '业务调研：访谈 30+ 位一线顾问，梳理学员分配、跨部门交接、阶段跟进与资料查询中的问题，推进多维表格自动化与资料查询站建设。',
+        en: 'Business research: interviewed 30+ front-line advisers, mapped pain points in student assignment, cross-department handoff, stage follow-up and material lookup, then drove bitable automation and the query-site build.',
+      },
+      {
+        zh: '多维表格自动化：重建 20+ 字段、500+ 学员的信息库，设计 11 个自动化流程，覆盖分配—推送—喜报—交接—关键窗口提醒；分配耗时由 10 分钟降至 10 秒内，交接由 30 分钟降至 1 分钟内。',
+        en: 'Bitable automation: rebuilt a 20+ field, 500+ student database and designed 11 automation flows covering assignment → push → success-notice split → handoff → key-window reminders; assignment time dropped from 10 min to under 10 s, handoff from 30 min to under 1 min.',
+      },
+      {
+        zh: '产品资料查询站：用 AI 数据清洗 SOP 与 skill 清洗 294 份资料并结构化归类，覆盖四大业务线 26 个内容页与科研、竞赛匹配系统，已供 182 位顾问在咨询现场 10 秒内完成检索与发送。',
+        en: 'Material query site: an AI data-cleaning SOP and skill cleaned and structured 294 documents into 26 pages across four business lines plus research and competition matching; used by 182 advisers to find and send materials within 10 seconds during consultations.',
+      },
+    ],
+  },
+  {
+    period: '2026.03 — 至今',
+    org: { zh: '字节跳动 · TRAE on Campus', en: 'ByteDance · TRAE on Campus' },
+    role: { zh: 'TRAE 校园大使（西安石油大学站）', en: 'TRAE Campus Ambassador (Xi\u2019an Shiyou University)' },
+    bullets: [
+      {
+        zh: '开发者拉新：通过社团陌拜与校方合作招募，累计报名 1049 人，筛选确定 101 名参与者、96 人到场，到场率约 95%。',
+        en: 'Developer acquisition: recruited via club outreach and school partnerships — 1049 sign-ups, filtered to 101 participants, 96 attended (~95% attendance).',
+      },
+      {
+        zh: '活动策划运营：设计「产品认知 → 案例演示 → 现场实操 → 1v1 指导 → Demo 展示」流程，协调 3 位技术助教，现场安装激活率 95%+，85%+ 参与者在 2 小时内完成可交互 AI 应用 Demo。',
+        en: 'Event design & ops: a flow of product intro → demo → hands-on → 1v1 → showcase, with 3 teaching assistants; 95%+ install/activation rate, and 85%+ shipped an interactive AI-app demo within 2 hours.',
+      },
+      {
+        zh: 'SOP 与社区运营：沉淀渠道宣传、活动策划、校内申请、现场执行、TRAE 对接、活动总结的全流程 SOP，支撑后续 3 场活动，运营近 500 人社群，日均消息 200+。',
+        en: 'SOP & community: documented a full-process SOP (promotion, planning, campus approval, on-site execution, TRAE liaison, recap) supporting 3 more events; runs a ~500-member community with 200+ daily messages.',
+      },
+    ],
+  },
+];
+
+const principles: { title: Localized; desc: Localized }[] = [
+  {
+    title: { zh: '先结构化，再写代码', en: 'Structure first, code second' },
+    desc: { zh: '字段、流程、边界先想清楚，代码只是把结构落成实现。', en: 'Fields, flow and boundaries come first; code is just the structure made real.' },
+  },
+  {
+    title: { zh: '自动化优先', en: 'Automation first' },
+    desc: { zh: '重复出现三次的事，就值得做成规则或工具。', en: 'Anything repeated three times deserves to become a rule or a tool.' },
+  },
+  {
+    title: { zh: '能上线才算完成', en: 'Shipped is done' },
+    desc: { zh: 'Demo 不算数，有人真的用上了才算数。', en: 'A demo does not count — it counts when someone actually uses it.' },
+  },
+  {
+    title: { zh: '内容也是工程', en: 'Content is engineering too' },
+    desc: { zh: '294 份资料、337 条档案，换表重跑就能更新，不用手改 HTML。', en: '294 docs and 337 records update by re-running against a new sheet — no hand-edited HTML.' },
+  },
+];
+
+const creds: Localized[] = [
+  { zh: '阿里巴巴大模型工程师 ACA 证书', en: 'Alibaba Cloud ACA — Large Model Engineer' },
+  { zh: '了解 RAG / MCP / SFT', en: 'Familiar with RAG / MCP / SFT' },
+  { zh: '熟练使用飞书多维表格与 SQL', en: 'Proficient in Feishu Bitable and SQL' },
+  { zh: '英语可作为工作语言', en: 'English as a working language' },
+];
+
+const now: Localized = {
+  zh: '2027 届应用物理学。目前在找产品运营相关的机会，同时把手上的项目逐个做成能上线、能读代码的东西。',
+  en: 'Class of 2027, applied physics. Currently looking for product-operations opportunities, while shipping the projects on my desk — one live, readable repo at a time.',
+};
+
+const show = (v: Localized | string) => (typeof v === 'string' ? v : v[lang]);
+---
+
+<BaseLayout
+  lang={lang}
+  title={t('about.title')}
+  description={lead[lang]}
+  section="dev"
+  image="/images/projects/schrodingers-site.jpg"
+>
+  <section class="head container-wide">
+    <div class="head-text reveal">
+      <p class="kicker">{t('aboutDev.kicker')}</p>
+      <h1 class="display">{SITE.author[lang]}</h1>
+      <p class="role mono">{role[lang]}</p>
+      <p class="lead head-lead">{lead[lang]}</p>
+    </div>
+
+    <aside class="spec reveal" aria-label="profile">
+      <div class="spec-head mono">
+        <span>SCH_PROFILE</span>
+        <span>v1.0</span>
+      </div>
+      <dl class="spec-list">
+        {spec.map((row) => (
+          <div class="spec-row">
+            <dt class="mono">{row.k[lang]}</dt>
+            <dd>
+              {row.href ? (
+                <a href={row.href} target="_blank" rel="noopener">{show(row.v)}</a>
+              ) : (
+                show(row.v)
+              )}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </aside>
+  </section>
+
+  <section class="container-wide block">
+    <div class="block-head">
+      <span class="mono numeric num">01</span>
+      <h2 class="h2">{t('aboutDev.bioTitle')}</h2>
+    </div>
+    <div class="prose story">
+      {bio.map((p) => <p>{p[lang]}</p>)}
+    </div>
+  </section>
+
+  <section class="container-wide block">
+    <div class="block-head">
+      <span class="mono numeric num">02</span>
+      <h2 class="h2">{t('aboutDev.expTitle')}</h2>
+    </div>
+    <div class="exp">
+      {experience.map((e) => (
+        <div class="exp-item reveal">
+          <div class="exp-period mono numeric">{e.period}</div>
+          <div class="exp-body">
+            <h3 class="exp-org">{e.org[lang]}</h3>
+            <p class="exp-role mono">{e.role[lang]}</p>
+            <ul class="exp-bullets">
+              {e.bullets.map((b) => <li>{b[lang]}</li>)}
+            </ul>
+          </div>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <section class="container-wide block">
+    <div class="block-head">
+      <span class="mono numeric num">03</span>
+      <h2 class="h2">{t('aboutDev.howTitle')}</h2>
+    </div>
+    <div class="principles">
+      {principles.map((p) => (
+        <div class="principle reveal">
+          <h3 class="principle-title">{p.title[lang]}</h3>
+          <p class="principle-desc">{p.desc[lang]}</p>
+        </div>
+      ))}
+    </div>
+    <div class="creds">
+      <span class="mono creds-label">{t('aboutDev.credTitle')}</span>
+      <ul class="creds-list">
+        {creds.map((c) => <li>{c[lang]}</li>)}
+      </ul>
+    </div>
+  </section>
+
+  <section class="container-wide block cta-block">
+    <div class="block-head">
+      <span class="mono numeric num">04</span>
+      <h2 class="h2">{t('aboutDev.nowTitle')}</h2>
+    </div>
+    <div class="now">
+      <p class="now-text">{now[lang]}</p>
+      <div class="now-links">
+        <a class="btn" href={localizePath('/projects', lang)}>
+          {t('aboutDev.projectsCta')} <span class="arrow" aria-hidden="true">→</span>
+        </a>
+        <a class="btn" href={localizePath('/build', lang)}>
+          {t('aboutDev.buildCta')} <span class="arrow" aria-hidden="true">→</span>
+        </a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .head {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: clamp(32px, 5vw, 80px);
+    align-items: center;
+    padding-top: clamp(56px, 9vw, 110px);
+    padding-bottom: clamp(40px, 6vw, 80px);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .head .display {
+    margin-top: 20px;
+  }
+
+  .role {
+    margin-top: 18px;
+    color: var(--cool);
+    letter-spacing: 0.06em;
+  }
+
+  .head-lead {
+    margin-top: 24px;
+  }
+
+  .spec {
+    background: var(--bg-elev);
+    border: 1px solid var(--line);
+    border-left: 2px solid var(--cool);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--card-shadow);
+    overflow: hidden;
+  }
+
+  .spec-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 22px;
+    background: var(--cool-soft);
+    color: var(--cool);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .spec-list {
+    margin: 0;
+    padding: 6px 22px;
+  }
+
+  .spec-row {
+    display: grid;
+    grid-template-columns: 96px 1fr;
+    gap: 18px;
+    align-items: baseline;
+    padding-block: 13px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .spec-row:last-child {
+    border-bottom: 0;
+  }
+
+  .spec-row dt {
+    color: var(--text-faint);
+  }
+
+  .spec-row dd {
+    margin: 0;
+    font-size: 14px;
+    color: var(--text);
+    word-break: break-word;
+  }
+
+  .spec-row dd a {
+    border-bottom: 1px solid var(--line-strong);
+    padding-bottom: 2px;
+    transition: color 0.3s var(--ease), border-color 0.3s var(--ease);
+  }
+
+  .spec-row dd a:hover {
+    color: var(--cool);
+    border-color: var(--cool);
+  }
+
+  .block {
+    padding-block: clamp(40px, 6vw, 76px);
+    border-top: 1px solid var(--line);
+  }
+
+  .block:first-of-type {
+    border-top: 0;
+  }
+
+  .block-head {
+    display: flex;
+    align-items: baseline;
+    gap: 20px;
+    margin-bottom: clamp(26px, 3.4vw, 44px);
+  }
+
+  .num {
+    color: var(--cool);
+  }
+
+  .story {
+    max-width: 72ch;
+  }
+
+  .exp {
+    display: grid;
+  }
+
+  .exp-item {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    gap: clamp(20px, 3vw, 44px);
+    padding-block: 26px;
+    border-top: 1px solid var(--line);
+  }
+
+  .exp-item:last-child {
+    border-bottom: 1px solid var(--line);
+  }
+
+  .exp-period {
+    color: var(--text-faint);
+    padding-top: 4px;
+  }
+
+  .exp-org {
+    font-size: 17px;
+    font-weight: 900;
+    margin-bottom: 6px;
+  }
+
+  .exp-role {
+    color: var(--cool);
+    margin-bottom: 14px;
+  }
+
+  .exp-bullets {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 10px;
+  }
+
+  .exp-bullets li {
+    position: relative;
+    padding-left: 18px;
+    font-size: 13.5px;
+    line-height: 1.9;
+    color: var(--text-dim);
+    max-width: 74ch;
+  }
+
+  .exp-bullets li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.78em;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--cool);
+    opacity: 0.7;
+  }
+
+  .principles {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: clamp(20px, 3vw, 40px);
+    border-top: 1px solid var(--line);
+    padding-top: clamp(24px, 3vw, 40px);
+  }
+
+  .principle {
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    display: grid;
+    gap: 10px;
+    align-content: start;
+  }
+
+  .principle-title {
+    font-size: 15px;
+    font-weight: 900;
+    color: var(--text);
+  }
+
+  .principle-desc {
+    font-size: 13.5px;
+    line-height: 1.9;
+    color: var(--text-dim);
+  }
+
+  .creds {
+    margin-top: clamp(28px, 4vw, 48px);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 16px 28px;
+    padding-top: 22px;
+    border-top: 1px solid var(--line);
+  }
+
+  .creds-label {
+    color: var(--cool);
+  }
+
+  .creds-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 22px;
+  }
+
+  .creds-list li {
+    font-size: 13.5px;
+    color: var(--text-dim);
+    position: relative;
+    padding-left: 14px;
+  }
+
+  .creds-list li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.62em;
+    width: 5px;
+    height: 5px;
+    background: var(--line-strong);
+    transform: rotate(45deg);
+  }
+
+  .now {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+
+  .now-text {
+    font-size: clamp(1.1rem, 1.8vw, 1.4rem);
+    line-height: 1.8;
+    color: var(--text);
+    max-width: 36ch;
+  }
+
+  .now-links {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  @media (max-width: 900px) {
+    .head {
+      grid-template-columns: 1fr;
+    }
+    .exp-item {
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    .principles {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

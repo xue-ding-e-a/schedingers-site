@@ -427,7 +427,10 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
               >
                 {items.map((item) => {
                   const href = localizePath(item.href, lang);
-                  const active = basePath === item.href;
+                  // 静态目录索引的 URL 带尾部斜杠（/dev/about/），而导航 href 不带（/dev/about），
+                  // 归一化后再比较，保证当前页导航项能正确高亮
+                  const active =
+                    basePath.replace(/\/+$/, '') === item.href.replace(/\/+$/, '');
                   return (
                     <a href={href} class:list={['nav-link', { 'is-active': active }]}>
                       {t(`nav.${item.key}` as any)}
