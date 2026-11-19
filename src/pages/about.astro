@@ -27,8 +27,7 @@ const gear = [
       </p>
     </div>
     <figure class="head-photo reveal" style={`background:${portrait.color}`}>
-      <img src={withBase(portrait.thumb)} alt={portrait.title[lang]} loading="lazy" decoding="async" />
-      <figcaption class="mono">{portrait.title[lang]} · {portrait.region[lang]}</figcaption>
+      <img src={withBase('/images/about-portrait.png')} alt={portrait.title[lang]} loading="lazy" decoding="async" />
     </figure>
   </section>
 
@@ -138,8 +137,6 @@ const gear = [
   .head-photo img {
     width: 100%;
     height: auto;
-    aspect-ratio: 4 / 5;
-    object-fit: cover;
   }
 
   .head-photo figcaption {
