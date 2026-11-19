@@ -85,44 +85,156 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
           var arrived = sessionStorage.getItem('sch-logo-arrived');
           if (arrived && arrived === section) {
             sessionStorage.removeItem('sch-logo-arrived');
+            // 来源页在导航期间写入的起步进度，目标页从这里接续，保证轨道画面不跳变
+            var startProgress = 0;
+            try {
+              startProgress = parseFloat(sessionStorage.getItem('sch-logo-progress')) || 0;
+              sessionStorage.removeItem('sch-logo-progress');
+            } catch (e) {}
             if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
               root.classList.add('logo-arrived');
               var playArrival = function () {
-                // 接住过渡层里的全屏 logo：先收缩回顶部 logo 的位置，再展开文字与正文
-                var settled = new Promise(function (resolve) {
-                  var finish = function () {
-                    root.classList.add('logo-arrived--settled');
-                    resolve();
-                  };
-                  requestAnimationFrame(function () {
-                    requestAnimationFrame(function () {
-                      var mark = document.querySelector('.arrive-mark svg');
-                      var slot = document.querySelector('.brand-slot--mark');
-                      if (!mark || !slot) {
-                        finish();
-                        return;
-                      }
-                      var from = mark.getBoundingClientRect();
-                      var to = slot.getBoundingClientRect();
-                      if (!from.width || !to.width) {
-                        finish();
-                        return;
-                      }
-                      var scale = to.width / from.width;
-                      var dx = to.left + to.width / 2 - (from.left + from.width / 2);
-                      var dy = to.top + to.height / 2 - (from.top + from.height / 2);
-                      mark.style.transform =
-                        'translate(' + dx + 'px,' + dy + 'px) scale(' + scale + ')';
-                      setTimeout(finish, 340);
-                    });
-                  });
+                var warp = document.querySelector('.arrive-warp');
+                var mark = warp ? warp.querySelector('.world-warp-mark') : null;
+                var dot = warp ? warp.querySelector('.warp-dot') : null;
+                var arc = warp ? warp.querySelector('.warp-orbit--' + section) : null;
+                var slot = document.querySelector('.brand-slot--mark');
+
+                // 轨道几何，与来源页完全一致
+                var CENTER = 32;
+                var RX = 27;
+                var RY = 10.5;
+                var TAU = Math.PI * 2;
+                var WORLDS = {
+                  photo: { dot: [228, 171, 99] },
+                  dev: { dot: [124, 103, 228] }
+                };
+                var source = section === 'dev' ? 'photo' : 'dev';
+                var rad = function (deg) { return (deg * Math.PI) / 180; };
+                var easeInOut = function (t) {
+                  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+                };
+                var mix = function (a, b, t) { return a + (b - a) * t; };
+                var ellipsePoint = function (rot, angle) {
+                  var c = Math.cos(rad(rot));
+                  var s = Math.sin(rad(rot));
+                  var x = RX * Math.cos(angle);
+                  var y = RY * Math.sin(angle);
+                  return { x: CENTER + x * c - y * s, y: CENTER + x * s + y * c };
+                };
+                var angleOnTrack = function (rot, x, y) {
+                  var c = Math.cos(rad(rot));
+                  var s = Math.sin(rad(rot));
+                  var dx = x - CENTER;
+                  var dy = y - CENTER;
+                  var lx = dx * c + dy * s;
+                  var ly = -dx * s + dy * c;
+                  return Math.atan2(ly / RY, lx / RX);
+                };
+                var topY = CENTER - 11.83;
+                var bottomY = CENTER + 11.83;
+                var plans = {
+                  'photo-dev': {
+                    from: { rot: 30, a: -Math.PI, b: angleOnTrack(30, CENTER, bottomY) - TAU },
+                    to: { rot: -30, a: angleOnTrack(-30, CENTER, bottomY), b: 0 }
+                  },
+                  'dev-photo': {
+                    from: { rot: -30, a: 0, b: angleOnTrack(-30, CENTER, topY) },
+                    to: { rot: 30, a: angleOnTrack(30, CENTER, topY), b: -Math.PI }
+                  }
+                };
+                var plan = plans[source + '-' + section];
+                var crossed = false;
+
+                var paintAlong = function (p) {
+                  if (!plan || !dot) return;
+                  var point;
+                  var colorT = 0;
+                  if (p < 0.42) {
+                    point = ellipsePoint(plan.from.rot, mix(plan.from.a, plan.from.b, easeInOut(p / 0.42)));
+                  } else if (p < 0.56) {
+                    point = ellipsePoint(plan.to.rot, plan.to.a);
+                    if (!crossed) {
+                      crossed = true;
+                      warp.dataset.world = section;
+                    }
+                  } else {
+                    var t = easeInOut(Math.min(1, (p - 0.56) / 0.44));
+                    point = ellipsePoint(plan.to.rot, mix(plan.to.a, plan.to.b, t));
+                    colorT = Math.min(1, t / 0.55);
+                  }
+                  dot.setAttribute('cx', point.x.toFixed(2));
+                  dot.setAttribute('cy', point.y.toFixed(2));
+                  var from = WORLDS[source].dot;
+                  var to = WORLDS[section].dot;
+                  dot.style.color = 'rgb(' + Math.round(mix(from[0], to[0], colorT)) + ',' +
+                    Math.round(mix(from[1], to[1], colorT)) + ',' + Math.round(mix(from[2], to[2], colorT)) + ')';
+                  // 目标轨道即进度条：描边随进度画出
+                  if (arc) arc.setAttribute('stroke-dashoffset', (100 - p * 100).toFixed(2));
+                };
+
+                // 真实加载里程碑 → 目标进度（懒加载图片不阻塞 load，不计入）
+                var fontsDone = 0;
+                var loadDone = 0;
+                var heroDone = section === 'photo' ? 0 : 1;
+                var imgs = Array.prototype.slice.call(document.images).filter(function (im) {
+                  return im.loading !== 'lazy';
                 });
+                var imgRatio = imgs.length ? 0 : 1;
+                var countImg = function () {
+                  if (!imgs.length) {
+                    imgRatio = 1;
+                    return;
+                  }
+                  var done = 0;
+                  imgs.forEach(function (im) { if (im.complete) done++; });
+                  imgRatio = done / imgs.length;
+                };
+                countImg();
+                imgs.forEach(function (im) {
+                  if (im.complete) return;
+                  im.addEventListener('load', countImg);
+                  im.addEventListener('error', countImg);
+                });
+                if (document.fonts && document.fonts.ready) {
+                  document.fonts.ready.then(function () { fontsDone = 1; }, function () { fontsDone = 1; });
+                } else {
+                  fontsDone = 1;
+                }
+                if (document.readyState === 'complete') {
+                  loadDone = 1;
+                } else {
+                  window.addEventListener('load', function () { loadDone = 1; }, { once: true });
+                }
+                if (section === 'photo') {
+                  var hero = document.querySelector('[data-hero]');
+                  if (!hero) {
+                    heroDone = 1;
+                  } else {
+                    var isSettled = function () {
+                      return hero.hasAttribute('data-photo-settled') ||
+                        (!hero.hasAttribute('data-photo-initialized') && !hero.hasAttribute('data-photo-loading'));
+                    };
+                    if (isSettled()) {
+                      heroDone = 1;
+                    } else {
+                      var observer = new MutationObserver(function () {
+                        if (!isSettled()) return;
+                        observer.disconnect();
+                        heroDone = 1;
+                      });
+                      observer.observe(hero, {
+                        attributes: true,
+                        attributeFilter: ['data-photo-settled', 'data-photo-initialized', 'data-photo-loading']
+                      });
+                    }
+                  }
+                }
 
                 var revealed = false;
                 var reveal = function () {
                   if (revealed) return;
                   revealed = true;
-                  // 等布局、绘制各完成一帧，再一次性展开，避免首帧解码与 Logo 动画抢主线程
                   requestAnimationFrame(function () {
                     requestAnimationFrame(function () {
                       root.classList.add('logo-arrived--play');
@@ -130,45 +242,72 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
                         root.classList.remove('logo-arrived');
                         root.classList.remove('logo-arrived--play');
                         root.classList.remove('logo-arrived--settled');
+                        if (warp) warp.remove();
                       }, 1000);
                     });
                   });
                 };
-                var ready = [settled];
-                if (document.fonts && document.fonts.ready) ready.push(document.fonts.ready);
-                ready.push(new Promise(function (resolve) {
-                  if (document.readyState === 'complete') resolve();
-                  else window.addEventListener('load', resolve, { once: true });
-                }));
-                if (section === 'photo') {
-                  ready.push(new Promise(function (resolve) {
-                    var hero = document.querySelector('[data-hero]');
-                    if (!hero) {
-                      resolve();
-                      return;
-                    }
-                    var isSettled = function () {
-                      return hero.hasAttribute('data-photo-settled') ||
-                        (!hero.hasAttribute('data-photo-initialized') && !hero.hasAttribute('data-photo-loading'));
-                    };
-                    if (isSettled()) {
-                      resolve();
-                      return;
-                    }
-                    var observer = new MutationObserver(function () {
-                      if (!isSettled()) return;
-                      observer.disconnect();
-                      resolve();
-                    });
-                    observer.observe(hero, {
-                      attributes: true,
-                      attributeFilter: ['data-photo-settled', 'data-photo-initialized', 'data-photo-loading']
-                    });
-                  }));
-                }
-                Promise.all(ready).then(reveal, reveal);
-                // 资源异常时也不能让正文一直停留在隐藏状态
-                setTimeout(reveal, 4000);
+
+                var finished = false;
+                // 进度满格后：全屏 logo 收缩回顶部 logo，再展开文字与正文
+                var shrinkAndReveal = function () {
+                  var finish = function () {
+                    root.classList.add('logo-arrived--settled');
+                    reveal();
+                  };
+                  if (!mark || !slot) {
+                    finish();
+                    return;
+                  }
+                  var from = mark.getBoundingClientRect();
+                  var to = slot.getBoundingClientRect();
+                  if (!from.width || !to.width) {
+                    finish();
+                    return;
+                  }
+                  var scale = to.width / from.width;
+                  var dx = to.left + to.width / 2 - (from.left + from.width / 2);
+                  var dy = to.top + to.height / 2 - (from.top + from.height / 2);
+                  mark.style.transformOrigin = 'center';
+                  mark.style.transition = 'transform 0.34s cubic-bezier(0.22, 1, 0.36, 1)';
+                  mark.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(' + scale + ')';
+                  setTimeout(finish, 340);
+                };
+
+                var displayed = startProgress;
+                var last = performance.now();
+                var tick = function (now) {
+                  if (finished) return;
+                  // DOMContentLoaded 已发生（占 0.15），其余由图片、字体、load、首屏图共同推进
+                  var t = Math.max(startProgress,
+                    0.15 + 0.45 * imgRatio + 0.15 * fontsDone + 0.15 * loadDone + 0.10 * heroDone);
+                  displayed += (t - displayed) * Math.min(1, (now - last) / (t >= 1 ? 50 : 125));
+                  last = now;
+                  paintAlong(Math.min(1, displayed));
+                  if (t >= 1 && displayed > 0.995) {
+                    finished = true;
+                    paintAlong(1);
+                    shrinkAndReveal();
+                    return;
+                  }
+                  requestAnimationFrame(tick);
+                };
+                paintAlong(startProgress);
+                requestAnimationFrame(tick);
+
+                // 资源异常时兜底：直接补满进度并展开，不让正文一直隐藏
+                setTimeout(function () {
+                  fontsDone = 1;
+                  loadDone = 1;
+                  heroDone = 1;
+                  imgRatio = 1;
+                }, 4000);
+                setTimeout(function () {
+                  if (finished) return;
+                  finished = true;
+                  root.classList.add('logo-arrived--settled');
+                  reveal();
+                }, 5000);
               };
               if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', playArrival);
@@ -191,29 +330,46 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
   </head>
   <body class:list={['page', `accent-${accent}`, { 'world-aware': preserveWorldNav }]}>
     {
-      /* 主线切换抵达时的接续 logo：首帧与过渡层最后一帧完全一致，随后收缩回顶部 logo */
+      /* 主线切换抵达时的过渡层：首帧接续来源页轨道画面，轨道描边即真实加载进度条 */
       chrome && (
-        <div class="arrive-mark" aria-hidden="true">
-          <svg viewBox="0 0 64 64" focusable="false">
+        <div
+          class="world-warp arrive-warp is-on is-armed"
+          data-world={section === 'dev' ? 'photo' : 'dev'}
+          data-target={section}
+          aria-hidden="true"
+        >
+          <svg class="world-warp-mark" viewBox="0 0 64 64" focusable="false">
             <g transform="rotate(30 32 32)">
               <ellipse
-                class="arrive-orbit arrive-orbit--photo"
+                class="warp-orbit warp-orbit--photo"
                 cx="32"
                 cy="32"
                 rx="27"
                 ry="10.5"
+                pathLength="100"
+                stroke-dasharray={section === 'photo' ? '100' : undefined}
+                stroke-dashoffset={section === 'photo' ? '100' : undefined}
               />
             </g>
             <g transform="rotate(-30 32 32)">
-              <ellipse class="arrive-orbit arrive-orbit--dev" cx="32" cy="32" rx="27" ry="10.5" />
+              <ellipse
+                class="warp-orbit warp-orbit--dev"
+                cx="32"
+                cy="32"
+                rx="27"
+                ry="10.5"
+                pathLength="100"
+                stroke-dasharray={section === 'dev' ? '100' : undefined}
+                stroke-dashoffset={section === 'dev' ? '100' : undefined}
+              />
             </g>
-            <circle class="arrive-core" cx="32" cy="32" r="8" />
+            <circle class="warp-core" cx="32" cy="32" r="8" />
             <circle
-              class="arrive-dot"
-              cx="32"
-              cy={section === 'dev' ? '43.83' : '20.17'}
+              class="warp-dot"
+              cx={section === 'dev' ? '8.62' : '55.38'}
+              cy="18.5"
               r="3.4"
-              style={`color: ${section === 'dev' ? '#7c67e4' : '#e4ab63'}`}
+              style={`color: ${section === 'dev' ? '#e4ab63' : '#7c67e4'}`}
             />
           </svg>
         </div>
@@ -392,7 +548,6 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
         };
         let switching = false;
         let warpEl = null;
-        let warmFrameEl = null;
         const warmed = new Map();
 
         const rad = (deg) => (deg * Math.PI) / 180;
@@ -485,19 +640,6 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
           return job;
         };
 
-        // 点击瞬间用隐藏 iframe 预渲染目标页面：HTML、样式、字体与首屏图片都会提前就位
-        const buildFrame = (href) => {
-          if (warmFrameEl) warmFrameEl.remove();
-          const frame = document.createElement('iframe');
-          frame.className = 'warm-frame';
-          frame.setAttribute('aria-hidden', 'true');
-          frame.setAttribute('tabindex', '-1');
-          frame.setAttribute('sandbox', 'allow-same-origin');
-          frame.src = href;
-          document.body.appendChild(frame);
-          warmFrameEl = frame;
-        };
-
         const buildWarp = () => {
           if (warpEl) return warpEl;
           warpEl = document.createElement('div');
@@ -505,8 +647,8 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
           warpEl.setAttribute('aria-hidden', 'true');
           warpEl.innerHTML = [
             '<svg class="world-warp-mark" viewBox="0 0 64 64" focusable="false">',
-            '<g transform="rotate(30 32 32)"><ellipse class="warp-orbit warp-orbit--photo" cx="32" cy="32" rx="27" ry="10.5" /></g>',
-            '<g transform="rotate(-30 32 32)"><ellipse class="warp-orbit warp-orbit--dev" cx="32" cy="32" rx="27" ry="10.5" /></g>',
+            '<g transform="rotate(30 32 32)"><ellipse class="warp-orbit warp-orbit--photo" cx="32" cy="32" rx="27" ry="10.5" pathLength="100" /></g>',
+            '<g transform="rotate(-30 32 32)"><ellipse class="warp-orbit warp-orbit--dev" cx="32" cy="32" rx="27" ry="10.5" pathLength="100" /></g>',
             '<circle class="warp-core" cx="32" cy="32" r="8" />',
             '<circle class="warp-dot" cx="8.62" cy="18.5" r="3.4" />',
             '</svg>'
@@ -544,12 +686,12 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
           document.documentElement.style.overflow = 'hidden';
           if (brandEl) brandEl.classList.add('is-marked');
 
-          // 点击瞬间同时启动：图片预热 + 隐藏 iframe 预渲染 + 过渡动画
-          warmTarget(link.href);
-          buildFrame(link.href);
-
           const warp = buildWarp();
           const dot = warp.querySelector('.warp-dot');
+          // 目标轨道本身就是进度条：用 dashoffset 随真实加载进度描出轨道
+          const arc = warp.querySelector(`.warp-orbit--${target}`);
+          arc.setAttribute('stroke-dasharray', '100');
+          arc.setAttribute('stroke-dashoffset', '100');
           warp.classList.add('is-reset');
           warp.dataset.world = current;
           warp.dataset.target = target;
@@ -566,61 +708,56 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
             )},${Math.round(mix(from[2], to[2], colorT))})`;
           };
 
-          paintDot(ellipsePoint(plan.from.rot, plan.from.a), 0);
+          let crossed = false;
+          // 进度 → 轨道画面：三段路径保持不变（滑向交点 → 悬停换轨 → 滑到目标端点）
+          const paintAlong = (p) => {
+            let point;
+            let colorT = 0;
+            if (p < 0.42) {
+              point = ellipsePoint(plan.from.rot, mix(plan.from.a, plan.from.b, easeInOut(p / 0.42)));
+            } else if (p < 0.56) {
+              point = ellipsePoint(plan.to.rot, plan.to.a);
+              if (!crossed) {
+                crossed = true;
+                warp.dataset.world = target;
+              }
+            } else {
+              const t = easeInOut(Math.min(1, (p - 0.56) / 0.44));
+              point = ellipsePoint(plan.to.rot, mix(plan.to.a, plan.to.b, t));
+              colorT = Math.min(1, t / 0.55);
+            }
+            paintDot(point, colorT);
+            arc.setAttribute('stroke-dashoffset', (100 - p * 100).toFixed(2));
+          };
+
+          paintAlong(0);
 
           void warp.offsetWidth;
           warp.classList.add('is-on');
           requestAnimationFrame(() => warp.classList.add('is-armed'));
 
-          const phaseA = 440;
-          const hold = 150;
-          const phaseB = 470;
-          const travel = phaseA + hold + phaseB;
+          // 真实导航立即发起：轨道一边走，目标页一边加载。
+          // 来源页只让色点缓慢起步，进度持续写入 sessionStorage，由目标页接续真实进度。
           const begin = performance.now();
-          let crossed = false;
+          let lastWrite = 0;
+          const crawl = (now) => {
+            const p = 0.12 * (1 - Math.exp(-(now - begin) / 500));
+            paintAlong(p);
+            if (now - lastWrite > 80) {
+              lastWrite = now;
+              try {
+                sessionStorage.setItem('sch-logo-progress', p.toFixed(4));
+              } catch (e) {}
+            }
+            requestAnimationFrame(crawl);
+          };
+          requestAnimationFrame(crawl);
 
-          const travelDone = new Promise((resolve) => {
-            const frame = (now) => {
-              const elapsed = now - begin;
-              let point;
-              let colorT = 0;
-
-              if (elapsed < phaseA) {
-                const t = easeInOut(elapsed / phaseA);
-                point = ellipsePoint(plan.from.rot, mix(plan.from.a, plan.from.b, t));
-              } else if (elapsed < phaseA + hold) {
-                point = ellipsePoint(plan.to.rot, plan.to.a);
-                if (!crossed) {
-                  crossed = true;
-                  warp.dataset.world = target;
-                }
-              } else {
-                const t = easeInOut(Math.min(1, (elapsed - phaseA - hold) / phaseB));
-                point = ellipsePoint(plan.to.rot, mix(plan.to.a, plan.to.b, t));
-                colorT = Math.min(1, t / 0.55);
-              }
-
-              paintDot(point, colorT);
-
-              if (elapsed < travel) {
-                requestAnimationFrame(frame);
-              } else {
-                resolve();
-              }
-            };
-
-            requestAnimationFrame(frame);
-          });
-
-          // 轨道走完立刻发起真实导航：目标页的加载发生在过渡层仍是全屏 logo 的时候，
-          // 浏览器加载条因此属于过渡页本身，而不是过渡结束后再闪一下。
-          // logo 回归顶部的动画交由目标页接续完成（目标页首帧即为过渡层最后一帧）。
-          travelDone.then(() => {
-            try {
-              sessionStorage.setItem('sch-logo-arrived', target);
-            } catch (e) {}
-            window.location.assign(link.href);
-          });
+          try {
+            sessionStorage.setItem('sch-logo-arrived', target);
+            sessionStorage.setItem('sch-logo-progress', '0');
+          } catch (e) {}
+          window.location.assign(link.href);
         };
 
         if (!reduced) {
@@ -638,10 +775,6 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
             if (warpEl) {
               warpEl.remove();
               warpEl = null;
-            }
-            if (warmFrameEl) {
-              warmFrameEl.remove();
-              warmFrameEl = null;
             }
           });
         }
@@ -1064,56 +1197,6 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
         }
       }
 
-      /* ---------- 抵达后接住过渡层 logo ---------- */
-      .arrive-mark {
-        position: fixed;
-        inset: 0;
-        z-index: 200;
-        display: none;
-        place-items: center;
-        pointer-events: none;
-        color: #f6f4f0;
-      }
-
-      html.logo-arrived:not(.logo-arrived--settled) .arrive-mark {
-        display: grid;
-      }
-
-      html[data-world='dev'] .arrive-mark {
-        color: #1d1a2b;
-      }
-
-      .arrive-mark svg {
-        width: min(46vmin, 420px);
-        height: auto;
-        overflow: visible;
-        transform-origin: center;
-        transition: transform 0.34s cubic-bezier(0.22, 1, 0.36, 1);
-      }
-
-      .arrive-orbit {
-        fill: none;
-        stroke: currentColor;
-        stroke-width: 2.4;
-        stroke-linecap: round;
-        opacity: 0.24;
-      }
-
-      html[data-world='photo'] .arrive-orbit--photo,
-      html[data-world='dev'] .arrive-orbit--dev {
-        opacity: 0.75;
-      }
-
-      .arrive-core {
-        fill: currentColor;
-        opacity: 0.9;
-      }
-
-      .arrive-dot {
-        fill: currentColor;
-        filter: drop-shadow(0 0 1.2vmin currentColor);
-      }
-
       /* ---------- 全屏轨道过渡 ---------- */
       .world-warp {
         position: fixed;
@@ -1192,16 +1275,17 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
         filter: drop-shadow(0 0 1.2vmin currentColor);
       }
 
-      /* 点击切换时隐藏预渲染的目标页，只用来提前抓取和布局，不可见也不可交互 */
-      .warm-frame {
-        position: fixed;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-        border: 0;
-        opacity: 0;
-        pointer-events: none;
-        z-index: -1;
+      /* 抵达页的过渡层与来源页共用 .world-warp 样式：仅切换抵达时显示，logo 就位后隐藏 */
+      .arrive-warp {
+        display: none;
+      }
+
+      html.logo-arrived .arrive-warp {
+        display: grid;
+      }
+
+      html.logo-arrived--settled .arrive-warp {
+        display: none;
       }
 
       @media (prefers-reduced-motion: reduce) {

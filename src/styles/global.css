@@ -73,8 +73,8 @@ html[data-world='photo'] {
   --line: rgba(255, 255, 255, 0.1);
   --line-strong: rgba(255, 255, 255, 0.22);
   --text: #f6f4f0;
-  --text-dim: #a5a29c;
-  --text-faint: #6d6a64;
+  --text-dim: #a8a8a8;
+  --text-faint: #6a6a6a;
   --primary: #e5c9a4;
   --warm: #e5c9a4;
   --warm-soft: rgba(229, 201, 164, 0.14);
