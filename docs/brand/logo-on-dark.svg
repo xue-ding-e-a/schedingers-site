@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-labelledby="logoDarkTitle logoDarkDesc">
+  <title id="logoDarkTitle">薛定谔的站点 · 白色标识（深色背景用）</title>
+  <desc id="logoDarkDesc">两条交叉轨道、中心粒子与两枚轨道点组成的几何标识，白色，透明背景</desc>
+  <g transform="rotate(30 256 256)">
+    <ellipse cx="256" cy="256" rx="216" ry="84" fill="none" stroke="#f6f4f0" stroke-opacity="0.5" stroke-width="22" stroke-linecap="round"/>
+    <circle cx="40" cy="256" r="27" fill="#e4ab63"/>
+  </g>
+  <g transform="rotate(-30 256 256)">
+    <ellipse cx="256" cy="256" rx="216" ry="84" fill="none" stroke="#f6f4f0" stroke-opacity="0.5" stroke-width="22" stroke-linecap="round"/>
+    <circle cx="472" cy="256" r="27" fill="#7c67e4"/>
+  </g>
+  <circle cx="256" cy="256" r="64" fill="#f6f4f0"/>
+</svg>
