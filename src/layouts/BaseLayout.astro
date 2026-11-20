@@ -274,24 +274,28 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
                   setTimeout(finish, 340);
                 };
 
-                var displayed = startProgress;
-                var smooth = startProgress;
+                // 统一用 0–100 的百分比推进；真实进度允许跳跃，画面按固定速率逐份补齐
+                var initialProgress = Math.max(0, Math.min(100, startProgress * 100));
+                var displayed = initialProgress;
                 var last = performance.now();
                 var animStart = last;
-                // 最短播放时长：加载再快也让轨道完整走完，避免手机上只剩首尾两帧；
-                // 加载慢时 cap 先行到 1，画面仍由真实进度决定，不会假装加载完成
+                // 全程匀分为 100 份，避免少数资源里程碑完成时 Logo 突然跳过一大段；
+                // 加载慢时 cap 可以先到 100，但画面仍等待真实进度，不会提前满格
                 var MIN_TRAVEL = 1200;
+                var MS_PER_PERCENT = MIN_TRAVEL / 100;
                 var tick = function (now) {
                   if (finished) return;
-                  // DOMContentLoaded 已发生（占 0.15），其余由图片、字体、load、首屏图共同推进
-                  var t = Math.max(startProgress,
-                    0.15 + 0.45 * imgRatio + 0.15 * fontsDone + 0.15 * loadDone + 0.10 * heroDone);
-                  smooth += (t - smooth) * Math.min(1, (now - last) / (t >= 1 ? 50 : 125));
+                  // DOMContentLoaded 占 15%，其余由图片、字体、load、首屏图共同推进
+                  var loaded = Math.max(initialProgress, Math.min(100, Math.round(
+                    (0.15 + 0.45 * imgRatio + 0.15 * fontsDone + 0.15 * loadDone + 0.10 * heroDone) * 100
+                  )));
+                  var cap = initialProgress + (100 - initialProgress) * Math.min(1, (now - animStart) / MIN_TRAVEL);
+                  var target = Math.min(loaded, cap);
+                  var elapsed = Math.max(0, now - last);
                   last = now;
-                  var cap = startProgress + (1 - startProgress) * Math.min(1, (now - animStart) / MIN_TRAVEL);
-                  displayed = Math.min(smooth, cap);
-                  paintAlong(Math.min(1, displayed));
-                  if (t >= 1 && cap >= 1 && displayed > 0.995) {
+                  displayed = Math.min(target, displayed + elapsed / MS_PER_PERCENT);
+                  paintAlong(Math.min(1, displayed / 100));
+                  if (loaded >= 100 && cap >= 100 && displayed >= 99.999) {
                     finished = true;
                     paintAlong(1);
                     shrinkAndReveal();
@@ -299,7 +303,7 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
                   }
                   requestAnimationFrame(tick);
                 };
-                paintAlong(startProgress);
+                paintAlong(initialProgress / 100);
                 requestAnimationFrame(tick);
 
                 // 资源异常时兜底：直接补满进度并展开，不让正文一直隐藏
