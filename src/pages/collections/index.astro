@@ -29,23 +29,6 @@ const points = series.map((s) => {
     <p class="lead head-lead">{t('series.lead')}</p>
   </section>
 
-  <section class="container-wide map-sec">
-    <div class="map-head">
-      <p class="kicker">{t('atlas.title')}</p>
-      <p class="map-lead">{t('atlas.lead')}</p>
-      <p class="mono hint">{t('atlas.hint')}</p>
-    </div>
-    <div class="map-wrap">
-      <div
-        id="map"
-        style="height: clamp(360px, 58vh, 620px)"
-        data-points={JSON.stringify(points)}
-        data-no-network={t('atlas.noNetwork')}
-      ></div>
-      <p class="map-fallback mono" id="map-fallback">{t('atlas.loading')}</p>
-    </div>
-  </section>
-
   <section class="container-wide list">
     {series.map((s, i) => {
       const cover = works.find((w) => w.slug === s.cover)!;
@@ -65,6 +48,23 @@ const points = series.map((s) => {
         </a>
       );
     })}
+  </section>
+
+  <section class="container-wide map-sec">
+    <div class="map-head">
+      <p class="kicker">{t('atlas.title')}</p>
+      <p class="map-lead">{t('atlas.lead')}</p>
+      <p class="mono hint">{t('atlas.hint')}</p>
+    </div>
+    <div class="map-wrap">
+      <div
+        id="map"
+        style="height: clamp(360px, 58vh, 620px)"
+        data-points={JSON.stringify(points)}
+        data-no-network={t('atlas.noNetwork')}
+      ></div>
+      <p class="map-fallback mono" id="map-fallback">{t('atlas.loading')}</p>
+    </div>
   </section>
 
   <script is:inline src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -135,6 +135,7 @@ const points = series.map((s) => {
   }
 
   .map-sec {
+    padding-top: clamp(36px, 5vw, 64px);
     padding-bottom: clamp(36px, 5vw, 64px);
   }
 

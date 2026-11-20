@@ -84,7 +84,7 @@ export const ui = {
     'work.story': '拍摄故事',
     'work.prev': '上一幅',
     'work.next': '下一幅',
-    'work.back': '返回作品列表',
+    'work.back': '返回上一页',
     'work.seriesOf': '所属系列',
     'work.buyPrint': '获取原图',
 
@@ -247,7 +247,7 @@ export const ui = {
     'work.story': 'The story',
     'work.prev': 'Previous',
     'work.next': 'Next',
-    'work.back': 'Back to works',
+    'work.back': 'Back',
     'work.seriesOf': 'Series',
     'work.buyPrint': 'Request original',
 

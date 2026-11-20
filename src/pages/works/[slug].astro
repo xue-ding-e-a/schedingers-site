@@ -47,7 +47,7 @@ const stageSrcset = [
 
   <article class="work">
     <div class="container-wide work-top">
-      <a class="back mono" href={localizePath('/works', lang)}>← {t('work.back')}</a>
+      <a class="back mono" id="work-back" href={localizePath('/works', lang)}>← {t('work.back')}</a>
       <div class="title-row">
         <h1 class="display work-title">{work.title[lang]}</h1>
         <div class="title-meta">
@@ -116,6 +116,30 @@ const stageSrcset = [
     </nav>
   </article>
 
+  <script is:inline>
+    (() => {
+      const link = document.getElementById('work-back');
+      if (!link) return;
+
+      // 优先返回上一个页面（例如点进来的具体系列页）；直接打开、无历史记录时退回作品列表
+      link.addEventListener('click', (event) => {
+        if (
+          event.defaultPrevented ||
+          event.button !== 0 ||
+          event.metaKey ||
+          event.ctrlKey ||
+          event.shiftKey ||
+          event.altKey
+        ) {
+          return;
+        }
+        if (history.length <= 1) return;
+        event.preventDefault();
+        history.back();
+      });
+    })();
+  </script>
+
   <div class="work-loader" id="work-loader" aria-hidden="true">
     <div class="loader-inner">
       <div class="loader-meta mono">
@@ -136,15 +160,17 @@ const stageSrcset = [
       const fill = loader.querySelector('.loader-track i');
       const pct = loader.querySelector('.loader-pct');
       const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      const startedAt = performance.now();
 
       let raf = 0;
       let done = false;
       let timer = 0;
+      let progress = 0; // 当前进度 0-100
 
       const render = (value) => {
-        fill.style.width = value + '%';
-        pct.textContent = String(Math.round(value)).padStart(2, '0');
+        progress = value;
+        const p = Math.round(value);
+        fill.style.width = p + '%';
+        pct.textContent = String(p).padStart(2, '0');
       };
 
       const markReady = () => stage.classList.add('is-ready');
@@ -158,10 +184,24 @@ const stageSrcset = [
         loader.classList.add('is-done');
       };
 
-      const finish = () => {
-        render(100);
-        // 最短展示 420ms，避免过渡层一闪而过
-        setTimeout(() => hideLoader(false), Math.max(0, 420 - (performance.now() - startedAt)));
+      // 从当前进度平滑爬到 100%，再短暂停留后隐藏
+      const finishToHundred = () => {
+        const startProgress = progress;
+        const startAt = performance.now();
+        const climbMs = Math.max(300, (100 - startProgress) * 8); // 每 1% 约 8ms
+        const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+
+        const climb = (now) => {
+          const t = Math.min(1, (now - startAt) / climbMs);
+          render(startProgress + (100 - startProgress) * easeOutCubic(t));
+          if (t < 1) {
+            raf = requestAnimationFrame(climb);
+          } else {
+            // 到达 100% 后停留约 120ms，确保用户看清
+            setTimeout(() => hideLoader(false), 120);
+          }
+        };
+        raf = requestAnimationFrame(climb);
       };
 
       if (reduce) {
@@ -172,39 +212,127 @@ const stageSrcset = [
 
       stage.classList.add('is-gated');
 
-      // 命中缓存：直接放行，不播过渡
+      // 命中缓存：也走 0→100 过渡，但速度较快
       if (img.complete && img.naturalWidth) {
         markReady();
-        hideLoader(true);
+        const startAt = performance.now();
+        const animate = (now) => {
+          const t = Math.min(1, (now - startAt) / 400);
+          render(100 * (1 - Math.pow(1 - t, 3)));
+          if (t < 1) {
+            raf = requestAnimationFrame(animate);
+          } else {
+            setTimeout(() => hideLoader(false), 120);
+          }
+        };
+        raf = requestAnimationFrame(animate);
         return;
       }
 
-      img.addEventListener(
-        'load',
-        () => {
-          markReady();
-          finish();
-        },
-        { once: true }
-      );
+      // ===== 主逻辑：fetch 监听真实图片字节进度 =====
+      let imgLoaded = false;
+      let fetchDone = false;
+
+      const onImgLoad = () => {
+        if (imgLoaded) return;
+        imgLoaded = true;
+        markReady();
+        // fetch 也完成了 → 从当前进度爬到 100%
+        if (fetchDone) finishToHundred();
+      };
+
+      img.addEventListener('load', onImgLoad, { once: true });
       img.addEventListener(
         'error',
         () => {
+          imgLoaded = true;
           markReady();
-          finish();
+          finishToHundred();
         },
         { once: true }
       );
 
-      const step = (now) => {
-        const t = Math.min(1, (now - startedAt) / 2400);
-        render(Math.min(92, 6 + 86 * (1 - Math.pow(1 - t, 3))));
-        if (t < 1) raf = requestAnimationFrame(step);
-      };
-      raf = requestAnimationFrame(step);
+      // 用 currentSrc 获取 srcset 实际选中的 URL，fallback 到 src
+      const targetUrl = img.currentSrc || img.src;
 
-      // 慢网兜底：最多遮 4s，先放正文出来，图片继续加载
-      timer = setTimeout(() => hideLoader(false), 4000);
+      fetch(targetUrl)
+        .then((response) => {
+          if (!response.ok) throw new Error('Network response not ok');
+          const total = response.headers.get('content-length')
+            ? parseInt(response.headers.get('content-length'), 10)
+            : 0;
+
+          if (!total) {
+            // 没有 content-length，退回基于时间的假进度
+            startFallback();
+            return;
+          }
+
+          const reader = response.body.getReader();
+          let loaded = 0;
+
+          function pump() {
+            reader.read().then(({ done: streamDone, value }) => {
+              if (done) return;
+              if (value) {
+                loaded += value.length;
+                // 真实字节进度映射到 6%~92% 区间（首尾留空间给进场和收尾）
+                render(6 + 86 * (loaded / total));
+              }
+              if (streamDone) {
+                fetchDone = true;
+                if (imgLoaded) finishToHundred();
+                return;
+              }
+              pump();
+            });
+          }
+          pump();
+        })
+        .catch(() => {
+          // fetch 失败，退回假进度
+          startFallback();
+        });
+
+      // 无 content-length 或 fetch 失败时的时间驱动假进度
+      function startFallback() {
+        const fbStart = performance.now();
+        const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+        const step = (now) => {
+          const t = Math.min(1, (now - fbStart) / 2400);
+          render(Math.min(92, 6 + 86 * easeOutCubic(t)));
+          if (t < 1) {
+            raf = requestAnimationFrame(step);
+          } else {
+            // 假进度到 92% 后停住，等 img.load
+            render(92);
+          }
+        };
+        raf = requestAnimationFrame(step);
+
+        // 图片 load 后从 92% 平滑到 100%
+        const checkImg = () => {
+          if (imgLoaded) {
+            // 取消 fallback 定时器，走 finish
+            if (!fetchDone) finishToHundred();
+            return;
+          }
+          if (progress >= 92) {
+            // 已到 92%，停在这等 img.load
+            return;
+          }
+          raf = requestAnimationFrame(checkImg);
+        };
+        // 注意：如果 fetch 也在跑，它的 pump 会覆盖 render，这里只在 fetch 失败时生效
+      }
+
+      // 慢网兜底：4s 后无论当前进度多少，必须走到 100% 再进入
+      timer = setTimeout(() => {
+        markReady();
+        fetchDone = true;
+        imgLoaded = true;
+        finishToHundred();
+      }, 4000);
     })();
   </script>
 </BaseLayout>
