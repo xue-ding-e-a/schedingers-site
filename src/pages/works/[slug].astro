@@ -57,7 +57,7 @@ const stageSrcset = [
       </div>
     </div>
 
-    <figure class="stage container-wide">
+    <figure class="stage container-wide" style={`--ar:${(work.width / work.height).toFixed(4)}`}>
       <img
         src={withBase(work.image)}
         srcset={stageSrcset}
@@ -376,14 +376,15 @@ const stageSrcset = [
 
   .stage {
     margin: 0 auto;
+    /* 画幅宽度跟随照片比例与高度上限收紧，边界即照片边界 */
+    width: min(1600px, 100% - var(--gutter) * 2, calc(86svh * var(--ar, 1)));
   }
 
   .stage img {
+    display: block;
     width: 100%;
     height: auto;
     max-height: 86svh;
-    object-fit: contain;
-    margin-inline: auto;
   }
 
   .stage figcaption {
