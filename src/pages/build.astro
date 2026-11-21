@@ -11,8 +11,8 @@ const stack: { name: string; why: Localized }[] = [
   {
     name: 'Astro 5',
     why: {
-      zh: '内容多、交互少。默认零 JS 输出，只有星空画布按需加载，首屏不必为框架买单。',
-      en: 'Content-heavy, interaction-light. Zero JS by default; only the starfield loads on demand, so the first screen pays no framework tax.',
+      zh: '页面静态生成。导航、筛选和动效由原生脚本处理。',
+      en: 'Pages are generated statically. Native scripts handle navigation, filters and motion.',
     },
   },
   {
@@ -30,10 +30,10 @@ const stack: { name: string; why: Localized }[] = [
     },
   },
   {
-    name: 'Canvas 2D',
+    name: 'CSS + Three.js / MP4',
     why: {
-      zh: '门户页的星野只有两百多个点，2D 足够，不需要引入 Three.js 的几百 KB。',
-      en: 'The portal starfield is a few hundred dots. 2D is enough — no need for hundreds of KB of Three.js.',
+      zh: '门户先显示 CSS 星野，再切换到 Three.js。摄影首页先显示封面，星轨视频走独立缓存。',
+      en: 'The portal starts with a CSS starfield before handing off to Three.js. The photography homepage shows a poster while the star-trail video loads as a separately cacheable asset.',
     },
   },
   {
@@ -157,28 +157,76 @@ const timeline: { date: string; title: Localized; desc: Localized }[] = [
       en: 'The photo navigation now has six items, ending with Contact to match engineering, while the portal footer updated its locations and credentials.',
     },
   },
+  {
+    date: '2026.11.18',
+    title: { zh: '把地图和大图放到需要它们的地方', en: 'Move maps and large images where they are needed' },
+    desc: {
+      zh: '观星地图并入系列总览，摄影首页把注意力留给精选作品。为标题和数字字体生成子集，作品详情增加 1600px 图像档位，浏览器可按屏幕选择合适资源。',
+      en: 'Moved the stargazing map to the series index so the photography homepage could focus on featured works. Subset the heading and numeric fonts and added a 1,600px image size so browsers could pick a suitable asset for each screen.',
+    },
+  },
+  {
+    date: '2026.11.19',
+    title: { zh: '让工程项目的成果可见', en: 'Make the engineering work visible' },
+    desc: {
+      zh: '为四个项目补齐封面，把 WowLand 招募宣讲整理成案例。导航胶囊改用独立底色，减少 Firefox 和内置浏览器与其他浏览器的色差。',
+      en: 'Added covers to all four projects and wrote up the WowLand Campus Deck as a case study. Gave the navigation pills their own background colour to reduce differences across Firefox, in-app browsers and other browsers.',
+    },
+  },
+  {
+    date: '2026.11.20',
+    title: { zh: '分开讲摄影与工程，也让浏览有来有回', en: 'Give each track its own story and keep the way back' },
+    desc: {
+      zh: '摄影关于页完整展示天文插画，工程关于页独立讲项目和履历。跨主线时原子 Logo 衔接加载和正文入场，透明站点图标随浏览器配色切换。系列页加入显影过渡，作品详情按照片原始比例展示，也可返回上一页。',
+      en: 'The photography About page shows the full astronomical illustration, while engineering gets its own About page for projects and experience. The atom logo carries the transition between tracks, and the transparent favicon adapts to the browser colour scheme. Series pages gained an image reveal, while work details keep the original aspect ratio and offer a Back action.',
+    },
+  },
+  {
+    date: '2026.11.21',
+    title: { zh: '先让首屏出现，再加载后面的照片', en: 'Show the hero first, then load the previews' },
+    desc: {
+      zh: '门户先用 CSS 绘制轻量星空，Three.js 首帧就绪后再切换。摄影首页先显示 WebP 封面，再播放可缓存的循环星轨视频。精选作品和系列预览等视频开始播放后再加载。减少动效、暂停或播放失败时，直接放行预览。',
+      en: 'The portal starts with a lightweight CSS starfield and switches once Three.js renders its first frame. The photography homepage shows a WebP poster before playing a cacheable star-trail loop. Featured work and series previews wait until the video starts. Reduced-motion mode, pausing and playback errors all release the previews immediately.',
+    },
+  },
+  {
+    date: '2026.11.22',
+    title: { zh: '定稿摄影作品的浏览顺序与排版', en: 'Finalise the gallery layout and browsing order' },
+    desc: {
+      zh: '作品总览的「全部」视图采用三组等高并排与下方错落组合，保留原始画幅。筛选系列时，先按拍摄日期分组，再用窄图填补同日宽图所在行的余量，画廊宽度变化后重新排布。作品总览和系列详情也共用卡片交互。',
+      en: 'The All view uses three equal-height pairs above a staggered group and keeps the original aspect ratios. Series filters group works by capture date, use narrower cards to fill remaining space alongside wider ones from the same day and repack when the gallery width changes. The works index and series details also share card interactions.',
+    },
+  },
+  {
+    date: '2026.11.22',
+    title: { zh: '把联系方式统一收到页脚', en: 'Move contact details into the shared footer' },
+    desc: {
+      zh: '独立联系页和导航项合并为页脚联系区。摄影和工程页面底部都能找到联系方式，邮箱和微信支持一键复制。',
+      en: 'Folded the standalone Contact page and navigation entry into a shared footer section. Both tracks now show contact details at the bottom of their pages, with copy buttons for email and WeChat.',
+    },
+  },
 ];
 
 const lessons: { q: Localized; a: Localized }[] = [
   {
     q: { zh: '144MB、1.68 亿像素的原图怎么处理？', en: 'What do you do with a 144MB, 168-megapixel original?' },
     a: {
-      zh: '不在构建期处理。用 Pillow 离线生成 2400–3000px 的 WebP 与 1100px 缩略图，并顺带取出平均色作为占位底色，图片加载前不会闪白。',
-      en: 'Not at build time. Pillow pre-generates 2400–3000px WebP files plus 1100px thumbnails offline, and extracts an average colour so images never flash white while loading.',
+      zh: '用 Pillow 离线生成 WebP 大图、1600px 中间档与缩略图。详情页让浏览器按显示宽度选择资源，并用照片平均色占位，保持加载时的视觉连贯。',
+      en: 'Pillow prepares large WebP images, a 1,600px intermediate size and thumbnails offline. The browser picks a size for the displayed width, and an average-colour placeholder fills the space while the image loads.',
     },
   },
   {
     q: { zh: '画幅从竖幅 0.67 到横幅 2.14，网格怎么排？', en: 'Ratios from 0.67 portrait to 2.14 panorama — how do you grid that?' },
     a: {
-      zh: '作品总览用 CSS 多列布局，让不同高度自然咬合；系列页用等宽栅格并保留原始比例；详情页统一 contain，不裁掉任何一颗星。',
-      en: 'The index uses CSS multi-column so heights interlock naturally; series pages use an even grid with native ratios; detail pages use contain, so no star gets cropped away.',
+      zh: '作品总览按画幅配对，筛选后在同日作品内紧凑排布。系列详情按比例分配同排照片的宽度，单幅作品详情用原始比例控制画框。',
+      en: 'The works index pairs photos by aspect ratio and packs same-day photos together when filtered. Series details size photos in each row by aspect ratio, and individual work pages use the original ratio to size the frame.',
     },
   },
   {
     q: { zh: '另外三个项目都没有公开仓库，GitHub 作品集怎么做？', en: 'The other three projects have no public repos — how does the GitHub portfolio work?' },
     a: {
-      zh: '放弃实时 API，改用策展式卡片：手写定位、角色、技术栈与线上链接，卡片用浏览器窗口框架统一视觉。这个站点本身的源码已经推上 GitHub，作品集因此从「只能看截图」变成「可以直接读代码」。',
-      en: 'Drop the live API and curate instead: positioning, role, stack and live link are written by hand, with a shared browser-frame treatment. This site is now open-sourced on GitHub, so the portfolio moves from screenshots to readable code.',
+      zh: '放弃实时 API，改用策展式卡片：手写定位、角色、技术栈与线上链接，卡片用浏览器窗口框架统一视觉。站点源码已公开在 GitHub，读者可以直接查看实现。',
+      en: 'Drop the live API and curate instead: positioning, role, stack and live link are written by hand, with a shared browser-frame treatment. The public GitHub repository lets readers inspect how this site works.',
     },
   },
 ];
@@ -186,7 +234,7 @@ const lessons: { q: Localized; a: Localized }[] = [
 const facts = [
   { k: { zh: '作品', en: 'Works' }, v: '10' },
   { k: { zh: '系列', en: 'Series' }, v: '4' },
-  { k: { zh: '路由', en: 'Routes' }, v: '16' },
+  { k: { zh: '每种语言的页面', en: 'Pages per language' }, v: '29' },
   { k: { zh: '语言', en: 'Languages' }, v: '2' },
 ];
 ---

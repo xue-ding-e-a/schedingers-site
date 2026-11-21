@@ -48,23 +48,22 @@ So the site splits into two entries: photography in black, engineering in white,
 
 ## Features
 
-- Dual-track portal: [photography](https://xue-ding-e-a.github.io/schedingers-site/en/photo/) and [engineering](https://xue-ding-e-a.github.io/schedingers-site/en/dev/) each have their own navigation, home rhythm and theme.
-- [10 astrophotographs](https://xue-ding-e-a.github.io/schedingers-site/en/works/), [4 series](https://xue-ding-e-a.github.io/schedingers-site/en/collections/) and [4 engineering projects](https://xue-ding-e-a.github.io/schedingers-site/en/projects/), mirrored in Chinese and English.
-- Curated works are sorted by original file size: larger files get larger cards, with horizontal scrolling only. See [photo.astro](src/pages/photo.astro).
-- The [work detail page](https://xue-ding-e-a.github.io/schedingers-site/en/works/galactic-arch-snow-mountain/) shows capture coordinates, camera, lens, EXIF and stacking method.
-- The navigation keeps its frosted glass, grain and lifted shadow even on solid backgrounds. See [BaseLayout.astro](src/layouts/BaseLayout.astro).
-- Zero framework JS by default; the Three.js particle background loads on demand on the [home page](src/pages/index.astro) only.
-- Images are preprocessed offline into WebP and thumbnails, with average-colour placeholders to prevent flash-of-white. See [public/images/works](public/images/works).
+- Photography in black and engineering in white, each with its own navigation and About page. The atom logo carries the transition between tracks. See the [photography homepage](https://xue-ding-e-a.github.io/schedingers-site/en/photo/), [engineering homepage](https://xue-ding-e-a.github.io/schedingers-site/en/dev/) and [engineering About page](https://xue-ding-e-a.github.io/schedingers-site/en/dev/about/).
+- The portal shows a lightweight starfield until Three.js renders its first frame. The photography homepage uses a WebP poster and a cacheable star-trail loop, then loads work and series previews once playback starts. Previews also load when motion is disabled, playback is paused or playback fails. See the [portal](src/pages/index.astro) and [photography homepage](src/pages/photo.astro) source.
+- The All view arranges 10 photographs in paired and staggered rows while preserving each frame. Series filters group works by capture date and pack same-day cards by width. See the [works index](https://xue-ding-e-a.github.io/schedingers-site/en/works/) and [gallery source](src/components/WorksGallery.astro).
+- Featured works scroll horizontally on the photography homepage. The stargazing map lives on the series index and each of the four series has its own page. Work details fit the photo’s native aspect ratio, show coordinates, gear, EXIF and stacking methods, and offer a Back action. See the [series index](https://xue-ding-e-a.github.io/schedingers-site/en/collections/) and [work detail example](https://xue-ding-e-a.github.io/schedingers-site/en/works/galactic-arch-snow-mountain/).
+- All four engineering projects have covers and detail pages. Both tracks are bilingual and share a footer contact section with copy buttons for email and WeChat. See the [engineering projects](https://xue-ding-e-a.github.io/schedingers-site/en/projects/) and [contact section source](src/components/ContactFooter.astro).
+- The site is statically generated, with page scripts handling interactions. Work images are prepared offline in responsive WebP sizes and use average-colour placeholders while loading. See the [image processing script](scripts/build-responsive-images.py).
 
 ## Stack
 
 | Layer | Choice | Why |
 | --- | --- | --- |
-| Framework | Astro 5 | Content-heavy, interaction-light, zero JS by default |
+| Framework | Astro 5 | Static pages with native scripts for interactions |
 | Types | TypeScript | Locks down bilingual EXIF, coordinate and copy fields |
 | Styling | Vanilla CSS | Aspect ratios run from 0.67 to 2.14; hand-written grids beat breakpoint tuning |
 | Images | Python / Pillow | Largest original is 144 MB and 168 megapixels, processed before build |
-| Background | Canvas 2D + Three.js | 2D star field on the portal, particle background loaded on demand |
+| Hero motion | CSS + Three.js / MP4 | CSS starfield on the portal, static poster and looping video on the photography homepage |
 | Deployment | GitHub Pages + Actions | Push to main builds and publishes |
 
 ## Quick Start
@@ -82,7 +81,7 @@ npm run preview   # preview the build
 
 ```text
 src/
-├─ components/        WorkCard, ProjectCard
+├─ components/        WorksGallery, WorkCard, ProjectCard, ContactFooter
 ├─ data/              works.ts / series.ts / projects.ts (content and bilingual fields)
 ├─ i18n/              ui.ts (copy dictionary), utils.ts (language and path helpers)
 ├─ layouts/           BaseLayout.astro (navigation, footer, theme switch)
@@ -95,7 +94,7 @@ public/
 
 ## Content Maintenance
 
-- Add a work: edit [src/data/works.ts](src/data/works.ts), fill in both languages and the `thumb` path, and put images in `public/images/works/`.
+- Add a work: edit [src/data/works.ts](src/data/works.ts), fill in both languages and the `thumb` path, and put images in `public/images/works/`. To include the work in the All view, update the curated layout in [WorksGallery.astro](src/components/WorksGallery.astro).
 - Add a series: edit [src/data/series.ts](src/data/series.ts); the detail route is generated by `src/pages/collections/[slug].astro`.
 - Add a project: edit [src/data/projects.ts](src/data/projects.ts).
 - Change navigation: edit [src/consts.ts](src/consts.ts); photography and engineering use `PHOTO_NAV` and `DEV_NAV`.
@@ -118,12 +117,12 @@ If the repository is renamed, update `base` as well or static assets will 404.
 
 Each iteration is recorded by feature batch in the site's [Build Log](https://xue-ding-e-a.github.io/schedingers-site/en/build/), including technical choices, the split between AI and human work, the timeline and retrospective notes. Recent batches:
 
-- `2026.11.17` Deployment first: subpath, Actions and asset paths aligned
-- `2026.11.17` Replacing the generic dark template: Darkness visual system and particle hero
-- `2026.11.17` Chinese type no longer mixed: four font stacks and the full font set
-- `2026.11.17` Split into two tracks: photography black / engineering white
-- `2026.11.18` Curated works: horizontal scroll only
-- `2026.11.18` Contact entry added to the photography navigation
+- `2026.11.22` Finalised the curated works layout, packed filtered results by capture date, aligned photography card interactions and moved contact details into the shared footer.
+- `2026.11.21` Added a lightweight portal starfield, switched the photography hero to a cacheable star-trail loop and deferred photo previews.
+- `2026.11.20` Split the photography and engineering About pages, smoothed the atom logo transition, added a theme-aware favicon and refined series reveals, work framing and back navigation.
+- `2026.11.19` Added engineering project covers and the WowLand Campus Deck case study, and adjusted navigation pills to reduce browser colour differences.
+- `2026.11.18` Switched featured works to horizontal scrolling, moved the stargazing map to the series index and added font subsets and responsive image sizes.
+- `2026.11.17` Set up GitHub Pages deployment, established the typography and visual system, and split the site into the photography and engineering tracks.
 
 ## Contributing
 

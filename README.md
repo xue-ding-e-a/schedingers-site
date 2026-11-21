@@ -48,23 +48,22 @@
 
 ## 功能
 
-- 双主线门户：[摄影线](https://xue-ding-e-a.github.io/schedingers-site/photo/)与[工程线](https://xue-ding-e-a.github.io/schedingers-site/dev/)各自拥有独立导航、首页节奏与主题色。
-- [10 幅星空作品](https://xue-ding-e-a.github.io/schedingers-site/works/)、[4 个系列](https://xue-ding-e-a.github.io/schedingers-site/collections/)、[4 个工程项目](https://xue-ding-e-a.github.io/schedingers-site/projects/)，全部中英双语镜像。
-- 精选作品按原始文件体积排序，文件越大卡片越大；仅保留横向滑动，见 [photo.astro](src/pages/photo.astro)。
-- [作品详情页](https://xue-ding-e-a.github.io/schedingers-site/works/galactic-arch-snow-mountain/)展示拍摄地坐标、机身、镜头、EXIF 与堆栈方式。
-- 导航栏在纯色背景上仍有毛玻璃、颗粒与浮起阴影，见 [BaseLayout.astro](src/layouts/BaseLayout.astro)。
-- 默认零框架 JS；Three.js 粒子背景只在[首页](src/pages/index.astro)按需加载。
-- 图片离线预处理为 WebP 与缩略图，并提取平均色作为加载占位，避免闪白，见 [public/images/works](public/images/works)。
+- 摄影黑、工程白，两条主线有独立的导航与关于页。跨主线时由原子 Logo 衔接过渡。参见[摄影线](https://xue-ding-e-a.github.io/schedingers-site/photo/)、[工程线](https://xue-ding-e-a.github.io/schedingers-site/dev/)和[工程关于页](https://xue-ding-e-a.github.io/schedingers-site/dev/about/)。
+- 门户先显示轻量星空，Three.js 画布首帧就绪后再切换。摄影首页用 WebP 封面与可缓存的循环星轨视频，精选作品和系列预览等到视频开始播放后再加载。关闭动效、暂停播放或播放失败时，预览仍可加载。参见[门户](src/pages/index.astro)和[摄影首页](src/pages/photo.astro)。
+- 10 幅作品的「全部」视图用并排与错落组合保留完整画幅。筛选系列后，按拍摄日期分组，同日作品按卡片宽度紧凑排布。参见[作品总览](https://xue-ding-e-a.github.io/schedingers-site/works/)和[作品布局源码](src/components/WorksGallery.astro)。
+- 摄影首页的精选作品横向滚动。观星地图归入系列总览，4 个系列各有独立页面。作品详情按照片原始比例收紧画框，展示拍摄坐标、器材、EXIF 与堆栈方式，并支持返回上一页。参见[系列总览](https://xue-ding-e-a.github.io/schedingers-site/collections/)和[作品详情示例](https://xue-ding-e-a.github.io/schedingers-site/works/galactic-arch-snow-mountain/)。
+- 4 个工程项目均有封面和独立详情，摄影与工程内容均提供中英双语。两条主线共用页脚联系区，邮箱和微信可一键复制。参见[工程项目](https://xue-ding-e-a.github.io/schedingers-site/projects/)和[联系区源码](src/components/ContactFooter.astro)。
+- 站点静态输出，交互由页面脚本处理。作品图离线生成 WebP 缩略图与响应式档位，加载时用照片平均色占位。参见[图片处理脚本](scripts/build-responsive-images.py)。
 
 ## 技术栈
 
 | 层 | 选择 | 理由 |
 | --- | --- | --- |
-| 框架 | Astro 5 | 内容多、交互少，默认零 JS |
+| 框架 | Astro 5 | 静态生成页面，原生脚本处理交互 |
 | 类型 | TypeScript | 锁死双语的 EXIF、坐标与文案字段 |
 | 样式 | 原生 CSS | 画幅从 0.67 到 2.14，手写栅格比调断点更直接 |
 | 图像 | Python / Pillow | 最大原图 144MB、1.68 亿像素，构建前离线处理 |
-| 背景 | Canvas 2D + Three.js | 门户星野用 2D，首页粒子背景按需加载 |
+| 首屏动效 | CSS + Three.js / MP4 | 门户先显示 CSS 星野，摄影首页用静态封面到循环视频的过渡 |
 | 部署 | GitHub Pages + Actions | 推送 main 即构建发布 |
 
 ## 快速开始
@@ -82,7 +81,7 @@ npm run preview   # 预览构建结果
 
 ```text
 src/
-├─ components/        WorkCard、ProjectCard
+├─ components/        WorksGallery、WorkCard、ProjectCard、ContactFooter
 ├─ data/              works.ts / series.ts / projects.ts（内容与双语字段）
 ├─ i18n/              ui.ts（文案字典）、utils.ts（语言与路径工具）
 ├─ layouts/           BaseLayout.astro（导航、页脚、主题切换）
@@ -95,7 +94,7 @@ public/
 
 ## 内容维护
 
-- 新增作品：编辑 [src/data/works.ts](src/data/works.ts)，补齐中英文字段与 `thumb` 路径，图片放进 `public/images/works/`。
+- 新增作品：编辑 [src/data/works.ts](src/data/works.ts)，补齐中英文字段与 `thumb` 路径，图片放进 `public/images/works/`。新增作品要出现在「全部」视图时，也要更新 [WorksGallery.astro](src/components/WorksGallery.astro) 的手工排版。
 - 新增系列：编辑 [src/data/series.ts](src/data/series.ts)，详情路由由 `src/pages/collections/[slug].astro` 自动生成。
 - 新增项目：编辑 [src/data/projects.ts](src/data/projects.ts)。
 - 调整导航：编辑 [src/consts.ts](src/consts.ts)，摄影与工程分别使用 `PHOTO_NAV`、`DEV_NAV`。
@@ -118,12 +117,12 @@ base: '/schedingers-site',
 
 每次迭代按功能批次记录在站点的[制作手记](https://xue-ding-e-a.github.io/schedingers-site/build/)中，包括技术选型、AI 与人工的分工、时间线与踩坑复盘。近期批次：
 
-- `2026.11.17` 先让部署跑通：子路径、Actions 与资源路径对齐
-- `2026.11.17` 换掉通用深色模板：Darkness 视觉体系与首页粒子背景
-- `2026.11.17` 中文字体不再「混血」：四套字体栈与全量字体
-- `2026.11.17` 拆成两条主线：摄影黑 / 工程白
-- `2026.11.18` 精选作品只保留横滑
-- `2026.11.18` 摄影导航补上「联系」入口
+- `2026.11.22` 定稿作品总览的策展排版，按拍摄日期紧凑排列筛选结果，统一摄影卡片交互与两条主线的联系页脚。
+- `2026.11.21` 门户先显示轻量星空，摄影首页改用可缓存的星轨循环视频，并延后加载照片预览。
+- `2026.11.20` 拆分摄影和工程的关于页，平滑跨主线的 Logo 过渡，适配浏览器深浅配色图标，补齐系列显影及作品详情的原比例画框和返回操作。
+- `2026.11.19` 为工程项目补齐封面和 WowLand 招募宣讲案例，调整导航胶囊以减少浏览器间的色差。
+- `2026.11.18` 精选作品改为横向滚动，观星地图并入系列总览，加入字体子集与作品图的响应式档位。
+- `2026.11.17` 跑通 GitHub Pages 部署，建立字体与视觉体系，拆分摄影黑、工程白两条主线。
 
 ## 贡献
 
