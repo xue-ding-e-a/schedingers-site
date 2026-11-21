@@ -1,5 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import heroVideo from '../assets/photo/star-trails-loop.mp4?url';
+import heroPoster from '../assets/photo/star-trails-poster.webp?url';
 import WorkCard from '../components/WorkCard.astro';
 import { works, featuredWorks } from '../data/works';
 import { series } from '../data/series';
@@ -26,52 +28,16 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
 ---
 
 <BaseLayout lang={lang} title={t('nav.photo')} description={t('photo.lead')} section="photo">
-  <Fragment slot="head">
-    <link rel="preload" as="image" href={withBase(hero.image)} fetchpriority="high" />
-    <link rel="preload" as="image" href={withBase('/images/works/star-trails-river-highlight.png')} />
-    <link rel="preload" as="image" href={withBase('/images/works/star-trails-river-lamp-dim.webp')} />
-    <link rel="preload" as="image" href={withBase('/images/works/star-trails-river-lamp-glow.webp')} />
-  </Fragment>
-
   <section class="hero" data-hero>
-    <script is:inline>
-      // The first photo paint must include the low-light layer.
-      if (matchMedia('(prefers-reduced-motion: no-preference)').matches) {
-        const hero = document.currentScript.parentElement;
-        hero.setAttribute('data-photo-loading', '');
-        window.addEventListener('load', () => {
-          if (!hero.hasAttribute('data-photo-initialized')) hero.removeAttribute('data-photo-loading');
-        }, { once: true });
-      }
-    </script>
-    <img class="hero-img" src={withBase(hero.image)} alt={hero.title[lang]} width={hero.width} height={hero.height} fetchpriority="high" />
-    <svg
-      class="hero-star-motion"
-      viewBox={`0 0 ${hero.width} ${hero.height}`}
-      preserveAspectRatio="xMidYMid slice"
-      aria-hidden="true"
-    >
-      <defs>
-        <mask id="hero-star-mask" maskUnits="userSpaceOnUse" x="0" y="0" width={hero.width} height={hero.height}>
-          <image data-motion-src={withBase('/images/works/star-trails-river-highlight.png')} width={hero.width} height={hero.height} />
-        </mask>
-        <radialGradient id="hero-star-light">
-          <stop offset="0" stop-color="#eef5ff" />
-          <stop offset="0.42" stop-color="#eef5ff" stop-opacity="0.94" />
-          <stop offset="0.75" stop-color="#eef5ff" stop-opacity="0.4" />
-          <stop offset="1" stop-color="#eef5ff" stop-opacity="0" />
-        </radialGradient>
-      </defs>
-      <g mask="url(#hero-star-mask)" fill="url(#hero-star-light)">
-        <ellipse class="hero-star-light" cx="80" cy="805" rx="238" ry="147" style="--travel-x: 755px; --travel-y: -346px; --phase: -3.2s" />
-        <ellipse class="hero-star-light" cx="690" cy="713" rx="220" ry="167" style="--travel-x: 615px; --travel-y: -499px; --phase: -1.75s" />
-        <ellipse class="hero-star-light" cx="1348" cy="948" rx="248" ry="166" style="--travel-x: 672px; --travel-y: -410px; --phase: -4.7s" />
-        <ellipse class="hero-star-light" cx="1490" cy="589" rx="225" ry="143" style="--travel-x: 675px; --travel-y: -358px; --phase: -7.1s" />
-      </g>
-      <!-- These cropped layers use the original 2400 × 1600 photo coordinates. -->
-      <image class="hero-lamp-layer hero-lamp-shade" data-motion-src={withBase('/images/works/star-trails-river-lamp-dim.webp')} x="0" y="950" width="1090" height="550" />
-      <image class="hero-lamp-layer hero-lamp-glow" data-motion-src={withBase('/images/works/star-trails-river-lamp-glow.webp')} x="0" y="950" width="1090" height="550" />
-    </svg>
+    <video
+      class="hero-video"
+      data-src={heroVideo}
+      poster={heroPoster}
+      aria-label={hero.title[lang]}
+      muted
+      playsinline
+      loop
+    ></video>
     <div class="hero-veil" aria-hidden="true"></div>
     <div class="hero-inner container-wide">
       <p class="kicker">{t('photo.kicker')}</p>
@@ -171,7 +137,6 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
 <style>
   .hero {
     position: relative;
-    --hero-period: 10s;
     min-height: 100svh;
     /* 向上延伸，让首屏图覆盖到导航栏顶部 */
     margin-top: calc(var(--head-h, var(--nav-h)) * -1);
@@ -182,7 +147,7 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
     overflow: hidden;
   }
 
-  .hero-img {
+  .hero-video {
     position: absolute;
     inset: 0;
     width: 100%;
@@ -190,72 +155,12 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
     object-fit: cover;
   }
 
-  /* 对原片和星轨高光一起压暗，保持首屏图原有的亮度。 */
   .hero-veil {
     position: absolute;
     inset: 0;
     background: #000;
     opacity: 0.25;
     pointer-events: none;
-  }
-
-  /* 使用原片现有的星轨和周围微光生成遮罩，与原片共用居中裁切。 */
-  .hero-star-motion {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    display: block;
-    pointer-events: none;
-    visibility: hidden;
-  }
-
-  .hero-star-light {
-    opacity: 0;
-  }
-
-  .hero-lamp-shade {
-    --low: 1;
-    --peak: 0;
-  }
-
-  .hero-lamp-glow {
-    --low: 0;
-    --peak: 1;
-    opacity: 0;
-  }
-
-  @media (prefers-reduced-motion: no-preference) {
-    .hero[data-photo-loading] .hero-img {
-      visibility: hidden;
-    }
-
-    .hero[data-photo-dimmed] .hero-star-motion {
-      visibility: visible;
-    }
-
-    .hero[data-motion-ready] .hero-star-light {
-      animation: star-light-pass var(--hero-period) linear var(--phase) infinite;
-    }
-
-    .hero[data-motion-ready] .hero-lamp-layer {
-      animation: lamp-exposure var(--hero-period) cubic-bezier(0.333, 0, 0.667, 1) infinite;
-    }
-
-    .hero[data-motion-paused] :is(.hero-star-light, .hero-lamp-layer) {
-      animation-play-state: paused;
-    }
-  }
-
-  @keyframes star-light-pass {
-    0% { opacity: 0; transform: translate(0, 0); }
-    18%, 49% { opacity: 0.88; }
-    74%, 100% { opacity: 0; transform: translate(var(--travel-x), var(--travel-y)); }
-  }
-
-  @keyframes lamp-exposure {
-    0%, 3%, 97%, 100% { opacity: var(--low); }
-    19.5%, 27.5% { opacity: var(--peak); }
   }
 
   .hero-inner {
@@ -507,61 +412,51 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
 <script>
   const hero = document.querySelector<HTMLElement>('[data-hero]');
   const toggle = hero?.querySelector<HTMLButtonElement>('.hero-motion-toggle');
-  const photo = hero?.querySelector<HTMLImageElement>('.hero-img');
-  if (hero && toggle && photo) {
-    const motionPreference = matchMedia('(prefers-reduced-motion: reduce)');
-    const layers = Array.from(hero.querySelectorAll<SVGImageElement>('[data-motion-src]'));
-    let paused = false;
-    let inView = true;
-    let dimmed = false;
-    let scene: 'idle' | 'loading' | 'ready' | 'failed' = 'idle';
-    hero.setAttribute('data-photo-initialized', '');
+  const video = hero?.querySelector<HTMLVideoElement>('.hero-video');
+  function setupPlayback(video: HTMLVideoElement, toggle: HTMLButtonElement) {
+    const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+    let wantsPlayback = !reducedMotion.matches;
+    let sourceReady: Promise<void> | undefined;
 
-    const sync = () => {
-      const allowed = !motionPreference.matches;
-      const enabled = allowed && scene === 'ready';
-      hero.toggleAttribute('data-photo-loading', allowed && !dimmed && scene !== 'failed');
-      hero.toggleAttribute('data-photo-dimmed', allowed && dimmed);
-      hero.toggleAttribute('data-motion-ready', enabled);
-      hero.toggleAttribute('data-motion-paused', paused || !inView || document.hidden);
-      toggle.hidden = !enabled;
-      if (allowed && scene === 'idle') void loadScene();
-    };
+    async function loadVideo(player: HTMLVideoElement) {
+      // The build fingerprints this URL. Reuse the complete cached file across
+      // visits, and give the player a local source for every seek and loop.
+      const response = await fetch(player.dataset.src!, { cache: 'force-cache' });
+      if (!response.ok) throw new Error(`Video request failed (${response.status})`);
+      player.src = URL.createObjectURL(await response.blob());
+    }
 
-    const loadScene = async () => {
-      scene = 'loading';
-      const loading = layers.map((layer) => {
-        const image = new Image();
-        const src = layer.dataset.motionSrc!;
-        image.src = src;
-        return new Promise<void>((resolve, reject) => {
-          layer.addEventListener('load', () => resolve(), { once: true });
-          layer.addEventListener('error', reject, { once: true });
-          layer.setAttribute('href', src);
-        }).then(() => image.decode());
-      });
-      const shadeIndex = layers.findIndex((layer) => layer.classList.contains('hero-lamp-shade'));
-      const firstFrame = Promise.all([photo.decode(), loading[shadeIndex]]).then(() => {
-        dimmed = true;
-        sync();
-      });
-      const results = await Promise.allSettled([firstFrame, ...loading]);
-      scene = results.every(({ status }) => status === 'fulfilled') ? 'ready' : 'failed';
-      sync();
-      hero.setAttribute('data-photo-settled', '');
-    };
+    function updateLabel() {
+      toggle.textContent = (wantsPlayback ? toggle.dataset.pauseLabel : toggle.dataset.playLabel) ?? '';
+    }
 
+    async function syncPlayback() {
+      updateLabel();
+      if (!wantsPlayback) {
+        video.pause();
+        return;
+      }
+      try {
+        await (sourceReady ??= loadVideo(video));
+        if (wantsPlayback) await video.play();
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') return;
+        if (!video.src) sourceReady = undefined;
+        wantsPlayback = false;
+        updateLabel();
+      }
+    }
+
+    toggle.hidden = false;
     toggle.addEventListener('click', () => {
-      paused = !paused;
-      toggle.textContent = (paused ? toggle.dataset.playLabel : toggle.dataset.pauseLabel) ?? '';
-      sync();
+      wantsPlayback = !wantsPlayback;
+      void syncPlayback();
     });
-    new IntersectionObserver(([entry]) => {
-      inView = entry.isIntersecting;
-      sync();
-    }).observe(hero);
-    document.addEventListener('visibilitychange', sync);
-    motionPreference.addEventListener('change', sync);
-    sync();
+    reducedMotion.addEventListener('change', () => {
+      wantsPlayback = !reducedMotion.matches;
+      void syncPlayback();
+    });
+    void syncPlayback();
   }
+  if (video && toggle) setupPlayback(video, toggle);
 </script>

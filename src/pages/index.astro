@@ -103,7 +103,7 @@ const skyModule = withBase('/vendor/three-bg.js');
       }
     }
   </script>
-  <script is:inline define:vars={{ warmPage: localizePath('/photo/', lang), warmHero: withBase('/images/works/star-trails-river.webp') }}>
+  <script is:inline define:vars={{ warmPage: localizePath('/photo/', lang) }}>
     (() => {
       // 门户加载完成后，低优先级预热摄影首页
       const loaded = new Promise((resolve) => {
@@ -120,10 +120,6 @@ const skyModule = withBase('/vendor/three-bg.js');
         link.rel = 'prefetch';
         link.href = warmPage;
         document.head.appendChild(link);
-
-        const hero = new Image();
-        hero.fetchPriority = 'low';
-        hero.src = warmHero;
       });
     })();
   </script>
