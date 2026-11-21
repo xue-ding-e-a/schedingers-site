@@ -11,20 +11,19 @@ const t = useTranslations(lang);
 const otherLang: Lang = lang === 'zh' ? 'en' : 'zh';
 const langHref = withBase(otherLang === 'en' ? '/en/' : '/');
 const langLabel = otherLang === 'zh' ? '中文' : 'EN';
+const skyModule = withBase('/vendor/three-bg.js');
 ---
 
 <BaseLayout lang={lang} title={t('portal.title')} chrome={false} accent="warm">
   <Fragment slot="head">
-    <link rel="preload" as="script" href={withBase('/vendor/three-bg.js')} crossorigin />
+    <link rel="modulepreload" href={skyModule} media="(prefers-reduced-motion: no-preference)" />
     <link rel="preload" as="font" type="font/woff2" href={headingFont} crossorigin />
     <link rel="preload" as="font" type="font/woff2" href={numericFont} crossorigin />
   </Fragment>
-  <canvas
-    id="three-canvas"
-    aria-hidden="true"
-    data-warm-page={localizePath('/photo/', lang)}
-    data-warm-hero={withBase('/images/works/star-trails-river.webp')}
-  ></canvas>
+  <div class="portal-sky" aria-hidden="true">
+    <div class="portal-stars"></div>
+    <canvas id="three-canvas"></canvas>
+  </div>
   <div class="portal">
     <div class="veil" aria-hidden="true"></div>
 
@@ -92,13 +91,21 @@ const langLabel = otherLang === 'zh' ? '中文' : 'EN';
     </footer>
   </div>
 
-  <script src={withBase('/vendor/three-bg.js')} type="module" is:inline></script>
-  <script is:inline>
+  <script is:inline type="module" define:vars={{ skyModule }}>
+    const sky = document.querySelector('.portal-sky');
+    if (sky && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      try {
+        // 模块同步绘制第一帧，随后才切换到 3D 画布。
+        await import(skyModule);
+        sky.classList.add('is-rendered');
+      } catch {
+        // 脚本或 WebGL 不可用时，保留轻量星空。
+      }
+    }
+  </script>
+  <script is:inline define:vars={{ warmPage: localizePath('/photo/', lang), warmHero: withBase('/images/works/star-trails-river.webp') }}>
     (() => {
-      const canvas = document.getElementById('three-canvas');
-      if (!canvas) return;
-
-      // 门户全部元素加载完成后，立即预热摄影首页
+      // 门户加载完成后，低优先级预热摄影首页
       const loaded = new Promise((resolve) => {
         if (document.readyState === 'complete') resolve();
         else window.addEventListener('load', resolve, { once: true });
@@ -111,12 +118,12 @@ const langLabel = otherLang === 'zh' ? '中文' : 'EN';
 
         const link = document.createElement('link');
         link.rel = 'prefetch';
-        link.href = canvas.dataset.warmPage;
+        link.href = warmPage;
         document.head.appendChild(link);
 
         const hero = new Image();
-        hero.fetchPriority = 'high';
-        hero.src = canvas.dataset.warmHero;
+        hero.fetchPriority = 'low';
+        hero.src = warmHero;
       });
     })();
   </script>
@@ -174,6 +181,61 @@ const langLabel = otherLang === 'zh' ? '中文' : 'EN';
 </BaseLayout>
 
 <style>
+  .portal-sky {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .portal-stars,
+  #three-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    transition: opacity 0.35s ease;
+  }
+
+  .portal-stars {
+    /* 星点随首屏样式一同绘制。不同大小的重复图层打散星点间距。 */
+    background-image:
+      radial-gradient(circle at 17% 32%, #b89be4 0.7px, transparent 1.5px),
+      radial-gradient(circle at 62% 81%, #a66e9f 0.8px, transparent 1.7px),
+      radial-gradient(circle at 77% 24%, #7998d7 0.6px, transparent 1.4px),
+      radial-gradient(circle at 38% 63%, #705c9c 0.55px, transparent 1.2px),
+      radial-gradient(circle at 72% 46%, #b699cc 1px, transparent 2px),
+      radial-gradient(circle at 33% 17%, #6284b9 0.55px, transparent 1.3px);
+    background-size: 163px 127px, 211px 173px, 131px 181px, 97px 119px, 347px 271px, 123px 149px;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .portal-stars {
+      inset: -20px;
+      width: auto;
+      height: auto;
+      animation: stars-drift 18s ease-in-out infinite alternate;
+    }
+  }
+
+  #three-canvas,
+  .portal-sky.is-rendered .portal-stars {
+    opacity: 0;
+  }
+
+  .portal-sky.is-rendered #three-canvas {
+    opacity: 1;
+  }
+
+  .portal-sky.is-rendered .portal-stars {
+    animation-play-state: paused;
+  }
+
+  @keyframes stars-drift {
+    to { transform: translate(16px, -12px); }
+  }
+
   .portal {
     position: relative;
     min-height: 100svh;
