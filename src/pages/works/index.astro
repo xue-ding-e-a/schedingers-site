@@ -1,18 +1,16 @@
 ---
+import PhotoArranger from '../../components/PhotoArranger.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import WorkCard from '../../components/WorkCard.astro';
 import { works, sortByDate } from '../../data/works';
 import { series } from '../../data/series';
-import { useTranslations, localizePath } from '../../i18n/utils';
+import { useTranslations } from '../../i18n/utils';
 import type { Lang } from '../../i18n/ui';
 
 const { lang = 'zh' } = Astro.props as { lang?: Lang };
 const t = useTranslations(lang);
 const list = sortByDate(works);
 
-// 按原图存储体积分三档：≥50MB 大图、20–50MB 中图、<20MB 小图
-const sizeTier = (mb: number) => (mb >= 50 ? 'lg' : mb >= 20 ? 'md' : 'sm');
-const orientation = (w: { width: number; height: number }) => (w.width >= w.height ? 'land' : 'port');
 ---
 
 <BaseLayout lang={lang} title={t('works.title')} description={t('works.lead')} section="photo">
@@ -31,15 +29,17 @@ const orientation = (w: { width: number; height: number }) => (w.width >= w.heig
           <button class="chip" data-filter={s.slug} aria-pressed="false">{s.name[lang]}</button>
         ))}
       </div>
-      <span class="mono numeric count">{list.length} {t('works.count')}</span>
+      <span class="mono numeric count"><span id="work-count">{list.length}</span> {t('works.count')}</span>
     </div>
   </div>
 
   <section class="container-wide works-wrap">
-    <div class="works-grid" id="works-grid">
+    <PhotoArranger scope="works" {lang} photos={list.map(work => ({ work }))} />
+    <div class="works-grid" id="works-grid" data-arranger-original>
       {list.map((w, i) => (
         <div
-          class:list={['work-item', `tier-${sizeTier(w.sizeMB)}`, `orient-${orientation(w)}`]}
+          class="work-item"
+          style={`--ratio:${w.width / w.height}`}
           data-series={w.series}
         >
           <WorkCard work={w} lang={lang} eager={i < 3} />
@@ -55,7 +55,31 @@ const orientation = (w: { width: number; height: number }) => (w.width >= w.heig
 <script>
   const chips = Array.from(document.querySelectorAll<HTMLButtonElement>('.chip[data-filter]'));
   const items = Array.from(document.querySelectorAll<HTMLElement>('.work-item'));
+  const count = document.getElementById('work-count');
   const empty = document.getElementById('empty');
+
+  const grid = document.querySelector<HTMLElement>('#works-grid')!;
+  const desktop = window.matchMedia('(min-width: 641px)');
+
+  // Count the caption as part of each card, including wrapped translations.
+  const fitRows = () => {
+    if (!desktop.matches || !('ResizeObserver' in window)) return;
+    const style = getComputedStyle(grid);
+    const gap = parseFloat(style.columnGap);
+    const unit = parseFloat(style.getPropertyValue('--row-unit'));
+    const rows = items.map(item => Math.ceil((item.offsetHeight + gap) / unit));
+    items.forEach((item, i) => {
+      if (!item.hidden) item.style.setProperty('--rows', String(rows[i]));
+    });
+    grid.classList.add('packed');
+  };
+
+  if ('ResizeObserver' in window) {
+    const observer = new ResizeObserver(fitRows);
+    items.forEach(item => observer.observe(item));
+    desktop.addEventListener('change', fitRows);
+    fitRows();
+  }
 
   const apply = (filter: string) => {
     let visible = 0;
@@ -64,6 +88,8 @@ const orientation = (w: { width: number; height: number }) => (w.width >= w.heig
       item.hidden = !show;
       if (show) visible += 1;
     }
+    fitRows();
+    if (count) count.textContent = String(visible);
     if (empty) empty.hidden = visible > 0;
   };
 
@@ -80,16 +106,15 @@ const orientation = (w: { width: number; height: number }) => (w.width >= w.heig
 
 <style>
   .page-head {
-    padding-top: clamp(56px, 9vw, 110px);
-    padding-bottom: clamp(36px, 5vw, 60px);
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: baseline;
+    gap: 10px clamp(18px, 2vw, 32px);
+    padding-block: clamp(28px, 4vw, 56px) clamp(20px, 2.5vw, 36px);
   }
 
-  .page-head .display {
-    margin-top: 20px;
-  }
-
-  .head-lead {
-    margin-top: 22px;
+  .page-head .kicker {
+    grid-column: 1 / -1;
   }
 
   .filter-bar {
@@ -106,7 +131,7 @@ const orientation = (w: { width: number; height: number }) => (w.width >= w.heig
     display: flex;
     align-items: center;
     gap: 22px;
-    padding-block: 14px;
+    padding-block: 10px;
   }
 
   .filter-label {
@@ -131,41 +156,36 @@ const orientation = (w: { width: number; height: number }) => (w.width >= w.heig
   }
 
   .works-wrap {
-    padding-top: clamp(32px, 4vw, 56px);
+    padding-top: clamp(18px, 2vw, 30px);
   }
 
-  /* 12 栅格：档位只决定跨列数，横竖构图再各降一档，保证面积关系为 大 > 中 > 小 */
   .works-grid {
+    --row-unit: 4px;
+    --gallery-gap: clamp(16px, 1.8vw, 28px);
     display: grid;
     grid-template-columns: repeat(12, minmax(0, 1fr));
-    grid-auto-flow: row dense;
+    gap: var(--gallery-gap);
     align-items: start;
-    gap: clamp(20px, 2.4vw, 36px);
   }
 
   .work-item {
-    --span: 4;
-    grid-column: span var(--span);
     min-width: 0;
   }
 
-  .work-item.tier-lg.orient-land {
-    --span: 8;
-  }
-  .work-item.tier-lg.orient-port {
-    --span: 6;
-  }
-  .work-item.tier-md.orient-land {
-    --span: 6;
-  }
-  .work-item.tier-md.orient-port {
-    --span: 4;
-  }
-  .work-item.tier-sm.orient-land {
-    --span: 4;
-  }
-  .work-item.tier-sm.orient-port {
-    --span: 3;
+  @media (min-width: 641px) {
+    .works-grid.packed {
+      grid-auto-rows: var(--row-unit);
+      grid-auto-flow: row dense;
+      row-gap: 0;
+    }
+
+    .packed > .work-item {
+      grid-row-end: span var(--rows, 1);
+    }
+
+    .work-item {
+      grid-column: span 6;
+    }
   }
 
   .work-item[hidden] {
@@ -185,36 +205,26 @@ const orientation = (w: { width: number; height: number }) => (w.width >= w.heig
     color: var(--text-faint);
   }
 
-  @media (max-width: 1080px) {
-    .works-grid {
-      grid-template-columns: repeat(6, minmax(0, 1fr));
-    }
-    .work-item.tier-lg.orient-land {
-      --span: 4;
-    }
-    .work-item.tier-lg.orient-port {
-      --span: 3;
-    }
-    .work-item.tier-md.orient-land {
-      --span: 3;
-    }
-    .work-item.tier-md.orient-port {
-      --span: 2;
-    }
-    .work-item.tier-sm.orient-land,
-    .work-item.tier-sm.orient-port {
-      --span: 2;
-    }
-  }
-
   @media (max-width: 640px) {
-    .works-grid {
+    .page-head {
       grid-template-columns: 1fr;
-      gap: 28px;
+      row-gap: 8px;
     }
-    .works-grid .work-item {
-      --span: 1;
+
+    .works-grid {
+      justify-items: center;
+      grid-template-columns: minmax(0, 1fr);
+      row-gap: 32px;
     }
+
+    .work-item {
+      width: 100%;
+    }
+
+    .work-item {
+      max-width: calc(var(--ratio) * 56svh);
+    }
+
     .filter-label,
     .count {
       display: none;

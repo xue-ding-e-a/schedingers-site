@@ -91,18 +91,6 @@ const gear = [
       </div>
     </div>
   </section>
-
-  <section class="container-wide block">
-    <div class="block-head">
-      <span class="mono num">04</span>
-      <h2 class="h2">{t('about.contactTitle')}</h2>
-    </div>
-    <div class="contact-row">
-      <a href={`mailto:${SITE.email}`} class="contact-link">{SITE.email}</a>
-      <span class="mono">WeChat · {SITE.wechat}</span>
-      <a class="btn" href={localizePath('/contact', lang)}>{t('nav.contact')} <span class="arrow">→</span></a>
-    </div>
-  </section>
 </BaseLayout>
 
 <style>
@@ -221,25 +209,6 @@ const gear = [
     display: flex;
     gap: 12px;
     flex-wrap: wrap;
-  }
-
-  .contact-row {
-    display: flex;
-    align-items: center;
-    gap: 26px;
-    flex-wrap: wrap;
-  }
-
-  .contact-link {
-    font-size: clamp(1.1rem, 2vw, 1.5rem);
-    border-bottom: 1px solid var(--line-strong);
-    padding-bottom: 3px;
-    transition: color 0.3s var(--ease), border-color 0.3s var(--ease);
-  }
-
-  .contact-link:hover {
-    color: var(--accent, var(--warm));
-    border-color: var(--accent, var(--warm));
   }
 
   @media (max-width: 900px) {

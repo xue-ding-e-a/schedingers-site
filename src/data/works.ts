@@ -16,6 +16,7 @@ export type Work = {
   thumb: string;
   width: number;
   height: number;
+  gallerySize: 'portrait' | 'wide-small' | 'wide-medium' | 'wide-large';
   sizeMB: number;
   color: string;
   featured?: boolean;
@@ -24,6 +25,7 @@ export type Work = {
 export const works: Work[] = [
   {
     slug: 'under-the-milky-way',
+    gallerySize: 'portrait',
     sizeMB: 20.9,
     title: { zh: '银河下的我们', en: 'Us Beneath the Milky Way' },
     series: 'pingan',
@@ -59,6 +61,7 @@ Maybe the point of chasing the sky is not only to record some distant unknown. I
   },
   {
     slug: 'twin-arches-jade',
+    gallerySize: 'wide-large',
     sizeMB: 144.03,
     title: { zh: '双拱如玉', en: 'Twin Arches of Jade' },
     series: 'pingan',
@@ -97,6 +100,7 @@ No daytime noise, only wind over the grass slope. We stand at the edge of the va
   },
   {
     slug: 'prairie-starry-night',
+    gallerySize: 'wide-small',
     sizeMB: 14.68,
     title: { zh: '草原星夜', en: 'Prairie Starry Night' },
     series: 'pingan',
@@ -131,6 +135,7 @@ This starlight set out more than twenty thousand years ago, crossed light years 
   },
   {
     slug: 'winter-milky-way',
+    gallerySize: 'wide-medium',
     sizeMB: 6.89,
     title: { zh: '冬夜星河', en: 'Winter Milky Way' },
     series: 'guanshan',
@@ -168,6 +173,7 @@ Between them lies only this snowfield. Look up and there is the sea of stars; lo
   },
   {
     slug: 'star-trails-river',
+    gallerySize: 'wide-medium',
     sizeMB: 7.83,
     title: { zh: '星河流转', en: 'River of Turning Stars' },
     series: 'guanshan',
@@ -202,6 +208,7 @@ So the star trails are not just lines in the sky. They record the rotation of th
   },
   {
     slug: 'galactic-arch-snow-mountain',
+    gallerySize: 'wide-large',
     sizeMB: 56.52,
     title: { zh: '银河落入雪山', en: 'Where the Milky Way Falls' },
     series: 'guanshan',
@@ -237,6 +244,7 @@ We are used to calling this a galactic arch, and rarely stop to think that the g
   },
   {
     slug: 'eaves-of-time',
+    gallerySize: 'wide-medium',
     sizeMB: 17.37,
     title: { zh: '檐上流年', en: 'Years Above the Eaves' },
     series: 'xianyou',
@@ -271,6 +279,7 @@ Standing here in silence, we finish a gaze across time with the same sky people 
   },
   {
     slug: 'meteor-over-ridge',
+    gallerySize: 'portrait',
     sizeMB: 36.13,
     title: { zh: '山脊流星', en: 'Meteor Over the Ridge' },
     series: 'jiuzhaigou',
@@ -306,6 +315,7 @@ Standing below the silent forest, time seems to stop. Only starlight passes thro
   },
   {
     slug: 'stars-fall-on-village',
+    gallerySize: 'wide-medium',
     sizeMB: 34.68,
     title: { zh: '星落古寨', en: 'Stars Over the Old Village' },
     series: 'jiuzhaigou',
@@ -341,6 +351,7 @@ The sky is vast, the mountains say nothing. In their embrace, the sea of stars a
   },
   {
     slug: 'plank-road-star-bridge',
+    gallerySize: 'wide-small',
     sizeMB: 77.86,
     title: { zh: '栈道星桥', en: 'The Plank Road Star Bridge' },
     series: 'jiuzhaigou',

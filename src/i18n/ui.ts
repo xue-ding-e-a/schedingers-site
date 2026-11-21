@@ -18,7 +18,6 @@ export const ui = {
     'nav.projects': '项目',
     'nav.build': '制作手记',
     'nav.about': '关于',
-    'nav.contact': '联系',
     'nav.dev': '工程',
     'nav.index': '索引',
     'nav.menu': '菜单',
@@ -138,7 +137,6 @@ export const ui = {
     'about.storyTitle': '我是怎么走到星空下的',
     'about.gearTitle': '装备',
     'about.nowTitle': '现在',
-    'about.contactTitle': '聊聊',
 
     'aboutDev.kicker': 'About / 2022—2026',
     'aboutDev.bioTitle': '我怎么走到工程这条线',
@@ -151,6 +149,8 @@ export const ui = {
 
     'contact.title': '联系',
     'contact.lead': '合作、授权、约拍，或者只是聊聊星空。',
+    'contact.devLead': '聊聊项目、技术交流与合作。',
+    'contact.location': '所在地',
     'contact.email': '邮箱',
     'contact.wechat': '微信',
     'contact.copy': '点击复制',
@@ -181,7 +181,6 @@ export const ui = {
     'nav.projects': 'Projects',
     'nav.build': 'Build Log',
     'nav.about': 'About',
-    'nav.contact': 'Contact',
     'nav.dev': 'Engineering',
     'nav.index': 'Index',
     'nav.menu': 'Menu',
@@ -301,7 +300,6 @@ export const ui = {
     'about.storyTitle': 'How I ended up under the stars',
     'about.gearTitle': 'Gear',
     'about.nowTitle': 'Now',
-    'about.contactTitle': 'Say hello',
 
     'aboutDev.kicker': 'About / 2022—2026',
     'aboutDev.bioTitle': 'How I ended up in engineering',
@@ -314,6 +312,8 @@ export const ui = {
 
     'contact.title': 'Contact',
     'contact.lead': 'Collaboration, licensing, shoots — or just talk about the sky.',
+    'contact.devLead': 'Get in touch about projects, technology or collaboration.',
+    'contact.location': 'Location',
     'contact.email': 'Email',
     'contact.wechat': 'WeChat',
     'contact.copy': 'Click to copy',

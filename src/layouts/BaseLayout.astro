@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import ContactFooter from '../components/ContactFooter.astro';
 import { SITE, NAV, PHOTO_NAV, DEV_NAV } from '../consts';
 import { useTranslations, localizePath, withBase, stripBase } from '../i18n/utils';
 import type { Lang } from '../i18n/ui';
@@ -473,20 +474,22 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
     {
       chrome && (
         <footer class="site-foot">
-          <div class="container foot-inner">
-            <div class="foot-brand">
-              <span class="brand-text">{siteName}</span>
-              <span class="mono">{t('site.tagline')}</span>
+          <div class="container-wide">
+            <ContactFooter lang={lang} engineering={section === 'dev'} />
+            <div class="foot-inner">
+              <div class="foot-brand">
+                <span class="brand-text">{siteName}</span>
+                <span class="mono">{t('site.tagline')}</span>
+              </div>
+              <div class="foot-links">
+                <a href={localizePath('/', lang)}>{t('footer.back')}</a>
+                <a href={localizePath('/index', lang)}>{t('footer.index')}</a>
+                <a href={localizePath('/credits', lang)}>{t('footer.credit')}</a>
+              </div>
+              <p class="foot-note mono">
+                © {new Date().getFullYear()} {SITE.author[lang]} · {t('footer.rights')}
+              </p>
             </div>
-            <div class="foot-links">
-              <a href={localizePath('/', lang)}>{t('footer.back')}</a>
-              <a href={localizePath('/index', lang)}>{t('footer.index')}</a>
-              <a href={localizePath('/credits', lang)}>{t('footer.credit')}</a>
-              <a href={`mailto:${SITE.email}`}>{SITE.email}</a>
-            </div>
-            <p class="foot-note mono">
-              © {new Date().getFullYear()} {SITE.author[lang]} · {t('footer.rights')}
-            </p>
           </div>
         </footer>
       )

@@ -16,7 +16,6 @@ export const NAV = [
   { key: 'dev', href: '/dev' },
   { key: 'index', href: '/index' },
   { key: 'about', href: '/about' },
-  { key: 'contact', href: '/contact' },
 ] as const;
 
 export const PHOTO_NAV = [
@@ -24,7 +23,6 @@ export const PHOTO_NAV = [
   { key: 'works', href: '/works' },
   { key: 'series', href: '/collections' },
   { key: 'about', href: '/about' },
-  { key: 'contact', href: '/contact' },
 ] as const;
 
 export const DEV_NAV = [
@@ -32,5 +30,4 @@ export const DEV_NAV = [
   { key: 'projects', href: '/projects' },
   { key: 'build', href: '/build' },
   { key: 'about', href: '/dev/about' },
-  { key: 'contact', href: '/contact' },
 ] as const;

@@ -1,0 +1,47 @@
+---
+import '../styles/work-card-interactions.css';
+import type { Work } from '../data/works';
+import type { Lang } from '../i18n/ui';
+import { localizePath, withBase } from '../i18n/utils';
+
+interface Props {
+  work: Work;
+  lang: Lang;
+  featured?: boolean;
+}
+
+const { work, lang, featured = false } = Astro.props;
+const sources = [
+  `${withBase(work.thumb)} 1100w`,
+  `${withBase(work.image.replace(/\.webp$/, '-1600.webp'))} 1600w`,
+  `${withBase(work.image)} ${work.width}w`,
+].join(', ');
+---
+
+<a class="plate work-card-interaction" href={localizePath(`/works/${work.slug}`, lang)}>
+  <figure>
+    <span class="media" style={`background:${work.color}`}>
+      <img src={withBase(work.thumb)} srcset={sources}
+        sizes={featured ? '(max-width: 760px) 92vw, min(62vw, 960px)' : '(max-width: 760px) 92vw, min(58vw, 840px)'}
+        alt="" width={work.width} height={work.height} loading={featured ? 'eager' : 'lazy'}
+        fetchpriority={featured ? 'high' : 'auto'} decoding="async" />
+    </span>
+    <figcaption><span>{work.title[lang]}</span><span class="arrow" aria-hidden="true">↗</span></figcaption>
+  </figure>
+</a>
+
+<style>
+  .plate, img { display: block; width: 100%; }
+  figure { margin: 0; }
+  img { height: auto; }
+  figcaption {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    padding-top: 12px;
+    font-size: 15px;
+    color: var(--text);
+  }
+  .plate:is(:hover, :focus-visible) figcaption { color: var(--warm); }
+</style>

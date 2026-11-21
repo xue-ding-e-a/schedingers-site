@@ -1,0 +1,94 @@
+---
+import { SITE } from '../consts';
+import type { Lang } from '../i18n/ui';
+import { useTranslations } from '../i18n/utils';
+
+interface Props {
+  lang: Lang;
+  engineering: boolean;
+}
+const { lang, engineering } = Astro.props;
+const t = useTranslations(lang);
+const details = [
+  { label: t('contact.email'), value: SITE.email, href: `mailto:${SITE.email}`, copy: true },
+  { label: t('contact.wechat'), value: SITE.wechat, copy: true },
+  { label: 'GitHub', value: 'xue-ding-e-a', href: SITE.github, external: true },
+  { label: t('contact.location'), value: SITE.location[lang] },
+];
+---
+
+<section id="contact" class="contact" aria-labelledby="contact-title" tabindex="-1">
+  <div>
+    <h2 id="contact-title" class="h2">{t('contact.title')}</h2>
+    <p>{t(engineering ? 'contact.devLead' : 'contact.lead')}</p>
+  </div>
+  <dl>
+    {details.map(({ label, value, href, copy, external }) => (
+      <div class="row">
+        <dt class="mono">{label}</dt>
+        <dd>
+          {href ? <a href={href} target={external ? '_blank' : undefined} rel={external ? 'noopener' : undefined}>{value}</a> : <span>{value}</span>}
+          {copy && <button type="button" data-contact-copy={value} data-done={t('contact.copied')} aria-label={`${t('contact.copy')} · ${label}`}><span aria-live="polite">{t('contact.copy')}</span></button>}
+        </dd>
+      </div>
+    ))}
+  </dl>
+  <small>{t('contact.note')}</small>
+</section>
+
+<script>
+  document.querySelectorAll<HTMLButtonElement>('[data-contact-copy]').forEach((button) => {
+    const feedback = button.querySelector('span')!;
+    const label = feedback.textContent;
+    let timer: number;
+    button.addEventListener('click', async () => {
+      const value = button.dataset.contactCopy!;
+      try {
+        await navigator.clipboard.writeText(value);
+        feedback.textContent = button.dataset.done!;
+      } catch {
+        const range = document.createRange();
+        range.selectNodeContents(button.previousElementSibling!);
+        const selection = window.getSelection();
+        selection?.removeAllRanges();
+        selection?.addRange(range);
+        return;
+      }
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => { feedback.textContent = label; }, 1600);
+    });
+  });
+</script>
+
+<style>
+  .contact {
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: 18px clamp(32px, 6vw, 92px);
+    padding-bottom: 32px;
+    margin-bottom: 32px;
+    border-bottom: 1px solid var(--line);
+    scroll-margin-top: 96px;
+  }
+  .contact p, small, dt { color: var(--text-dim); }
+  .contact p { margin-top: 12px; }
+  dl, dd { margin: 0; }
+  .row {
+    display: grid;
+    grid-template-columns: 5rem minmax(0, 1fr);
+    align-items: baseline;
+    gap: 12px;
+    padding-block: 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  .row:first-child { padding-top: 0; }
+  dd { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; overflow-wrap: anywhere; }
+  a:hover { text-decoration: underline; }
+  button { color: var(--text-dim); background: var(--btn-bg); border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; font-size: 12px; }
+  button:hover { color: var(--text); background: var(--btn-hover-bg); }
+  small { grid-column: 1 / -1; line-height: 1.6; }
+  @media (max-width: 720px) {
+    .contact { grid-template-columns: 1fr; }
+    .row { grid-template-columns: 4rem minmax(0, 1fr); }
+  }
+</style>

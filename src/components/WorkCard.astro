@@ -1,4 +1,5 @@
 ---
+import '../styles/work-card-interactions.css';
 import DeferredPreview from './DeferredPreview.astro';
 import type { Work } from '../data/works';
 import type { Lang } from '../i18n/ui';
@@ -17,7 +18,7 @@ const href = localizePath(`/works/${work.slug}`, lang);
 const year = work.date.slice(0, 4);
 ---
 
-<a class:list={['work-card', { reveal }]} href={href} style={`--tint:${work.color}`}>
+<a class:list={['work-card', 'work-card-interaction', { reveal }]} href={href} style={`--tint:${work.color}`}>
   <span class="media" style={`aspect-ratio:${work.width} / ${work.height}`}>
     <DeferredPreview deferred={deferPreview}>
       <img
@@ -29,7 +30,6 @@ const year = work.date.slice(0, 4);
         decoding="async"
       />
     </DeferredPreview>
-    <span class="glow" aria-hidden="true"></span>
   </span>
   <span class="meta">
     <span class="name">
@@ -49,37 +49,12 @@ const year = work.date.slice(0, 4);
     background: transparent;
   }
 
-  .media {
-    position: relative;
-    display: block;
-    overflow: hidden;
-    background: var(--tint);
-    border-radius: 2px;
-  }
+  .media { background: var(--tint); }
 
   .media img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 1.1s var(--ease), filter 0.8s var(--ease);
-    filter: saturate(0.96);
-  }
-
-  .glow {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(to top, rgba(4, 6, 10, 0.45), transparent 46%);
-    opacity: 0;
-    transition: opacity 0.7s var(--ease);
-  }
-
-  .work-card:hover .media img {
-    transform: scale(1.035);
-    filter: saturate(1.08);
-  }
-
-  .work-card:hover .glow {
-    opacity: 1;
   }
 
   .meta {
@@ -96,20 +71,6 @@ const year = work.date.slice(0, 4);
     display: inline-flex;
     align-items: baseline;
     gap: 6px;
-  }
-
-  .arrow {
-    font-size: 11px;
-    color: var(--text-faint);
-    opacity: 0;
-    transform: translate(-4px, 4px);
-    transition: opacity 0.4s var(--ease), transform 0.4s var(--ease);
-  }
-
-  .work-card:hover .arrow {
-    opacity: 1;
-    transform: none;
-    color: var(--accent, var(--warm));
   }
 
   .sub {

@@ -1,9 +1,10 @@
 ---
+import PhotoArranger from '../../components/PhotoArranger.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import WorkCard from '../../components/WorkCard.astro';
-import { series, getSeries } from '../../data/series';
+import CollectionWork from '../../components/CollectionWork.astro';
+import { series } from '../../data/series';
 import { works, sortByDate } from '../../data/works';
-import { useTranslations, localizePath, withBase } from '../../i18n/utils';
+import { useTranslations, localizePath } from '../../i18n/utils';
 import type { Lang } from '../../i18n/ui';
 
 export function getStaticPaths() {
@@ -14,7 +15,9 @@ const { s } = Astro.props;
 const { lang = 'zh' } = Astro.props as { lang?: Lang };
 const t = useTranslations(lang);
 const list = sortByDate(works.filter((w) => w.series === s.slug));
-const cover = works.find((w) => w.slug === s.cover)!;
+const cover = list.find((work) => work.slug === s.cover)!;
+const remaining = list.filter((work) => work !== cover);
+const rows = Array.from({ length: Math.ceil(remaining.length / 2) }, (_, i) => remaining.slice(i * 2, i * 2 + 2));
 ---
 
 <BaseLayout lang={lang} title={s.name[lang]} description={s.desc[lang]} section="photo" image={cover.thumb}>
@@ -29,17 +32,32 @@ const cover = works.find((w) => w.slug === s.cover)!;
         <p class="kicker">{t('series.region')} · {s.region[lang]}</p>
         <h1 class="display">{s.name[lang]}</h1>
         <p class="lead">{s.desc[lang]}</p>
-        <p class="mono numeric count">{list.length} {t('series.works')}</p>
+        <p class="mono numeric count">{list.length} {lang === 'en' && list.length === 1 ? 'work' : t('series.works')}</p>
       </div>
-      <figure class="hero-cover" style={`background:${s.color}`}>
-        <img src={withBase(cover.image)} alt={cover.title[lang]} width={cover.width} height={cover.height} />
-      </figure>
+      <div class="hero-cover" data-arranger-original>
+        <CollectionWork work={cover} lang={lang} featured />
+      </div>
     </div>
+    <PhotoArranger scope={`series-${s.slug}`} {lang} photos={[cover, ...remaining].map(work => ({ work }))} />
   </section>
 
-  <section class="container-wide grid">
-    {list.map((w, i) => <WorkCard work={w} lang={lang} eager={i < 2} />)}
-  </section>
+  {rows.length > 0 && <div class="gallery container-wide" data-arranger-original>
+    {rows.map((row) => {
+      const ratios = row.map((work) => work.width / work.height);
+      return (
+        <div class="pair" style={{
+          '--columns': ratios.map((ratio) => `minmax(0, ${ratio}fr)`).join(' '),
+          '--row-width': `${ratios.reduce((sum, ratio) => sum + ratio, 0) * 460}px`,
+        }}>
+          {row.map((work) => (
+            <div class:list={['plate-wrap', { portrait: work.height > work.width }]}>
+              <CollectionWork {work} {lang} />
+            </div>
+          ))}
+        </div>
+      );
+    })}
+  </div>}
 
   <div class="collection-loader" id="collection-loader" aria-hidden="true">
     <div class="loader-inner">
@@ -235,11 +253,13 @@ const cover = works.find((w) => w.slug === s.cover)!;
 
   .hero-grid {
     display: grid;
-    grid-template-columns: 0.85fr 1.15fr;
+    grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.3fr);
     gap: clamp(30px, 5vw, 72px);
     align-items: center;
     margin-top: 32px;
   }
+
+  .hero:has(photo-arranger[data-active]) .hero-grid { grid-template-columns: 1fr; }
 
   .hero-text .display {
     margin-top: 18px;
@@ -254,32 +274,29 @@ const cover = works.find((w) => w.slug === s.cover)!;
     color: var(--text-faint);
   }
 
-  .hero-cover {
-    margin: 0;
-    overflow: hidden;
-    aspect-ratio: 16 / 10;
-  }
-
-  .hero-cover img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  .grid {
+  .hero, .gallery { max-width: 1440px; }
+  .hero-cover { min-width: 0; }
+  .gallery {
+    --gap: clamp(20px, 3vw, 44px);
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: clamp(20px, 3vw, 40px);
+    gap: clamp(40px, 6vw, 80px);
+    border-top: 1px solid var(--line);
+    padding-block: clamp(32px, 5vw, 72px) clamp(52px, 7vw, 96px);
+  }
+  .pair {
+    display: grid;
+    grid-template-columns: var(--columns);
     align-items: start;
-    padding-bottom: 40px;
+    gap: var(--gap);
+    width: min(100%, calc(var(--row-width) + var(--gap)));
+    margin-inline: auto;
   }
-
-  @media (max-width: 860px) {
-    .hero-grid {
-      grid-template-columns: 1fr;
-    }
+  @media (max-width: 760px) {
+    .hero-grid, .pair { grid-template-columns: minmax(0, 1fr); }
+    .hero-grid { gap: 26px; }
+    .pair { row-gap: 36px; }
+    .portrait { width: min(88%, 340px); justify-self: center; }
   }
-
   /* ---------- 进入系列页的全屏显影过渡 ---------- */
   .collection-loader {
     position: fixed;
@@ -292,7 +309,7 @@ const cover = works.find((w) => w.slug === s.cover)!;
   }
 
   /* 无脚本时直接放行内容 */
-  html:not(.js) .collection-loader {
+  :global(html:not(.js)) .collection-loader {
     display: none;
   }
 
@@ -336,12 +353,12 @@ const cover = works.find((w) => w.slug === s.cover)!;
     box-shadow: 0 0 14px rgba(229, 201, 164, 0.55);
   }
 
-  .hero-cover.is-gated img {
+  .hero-cover.is-gated :global(.media) {
     opacity: 0;
     transition: opacity 0.9s var(--ease);
   }
 
-  .hero-cover.is-gated.is-ready img {
+  .hero-cover.is-gated.is-ready :global(.media) {
     opacity: 1;
   }
 </style>
