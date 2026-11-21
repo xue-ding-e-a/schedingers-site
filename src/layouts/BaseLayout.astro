@@ -622,7 +622,7 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
 
             const doc = new DOMParser().parseFromString(html, 'text/html');
             const urls = [];
-            doc.querySelectorAll('img').forEach((img) => {
+            doc.querySelectorAll('img:not(noscript img)').forEach((img) => {
               const src = img.getAttribute('src');
               if (src) urls.push(src);
               const srcset = img.getAttribute('srcset');

@@ -1,0 +1,14 @@
+---
+interface Props {
+  deferred?: boolean;
+}
+
+const { deferred = true } = Astro.props;
+---
+
+{deferred ? (
+  <>
+    <template data-photo-preview><slot /></template>
+    <noscript><slot /></noscript>
+  </>
+) : <slot />}
