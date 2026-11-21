@@ -1,7 +1,6 @@
 ---
-import PhotoArranger from '../../components/PhotoArranger.astro';
+import WorksGallery from '../../components/WorksGallery.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import WorkCard from '../../components/WorkCard.astro';
 import { works, sortByDate } from '../../data/works';
 import { series } from '../../data/series';
 import { useTranslations } from '../../i18n/utils';
@@ -34,22 +33,10 @@ const list = sortByDate(works);
   </div>
 
   <section class="container-wide works-wrap">
-    <PhotoArranger scope="works" {lang} photos={list.map(work => ({ work }))} />
-    <div class="works-grid" id="works-grid" data-arranger-original>
-      {list.map((w, i) => (
-        <div
-          class="work-item"
-          style={`--ratio:${w.width / w.height}`}
-          data-series={w.series}
-        >
-          <WorkCard work={w} lang={lang} eager={i < 3} />
-        </div>
-      ))}
-    </div>
+    <WorksGallery {lang} worksByDate={list} />
     <p class="empty" id="empty" hidden>{t('works.empty')}</p>
+    <p class="note mono" id="works-sort-note" hidden>{t('works.sortNote')}</p>
   </section>
-
-  <p class="container-wide note mono">{t('works.sortNote')}</p>
 </BaseLayout>
 
 <script>
@@ -59,38 +46,68 @@ const list = sortByDate(works);
   const empty = document.getElementById('empty');
 
   const grid = document.querySelector<HTMLElement>('#works-grid')!;
-  const desktop = window.matchMedia('(min-width: 641px)');
+  const curated = document.getElementById('curated-works')!;
+  const sortNote = document.getElementById('works-sort-note')!;
+  let packedWidth = 0;
 
-  // Count the caption as part of each card, including wrapped translations.
-  const fitRows = () => {
-    if (!desktop.matches || !('ResizeObserver' in window)) return;
-    const style = getComputedStyle(grid);
-    const gap = parseFloat(style.columnGap);
-    const unit = parseFloat(style.getPropertyValue('--row-unit'));
-    const rows = items.map(item => Math.ceil((item.offsetHeight + gap) / unit));
-    items.forEach((item, i) => {
-      if (!item.hidden) item.style.setProperty('--rows', String(rows[i]));
+  function packFilteredWorks() {
+    if (grid.hidden) return;
+
+    const width = grid.getBoundingClientRect().width;
+    packedWidth = width;
+    const gap = parseFloat(getComputedStyle(grid).columnGap);
+    const byDate = new Map<string, { item: HTMLElement; width: number; index: number }[]>();
+
+    for (const [index, item] of items.entries()) {
+      if (item.hidden) continue;
+      const date = item.dataset.date ?? '';
+      const cards = byDate.get(date) ?? [];
+      cards.push({ item, width: item.getBoundingClientRect().width, index });
+      byDate.set(date, cards);
+    }
+
+    const order = [...byDate.values()].flatMap(cards => {
+      const rows: { remaining: number; cards: typeof cards }[] = [];
+      // Place wider works first, then use each row's leftover space for narrower works.
+      for (const card of cards.sort((a, b) => b.width - a.width)) {
+        const row = rows.find(row => row.remaining >= gap + card.width);
+        if (row) {
+          row.cards.push(card);
+          row.remaining -= gap + card.width;
+        } else {
+          rows.push({ remaining: width - card.width, cards: [card] });
+        }
+      }
+      return rows.flatMap(row => row.cards.sort((a, b) => a.index - b.index).map(card => card.item));
     });
-    grid.classList.add('packed');
-  };
 
-  if ('ResizeObserver' in window) {
-    const observer = new ResizeObserver(fitRows);
-    items.forEach(item => observer.observe(item));
-    desktop.addEventListener('change', fitRows);
-    fitRows();
+    const displayed = Array.from(grid.children).filter(child => !(child as HTMLElement).hidden);
+    if (order.some((item, index) => item !== displayed[index])) {
+      const focus = document.activeElement;
+      grid.append(...order);
+      if (focus instanceof HTMLElement && grid.contains(focus)) focus.focus({ preventScroll: true });
+    }
   }
 
+  const sizeObserver = new ResizeObserver(() => {
+    if (!grid.hidden && grid.getBoundingClientRect().width !== packedWidth) packFilteredWorks();
+  });
+  sizeObserver.observe(grid);
+
   const apply = (filter: string) => {
+    const showAll = filter === 'all';
+    curated.hidden = !showAll;
+    grid.hidden = showAll;
+    sortNote.hidden = showAll;
     let visible = 0;
     for (const item of items) {
-      const show = filter === 'all' || item.dataset.series === filter;
+      const show = item.dataset.series === filter;
       item.hidden = !show;
       if (show) visible += 1;
     }
-    fitRows();
-    if (count) count.textContent = String(visible);
-    if (empty) empty.hidden = visible > 0;
+    if (!showAll) packFilteredWorks();
+    if (count) count.textContent = String(showAll ? items.length : visible);
+    if (empty) empty.hidden = showAll || visible > 0;
   };
 
   for (const chip of chips) {
@@ -156,40 +173,7 @@ const list = sortByDate(works);
   }
 
   .works-wrap {
-    padding-top: clamp(18px, 2vw, 30px);
-  }
-
-  .works-grid {
-    --row-unit: 4px;
-    --gallery-gap: clamp(16px, 1.8vw, 28px);
-    display: grid;
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-    gap: var(--gallery-gap);
-    align-items: start;
-  }
-
-  .work-item {
-    min-width: 0;
-  }
-
-  @media (min-width: 641px) {
-    .works-grid.packed {
-      grid-auto-rows: var(--row-unit);
-      grid-auto-flow: row dense;
-      row-gap: 0;
-    }
-
-    .packed > .work-item {
-      grid-row-end: span var(--rows, 1);
-    }
-
-    .work-item {
-      grid-column: span 6;
-    }
-  }
-
-  .work-item[hidden] {
-    display: none;
+    padding-block: clamp(18px, 2vw, 30px) 40px;
   }
 
   .empty {
@@ -200,7 +184,7 @@ const list = sortByDate(works);
   }
 
   .note {
-    padding-bottom: 40px;
+    margin-top: 20px;
     text-align: right;
     color: var(--text-faint);
   }
@@ -209,20 +193,6 @@ const list = sortByDate(works);
     .page-head {
       grid-template-columns: 1fr;
       row-gap: 8px;
-    }
-
-    .works-grid {
-      justify-items: center;
-      grid-template-columns: minmax(0, 1fr);
-      row-gap: 32px;
-    }
-
-    .work-item {
-      width: 100%;
-    }
-
-    .work-item {
-      max-width: calc(var(--ratio) * 56svh);
     }
 
     .filter-label,

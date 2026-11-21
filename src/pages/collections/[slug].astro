@@ -1,5 +1,4 @@
 ---
-import PhotoArranger from '../../components/PhotoArranger.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import CollectionWork from '../../components/CollectionWork.astro';
 import { series } from '../../data/series';
@@ -34,14 +33,13 @@ const rows = Array.from({ length: Math.ceil(remaining.length / 2) }, (_, i) => r
         <p class="lead">{s.desc[lang]}</p>
         <p class="mono numeric count">{list.length} {lang === 'en' && list.length === 1 ? 'work' : t('series.works')}</p>
       </div>
-      <div class="hero-cover" data-arranger-original>
+      <div class="hero-cover">
         <CollectionWork work={cover} lang={lang} featured />
       </div>
     </div>
-    <PhotoArranger scope={`series-${s.slug}`} {lang} photos={[cover, ...remaining].map(work => ({ work }))} />
   </section>
 
-  {rows.length > 0 && <div class="gallery container-wide" data-arranger-original>
+  {rows.length > 0 && <div class="gallery container-wide">
     {rows.map((row) => {
       const ratios = row.map((work) => work.width / work.height);
       return (
@@ -258,8 +256,6 @@ const rows = Array.from({ length: Math.ceil(remaining.length / 2) }, (_, i) => r
     align-items: center;
     margin-top: 32px;
   }
-
-  .hero:has(photo-arranger[data-active]) .hero-grid { grid-template-columns: 1fr; }
 
   .hero-text .display {
     margin-top: 18px;

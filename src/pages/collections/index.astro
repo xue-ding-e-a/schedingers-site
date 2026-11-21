@@ -1,5 +1,4 @@
 ---
-import PhotoArranger from '../../components/PhotoArranger.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { series } from '../../data/series';
 import { works } from '../../data/works';
@@ -30,12 +29,7 @@ const points = series.map((s) => {
     <p class="lead head-lead">{t('series.lead')}</p>
   </section>
 
-  <div class="container-wide">
-    <PhotoArranger scope="collections" {lang} photos={series.map(s => ({
-      work: works.find(w => w.slug === s.cover)!, path: `/collections/${s.slug}`, title: s.name[lang],
-    }))} />
-  </div>
-  <section class="container-wide list" data-arranger-original>
+  <section class="container-wide list">
     {series.map((s, i) => {
       const cover = works.find((w) => w.slug === s.cover)!;
       const count = works.filter((w) => w.series === s.slug).length;

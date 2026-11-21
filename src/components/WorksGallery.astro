@@ -1,0 +1,138 @@
+---
+import WorkCard from './WorkCard.astro';
+import { getWork, type Work } from '../data/works';
+import type { Lang } from '../i18n/ui';
+
+const { lang, worksByDate } = Astro.props as { lang: Lang; worksByDate: Work[] };
+const equalHeightRows = [
+  { left: getWork('under-the-milky-way')!, right: getWork('galactic-arch-snow-mountain')! },
+  { left: getWork('plank-road-star-bridge')!, right: getWork('prairie-starry-night')!, leftShare: 0.4260954439096759 },
+  { left: getWork('star-trails-river')!, right: getWork('stars-fall-on-village')! },
+];
+const upperLeft = getWork('twin-arches-jade')!;
+const upperRight = getWork('meteor-over-ridge')!;
+const lowerLeft = getWork('winter-milky-way')!;
+const lowerRight = getWork('eaves-of-time')!;
+const ratio = (work: Work) => work.width / work.height;
+const upperLeftShare = 68;
+const upperRightShare = 30;
+const displayWidths: Record<string, string> = {
+  [upperLeft.slug]: `${upperLeftShare}cqw`,
+  [upperRight.slug]: `${upperRightShare}cqw`,
+  [lowerLeft.slug]: 'var(--lower-left-width)',
+  [lowerRight.slug]: 'calc(100cqw - var(--photo-gap) - var(--lower-left-width))',
+};
+
+for (const { left, right, leftShare } of equalHeightRows) {
+  const leftRatio = ratio(left);
+  const rightRatio = ratio(right);
+  if (leftShare === undefined) {
+    const usableWidth = '100cqw - var(--photo-gap)';
+    displayWidths[left.slug] = `calc((${usableWidth}) * ${leftRatio / (leftRatio + rightRatio)})`;
+    displayWidths[right.slug] = `calc(${usableWidth} - ${displayWidths[left.slug]})`;
+  } else {
+    displayWidths[left.slug] = `${100 * leftShare}cqw`;
+    displayWidths[right.slug] = `calc(${displayWidths[left.slug]} * ${rightRatio / leftRatio})`;
+  }
+}
+
+const pairColumns = (left: Work, right: Work) => `${displayWidths[left.slug]} ${displayWidths[right.slug]}`;
+---
+
+<div class="works-layout" style={{
+  '--upper-left-height': `calc(${displayWidths[upperLeft.slug]} / ${ratio(upperLeft)})`,
+  '--upper-right-height': `calc(${displayWidths[upperRight.slug]} / ${ratio(upperRight)})`,
+  '--lower-left-ratio': ratio(lowerLeft),
+  '--lower-right-ratio': ratio(lowerRight),
+}}>
+  <div class="curated-works" id="curated-works">
+    {equalHeightRows.map(({ left, right }, index) => (
+      <div class="pair" style={{ '--columns': pairColumns(left, right) }}>
+        <WorkCard work={left} {lang} titleOnly reveal={false} eager={index === 0} />
+        <WorkCard work={right} {lang} titleOnly reveal={false} eager={index === 0} />
+      </div>
+    ))}
+    <div class="staggered">
+      <div class="pair upper-pair" style={{ '--columns': pairColumns(upperLeft, upperRight) }}>
+        <WorkCard work={upperLeft} {lang} titleOnly reveal={false} />
+        <WorkCard work={upperRight} {lang} titleOnly reveal={false} />
+      </div>
+      <div class="pair lower-pair" style={{ '--columns': pairColumns(lowerLeft, lowerRight) }}>
+        <WorkCard work={lowerLeft} {lang} titleOnly reveal={false} />
+        <WorkCard work={lowerRight} {lang} titleOnly reveal={false} />
+      </div>
+    </div>
+  </div>
+  <div class="filtered-works" id="works-grid" hidden>
+    {worksByDate.map(work => (
+      <div
+        class="work-item"
+        data-series={work.series}
+        data-date={work.date}
+        style={{ '--work-width': displayWidths[work.slug] }}
+        hidden
+      >
+        <WorkCard {work} {lang} />
+      </div>
+    ))}
+  </div>
+</div>
+
+<style>
+  .works-layout {
+    --photo-gap: 32px;
+    --caption-gap: 4px;
+    --caption-line-height: 18px;
+    --caption-height: calc(var(--caption-gap) + var(--caption-line-height));
+    --left-top: calc(var(--upper-left-height) + var(--caption-height) + var(--photo-gap));
+    --right-top: calc(var(--upper-right-height) + var(--caption-height) + var(--photo-gap));
+    /* Solve the final pair's widths so different top edges share one bottom edge. */
+    --lower-left-height: calc((100cqw - var(--photo-gap) + var(--lower-right-ratio) * (var(--right-top) - var(--left-top))) / (var(--lower-left-ratio) + var(--lower-right-ratio)));
+    --lower-left-width: calc(var(--lower-left-height) * var(--lower-left-ratio));
+    container-type: inline-size;
+  }
+
+  .curated-works {
+    display: grid;
+    gap: var(--photo-gap);
+  }
+
+  .pair {
+    display: grid;
+    grid-template-columns: var(--columns);
+    align-items: start;
+    gap: var(--photo-gap);
+  }
+
+  .staggered { display: grid; }
+  .staggered .pair { grid-area: 1 / 1; }
+
+  .upper-pair {
+    justify-content: space-between;
+    gap: 0;
+  }
+
+  .lower-pair { pointer-events: none; }
+  .lower-pair > :global(a) { pointer-events: auto; }
+  .lower-pair > :global(a:first-child) { margin-top: var(--left-top); }
+  .lower-pair > :global(a:last-child) { margin-top: var(--right-top); }
+
+  .filtered-works {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--photo-gap);
+  }
+
+  .work-item {
+    flex: 0 0 auto;
+    min-width: 0;
+    width: var(--work-width, 100%);
+  }
+
+  [hidden] { display: none; }
+
+  @media (max-width: 640px) {
+    .works-layout { --photo-gap: 24px; }
+  }
+</style>

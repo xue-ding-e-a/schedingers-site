@@ -11,14 +11,15 @@ interface Props {
   eager?: boolean;
   deferPreview?: boolean;
   reveal?: boolean;
+  titleOnly?: boolean;
 }
 
-const { work, lang, eager = false, deferPreview = false, reveal = true } = Astro.props;
+const { work, lang, eager = false, deferPreview = false, reveal = true, titleOnly = false } = Astro.props;
 const href = localizePath(`/works/${work.slug}`, lang);
 const year = work.date.slice(0, 4);
 ---
 
-<a class:list={['work-card', 'work-card-interaction', { reveal }]} href={href} style={`--tint:${work.color}`}>
+<a class:list={['work-card', 'work-card-interaction', { reveal, 'title-only': titleOnly }]} href={href} style={`--tint:${work.color}`}>
   <span class="media" style={`aspect-ratio:${work.width} / ${work.height}`}>
     <DeferredPreview deferred={deferPreview}>
       <img
@@ -34,10 +35,12 @@ const year = work.date.slice(0, 4);
   <span class="meta">
     <span class="name">
       {work.title[lang]}
-      <span class="arrow" aria-hidden="true">↗</span>
+      {!titleOnly && <span class="arrow" aria-hidden="true">↗</span>}
     </span>
-    <span class="sub mono">{work.location[lang]}</span>
-    <span class="sub mono dim">{year}</span>
+    {!titleOnly && <>
+      <span class="sub mono">{work.location[lang]}</span>
+      <span class="sub mono dim">{year}</span>
+    </>}
   </span>
 </a>
 
@@ -49,7 +52,25 @@ const year = work.date.slice(0, 4);
     background: transparent;
   }
 
+  .title-only {
+    min-width: 0;
+    gap: var(--caption-gap, 4px);
+  }
+
+  .title-only .meta { display: block; }
+
+  .title-only .name {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 14px;
+    line-height: var(--caption-line-height, 18px);
+    letter-spacing: normal;
+  }
+
   .media { background: var(--tint); }
+  .title-only .media img { object-fit: contain; }
 
   .media img {
     width: 100%;
