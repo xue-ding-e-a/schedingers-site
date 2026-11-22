@@ -296,6 +296,11 @@ const points = series.map((s) => {
     .go {
       display: none;
     }
+    /* 手机端压缩系列封面图显示尺寸并居中，避免整幅铺满后过高 */
+    .thumb {
+      width: min(100%, 300px);
+      margin-inline: auto;
+    }
     .hint {
       margin-left: 0;
     }

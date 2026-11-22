@@ -472,6 +472,7 @@ const stripMaxRatio = Math.max(...featuredByOrder.map((w) => w.width / w.height)
     /* 手机端压缩系列封面图显示尺寸，避免整幅铺满后过高 */
     .series-media {
       width: min(72%, 232px);
+      margin-inline: auto;
     }
   }
 
