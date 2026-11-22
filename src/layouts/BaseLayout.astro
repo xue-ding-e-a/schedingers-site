@@ -1164,13 +1164,13 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
         .site-head {
           height: auto;
         }
-        /* 两行栅格：第一行品牌 + 语言，第二行导航 + 主线切换（靠右填补空处） */
+        /* 两行栅格：第一行品牌 + 语言，第二行主线切换（左紧邻）+ 导航（右紧邻） */
         .head-inner {
           display: grid;
-          grid-template-columns: minmax(0, 1fr) auto;
+          grid-template-columns: auto minmax(0, 1fr);
           grid-template-areas:
             'brand lang'
-            'nav track';
+            'track nav';
           align-items: center;
           column-gap: clamp(8px, 2.4vw, 10px);
           row-gap: 8px;
@@ -1192,6 +1192,7 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
         .site-nav {
           display: flex;
           flex-wrap: wrap;
+          justify-content: flex-end;
           grid-area: nav;
           width: 100%;
           min-width: 0;
@@ -1205,7 +1206,7 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
         }
         .track-switch {
           grid-area: track;
-          justify-self: end;
+          justify-self: start;
           white-space: nowrap;
           font-size: clamp(11px, 3.4vw, 12.5px);
           padding: clamp(5px, 1.55vw, 6px) clamp(7px, 3.1vw, 12px);

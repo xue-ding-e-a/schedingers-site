@@ -135,20 +135,19 @@ const list = sortByDate(works);
   }
 
   .filter-bar {
-    position: sticky;
-    top: var(--nav-h);
-    z-index: 40;
-    background: rgba(6, 7, 11, 0.82);
-    backdrop-filter: blur(16px);
-    border-top: 1px solid var(--line);
-    border-bottom: 1px solid var(--line);
+    position: relative;
   }
 
   .filter-inner {
     display: flex;
     align-items: center;
     gap: 22px;
-    padding-block: 10px;
+    padding: 10px clamp(14px, 1.6vw, 22px);
+    background: color-mix(in srgb, var(--bg-elev) 74%, transparent);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
   }
 
   .filter-label {
@@ -193,6 +192,11 @@ const list = sortByDate(works);
     .page-head {
       grid-template-columns: 1fr;
       row-gap: 8px;
+    }
+
+    .filter-inner {
+      gap: 14px;
+      border-radius: var(--radius-lg);
     }
 
     .filter-label,
