@@ -1214,6 +1214,24 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
           font-size: clamp(9px, 2.7vw, 10px);
         }
       }
+
+      /* 超窄屏（≤350px）才进一步收缩按钮，避免「关于」被挤到第三行 */
+      @media (max-width: 350px) {
+        .head-inner {
+          column-gap: 6px;
+        }
+        .nav-link {
+          font-size: 11px;
+          padding: 4px 8px;
+        }
+        .track-switch {
+          font-size: 10.5px;
+          padding: 4px 8px;
+        }
+        .track-icon {
+          font-size: 9px;
+        }
+      }
     </style>
   </body>
 </html>
