@@ -1,6 +1,5 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import DevelopingOverlay from '../components/DevelopingOverlay.astro';
 import { SITE } from '../consts';
 import { useTranslations, localizePath, withBase } from '../i18n/utils';
 import type { Lang } from '../i18n/ui';
@@ -95,31 +94,8 @@ const photoHref = localizePath('/photo/', lang);
     </footer>
   </div>
 
-  <DevelopingOverlay id="photo-entry-loader" lang={lang} />
-
   <script is:inline define:vars={{ photoHref }}>
     (() => {
-      const door = document.querySelector('.door-photo');
-      const loader = document.getElementById('photo-entry-loader');
-      const entryKey = 'sch-photo-entry';
-
-      door.addEventListener('click', (event) => {
-        if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey ||
-            event.shiftKey || event.altKey) return;
-
-        try {
-          sessionStorage.setItem(entryKey, new URL(door.href).pathname.replace(/\/$/, ''));
-          loader.classList.remove('is-done');
-        } catch {
-          // 存储不可用时，链接照常打开摄影页。
-        }
-      });
-      window.addEventListener('pageshow', (event) => {
-        if (!event.persisted) return;
-        loader.classList.add('is-done');
-        try { sessionStorage.removeItem(entryKey); } catch {}
-      });
-
       // 门户加载完成后，低优先级预热摄影首页
       const loaded = new Promise((resolve) => {
         if (document.readyState === 'complete') resolve();

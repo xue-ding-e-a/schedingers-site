@@ -1,6 +1,5 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import DevelopingOverlay from '../components/DevelopingOverlay.astro';
 import heroVideo from '../assets/photo/star-trails-loop.mp4?url';
 import heroPoster from '../assets/photo/star-trails-poster.webp?url';
 import mobileHeroVideo from '../assets/photo/star-trails-mobile.mp4?url';
@@ -33,25 +32,6 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
   <Fragment slot="head">
     <link rel="preload" as="image" href={heroPoster} fetchpriority="high" />
   </Fragment>
-  <DevelopingOverlay id="photo-entry-loader" lang={lang} />
-  <script is:inline>
-    (() => {
-      const entryKey = 'sch-photo-entry';
-      try {
-        const target = sessionStorage.getItem(entryKey);
-        sessionStorage.removeItem(entryKey);
-        if (target !== location.pathname.replace(/\/$/, '')) return;
-
-        const loader = document.getElementById('photo-entry-loader');
-        loader.classList.remove('is-done');
-        document.addEventListener('DOMContentLoaded', () => {
-          if (!loader.hasAttribute('data-playback-bound')) loader.classList.add('is-done');
-        }, { once: true });
-      } catch {
-        // 无法接续门户的显影时，直接展示摄影首页。
-      }
-    })();
-  </script>
   <section class="hero" data-hero>
     <video
       class="hero-video"
@@ -454,118 +434,16 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
   const hero = document.querySelector<HTMLElement>('[data-hero]');
   const toggle = hero?.querySelector<HTMLButtonElement>('.hero-motion-toggle');
   const video = hero?.querySelector<HTMLVideoElement>('.hero-video');
-  const loader = document.getElementById('photo-entry-loader');
   function setupPlayback(video: HTMLVideoElement, toggle: HTMLButtonElement) {
     // The star trails are the hero work itself. The page button controls playback.
     let wantsPlayback = true;
     let playbackAttempt = 0;
     let sourceReady: Promise<void> | undefined;
-    let entry = loader && !loader.classList.contains('is-done') ? loader : null;
-    const fill = entry?.querySelector<HTMLElement>('.loader-track i');
-    const percent = entry?.querySelector<HTMLElement>('.loader-pct');
-    let entryTimer: number | undefined;
-    let frameCallback: number | undefined;
-
-    let progress = -1;
-    let lastMediaTime: number | undefined;
-    let lastFrameCount = 0;
-    let lastClock = 0;
-
-    function renderProgress(value: number) {
-      if (!entry || value <= progress) return;
-      progress = value;
-      if (fill && percent) {
-        fill.style.width = `${value}%`;
-        percent.textContent = String(value).padStart(2, '0');
-      }
-      clearTimeout(entryTimer);
-      if (value < 100) entryTimer = window.setTimeout(onStartupTimeout, 12000);
-    }
-
-    function stopWatchingFrames() {
-      if (frameCallback !== undefined) video.cancelVideoFrameCallback(frameCallback);
-      frameCallback = undefined;
-      lastMediaTime = undefined;
-      video.removeEventListener('timeupdate', onTimeUpdate);
-    }
-
-    function dismissEntry() {
-      clearTimeout(entryTimer);
-      stopWatchingFrames();
-      entry?.classList.add('is-done');
-      entry = null;
-    }
-
-    function onStartupTimeout() {
-      wantsPlayback = false;
-      ++playbackAttempt;
-      video.pause();
-      updateLabel();
-      dismissEntry();
-    }
-
-    function finishEntry() {
-      renderProgress(100);
-      stopWatchingFrames();
-      if (entry) entryTimer = window.setTimeout(dismissEntry, 120);
-    }
-
-    function onVideoFrame(_: number, frame: VideoFrameCallbackMetadata) {
-      frameCallback = undefined;
-      if (!video.paused && !video.seeking && !video.ended) {
-        if (lastMediaTime !== undefined && frame.mediaTime > lastMediaTime) {
-          finishEntry();
-          return;
-        }
-        lastMediaTime = frame.mediaTime;
-      }
-      frameCallback = video.requestVideoFrameCallback(onVideoFrame);
-    }
-
-    function presentedFrames() {
-      const quality = video.getVideoPlaybackQuality?.();
-      return quality ? quality.totalVideoFrames - quality.droppedVideoFrames :
-        (video as HTMLVideoElement & { webkitDecodedFrameCount?: number }).webkitDecodedFrameCount;
-    }
-
-    function onTimeUpdate() {
-      if (video.paused || video.seeking || video.ended) return;
-      const count = presentedFrames();
-      if (count !== undefined && count > lastFrameCount && video.currentTime > lastClock) finishEntry();
-    }
-
-    entry?.setAttribute('data-playback-bound', '');
-    renderProgress(0);
-    video.addEventListener('loadeddata', () => renderProgress(96));
-    video.addEventListener('canplay', () => renderProgress(98));
-
-    async function readVideo(response: Response) {
-      const body = response.body;
-      let file: Blob;
-      if (entry && body) {
-        const total = Number(response.headers.get('content-length'));
-        const chunks: BlobPart[] = [];
-        let received = 0;
-        const reader = body.getReader();
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          chunks.push(value);
-          received += value.byteLength;
-          if (total > 0) renderProgress(Math.min(94, Math.floor(95 * received / total)));
-        }
-        file = new Blob(chunks, { type: response.headers.get('content-type') || 'video/mp4' });
-      } else {
-        file = await response.blob();
-      }
-      renderProgress(95);
-      return file;
-    }
 
     async function downloadVideo(url: string) {
       const response = await fetch(url, { cache: 'force-cache', priority: 'high' });
       if (!response.ok) throw new Error(`Video request failed (${response.status})`);
-      return readVideo(response);
+      return response.blob();
     }
 
     function prepareSource(manual: boolean) {
@@ -582,7 +460,7 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
       const attachLoop = (source: string | Blob) => attachVideoLoop(video, source, (file) => {
         useNativeSource(file ?? url);
         if (wantsPlayback) void syncPlayback();
-      }, readVideo);
+      });
 
       if (attachLoop(url)) return;
       if (manual) {
@@ -600,11 +478,9 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
 
     async function syncPlayback(manual = false) {
       const attempt = ++playbackAttempt;
-      stopWatchingFrames();
       updateLabel();
       if (!wantsPlayback) {
         video.pause();
-        dismissEntry();
         return;
       }
       try {
@@ -617,15 +493,6 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
         }
         if (attempt !== playbackAttempt) return;
         await video.play();
-        if (attempt !== playbackAttempt || !entry) return;
-        renderProgress(99);
-        if (typeof video.requestVideoFrameCallback === 'function') {
-          frameCallback = video.requestVideoFrameCallback(onVideoFrame);
-        } else {
-          lastFrameCount = presentedFrames() ?? 0;
-          lastClock = video.currentTime;
-          video.addEventListener('timeupdate', onTimeUpdate);
-        }
       } catch {
         // A pause or a fallback source can interrupt an older play() request.
         if (attempt !== playbackAttempt) return;
@@ -637,21 +504,9 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
         if (!video.hasAttribute('src')) sourceReady = undefined;
         wantsPlayback = false;
         updateLabel();
-        dismissEntry();
       }
     }
 
-    video.addEventListener('progress', () => {
-      if (entry && video.buffered.length && Number.isFinite(video.duration) && video.duration > 0) {
-        renderProgress(Math.min(95, Math.round(95 * video.buffered.end(video.buffered.length - 1) / video.duration)));
-      }
-    });
-    video.addEventListener('error', () => {
-      // Allow the loop controller to replace an interrupted source first.
-      queueMicrotask(() => {
-        if (video.error && entry) onStartupTimeout();
-      });
-    });
     video.muted = true;
     toggle.hidden = false;
     toggle.addEventListener('click', () => {
