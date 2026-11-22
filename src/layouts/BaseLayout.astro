@@ -104,30 +104,52 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
             root.classList.add('logo-arrived');
             var loadStep = readLoadStep();
             var isPhoto = section === 'photo';
+            // 换轨后的目标轨道
             var tilt = isPhoto ? Math.PI / 6 : -Math.PI / 6;
             var crossY = isPhoto ? -crossOffset : crossOffset;
             var startAngle = Math.atan2(crossY * Math.cos(tilt) / 10.5, crossY * Math.sin(tilt) / 27);
             var endAngle = isPhoto ? -Math.PI : 0;
+            // 换轨前的来源轨道
+            var sourceTilt = isPhoto ? -Math.PI / 6 : Math.PI / 6;
+            var sourceStart = isPhoto ? 0 : -Math.PI;
+            var sourceAngle = Math.atan2(crossY * Math.cos(sourceTilt) / 10.5, crossY * Math.sin(sourceTilt) / 27);
             var fromColor = isPhoto ? [124, 103, 228] : [228, 171, 99];
             var toColor = isPhoto ? [228, 171, 99] : [124, 103, 228];
             var dot = null;
             var arc = null;
+            var sourceArc = null;
 
-            // 轨道共 100 份：加载进度每前进 1%，小球沿轨道前进一份
+            // 整条轨道 200 份：进度 0-50 走换轨前上半段，50-100 走换轨后下半段
             var paintArrival = function (step) {
               if (!dot || !arc) return;
-              var progress = Math.max(0, Math.min(1, step / 100));
-              var travel = progress * progress * (3 - 2 * progress);
-              var angle = startAngle + (endAngle - startAngle) * travel;
+              var progress = Math.max(0, Math.min(100, step)) / 100;
+              var half = progress <= 0.5;
+              var q = half ? progress / 0.5 : (progress - 0.5) / 0.5;
+              var travel = q * q * (3 - 2 * q);
+              var angle = half
+                ? sourceStart + (sourceAngle - sourceStart) * travel
+                : startAngle + (endAngle - startAngle) * travel;
+              var useTilt = half ? sourceTilt : tilt;
               var x = 27 * Math.cos(angle);
               var y = 10.5 * Math.sin(angle);
-              dot.setAttribute('cx', (32 + x * Math.cos(tilt) - y * Math.sin(tilt)).toFixed(2));
-              dot.setAttribute('cy', (32 + x * Math.sin(tilt) + y * Math.cos(tilt)).toFixed(2));
-              var color = fromColor.map(function (value, i) {
-                return Math.round(value + (toColor[i] - value) * travel);
-              });
-              dot.style.color = 'rgb(' + color.join(',') + ')';
-              arc.setAttribute('stroke-dashoffset', ((1 - crossProgress) * (1 - progress) * 100).toFixed(2));
+              dot.setAttribute('cx', (32 + x * Math.cos(useTilt) - y * Math.sin(useTilt)).toFixed(2));
+              dot.setAttribute('cy', (32 + x * Math.sin(useTilt) + y * Math.cos(useTilt)).toFixed(2));
+              if (half) {
+                dot.style.color = 'rgb(' + fromColor.join(',') + ')';
+              } else {
+                var color = fromColor.map(function (value, i) {
+                  return Math.round(value + (toColor[i] - value) * travel);
+                });
+                dot.style.color = 'rgb(' + color.join(',') + ')';
+              }
+              arc.setAttribute('stroke-dashoffset', (half
+                ? 100 - crossProgress * 100 * travel
+                : (1 - crossProgress) * (1 - travel) * 100
+              ).toFixed(2));
+              if (sourceArc) {
+                sourceArc.style.opacity = half ? '0.75' : '0.24';
+                arc.style.opacity = half ? '0.24' : '0.75';
+              }
             };
 
             // 首帧就按来源页进度绘制，避免小球回跳到轨道交点
@@ -141,6 +163,7 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
                 warpWatch.disconnect();
                 dot = nextDot;
                 arc = nextArc;
+                sourceArc = warp.querySelector('.warp-orbit--' + (isPhoto ? 'dev' : 'photo'));
                 paintArrival(loadStep);
               });
               warpWatch.observe(root, { childList: true, subtree: true });
@@ -154,6 +177,7 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
               if (!dot || !arc) {
                 dot = warp ? warp.querySelector('.warp-dot') : null;
                 arc = warp ? warp.querySelector('.warp-orbit--' + section) : null;
+                sourceArc = warp ? warp.querySelector('.warp-orbit--' + (isPhoto ? 'dev' : 'photo')) : null;
                 paintArrival(loadStep);
               }
 
@@ -199,6 +223,8 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
               var reach = function (next) {
                 if (next > target) target = Math.min(100, next);
               };
+              // DOM 解析完成只是整条轨道的四成：剩余进度留给样式、图片与字体
+              reach(40);
               var settle = function () {
                 if (!loaded || !fontsDone) return;
                 requestAnimationFrame(function () {
@@ -209,7 +235,7 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
               };
               var onLoad = function () {
                 loaded = true;
-                reach(88);
+                reach(80);
                 settle();
               };
               if (loaded) onLoad();
@@ -217,7 +243,7 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
               if (document.fonts && document.fonts.ready) {
                 document.fonts.ready.then(function () {
                   fontsDone = true;
-                  reach(96);
+                  reach(94);
                   settle();
                 });
               } else {
@@ -549,11 +575,17 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
           const target = current === 'photo' ? 'dev' : 'photo';
           const pathname = new URL(link.href).pathname.replace(/\/$/, '');
           const isPhoto = target === 'photo';
+          // 换轨前的来源轨道
           const tilt = isPhoto ? -Math.PI / 6 : Math.PI / 6;
           const startAngle = isPhoto ? 0 : -Math.PI;
           const crossY = isPhoto ? -crossOffset : crossOffset;
           const crossAngle = Math.atan2(crossY * Math.cos(tilt) / 10.5, crossY * Math.sin(tilt) / 27);
-          const endAngle = isPhoto ? crossAngle : crossAngle - 2 * Math.PI;
+          // 换轨后的目标轨道
+          const targetTilt = isPhoto ? Math.PI / 6 : -Math.PI / 6;
+          const targetCrossAngle = Math.atan2(crossY * Math.cos(targetTilt) / 10.5, crossY * Math.sin(targetTilt) / 27);
+          const targetEnd = isPhoto ? -Math.PI : 0;
+          const fromColor = isPhoto ? [124, 103, 228] : [228, 171, 99];
+          const toColor = isPhoto ? [228, 171, 99] : [124, 103, 228];
 
           event.preventDefault();
           switching = true;
@@ -563,80 +595,71 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
           const warp = buildWarp();
           const dot = warp.querySelector<SVGCircleElement>('.warp-dot')!;
           const arc = warp.querySelector<SVGEllipseElement>(`.warp-orbit--${target}`)!;
+          const sourceArc = warp.querySelector<SVGEllipseElement>(`.warp-orbit--${current}`)!;
           arc.setAttribute('stroke-dasharray', '100');
-          warp.dataset.world = current;
+          // 核心与文字使用目标主题色，保证在目标底色上可见；轨道高亮由下面的行内透明度控制
+          warp.dataset.world = target;
           warp.dataset.target = target;
-          dot.style.color = isPhoto ? '#7c67e4' : '#e4ab63';
 
-          const paintApproach = (progress: number) => {
-            const travel = progress * progress * (3 - 2 * progress);
-            const angle = startAngle + (endAngle - startAngle) * travel;
+          // 整条轨道 200 份：进度 0-50 走换轨前上半段，50-100 走换轨后下半段
+          const paintJourney = (step: number) => {
+            const progress = Math.max(0, Math.min(100, step)) / 100;
+            const half = progress <= 0.5;
+            const q = half ? progress / 0.5 : (progress - 0.5) / 0.5;
+            const travel = q * q * (3 - 2 * q);
+            const angle = half
+              ? startAngle + (crossAngle - startAngle) * travel
+              : targetCrossAngle + (targetEnd - targetCrossAngle) * travel;
+            const useTilt = half ? tilt : targetTilt;
             const x = 27 * Math.cos(angle);
             const y = 10.5 * Math.sin(angle);
-            dot.setAttribute('cx', (32 + x * Math.cos(tilt) - y * Math.sin(tilt)).toFixed(2));
-            dot.setAttribute('cy', (32 + x * Math.sin(tilt) + y * Math.cos(tilt)).toFixed(2));
-            arc.setAttribute('stroke-dashoffset', ((1 - crossProgress * progress) * 100).toFixed(2));
-          };
-
-          paintApproach(0);
-          void warp.offsetWidth;
-          warp.classList.add('is-on', 'is-armed');
-          const begin = performance.now();
-          const approach = (now: number) => {
-            const progress = Math.max(0, Math.min(1, (now - begin) / 480));
-            paintApproach(progress);
-            if (progress < 1) {
-              requestAnimationFrame(approach);
-              return;
-            }
-            warp.dataset.world = target;
-            try {
-              sessionStorage.setItem('sch-logo-arrived', pathname);
-            } catch (e) {}
-            window.location.assign(link.href);
-
-            // 导航等待期间继续沿目标轨道推进：轨道分 100 份，加载每前进 1% 走一份
-            const targetTilt = isPhoto ? Math.PI / 6 : -Math.PI / 6;
-            const targetCrossY = isPhoto ? -crossOffset : crossOffset;
-            const targetStartAngle = Math.atan2(
-              targetCrossY * Math.cos(targetTilt) / 10.5,
-              targetCrossY * Math.sin(targetTilt) / 27
-            );
-            const targetEnd = isPhoto ? -Math.PI : 0;
-            const fromColor = isPhoto ? [124, 103, 228] : [228, 171, 99];
-            const toColor = isPhoto ? [228, 171, 99] : [124, 103, 228];
-            let loadStep = 0;
-            let savedStep = -1;
-            const persist = () => {
-              const whole = Math.round(loadStep);
-              if (whole === savedStep) return;
-              savedStep = whole;
-              try {
-                sessionStorage.setItem('sch-load-step', JSON.stringify({ step: whole, t: Date.now() }));
-              } catch (e) {}
-            };
-            const loadingBegin = performance.now();
-            const paintLoading = (now: number) => {
-              const elapsed = now - loadingBegin;
-              // 双曲蠕动：新页面提交前小球也持续缓慢前进，不会停在交点
-              loadStep = 90 * elapsed / (elapsed + 1600);
-              const progress = Math.max(0, Math.min(1, loadStep / 100));
-              const travel = progress * progress * (3 - 2 * progress);
-              const angle = targetStartAngle + (targetEnd - targetStartAngle) * travel;
-              const x = 27 * Math.cos(angle);
-              const y = 10.5 * Math.sin(angle);
-              dot.setAttribute('cx', (32 + x * Math.cos(targetTilt) - y * Math.sin(targetTilt)).toFixed(2));
-              dot.setAttribute('cy', (32 + x * Math.sin(targetTilt) + y * Math.cos(targetTilt)).toFixed(2));
+            dot.setAttribute('cx', (32 + x * Math.cos(useTilt) - y * Math.sin(useTilt)).toFixed(2));
+            dot.setAttribute('cy', (32 + x * Math.sin(useTilt) + y * Math.cos(useTilt)).toFixed(2));
+            if (half) {
+              dot.style.color = `rgb(${fromColor.join(',')})`;
+            } else {
               const color = fromColor.map((value, i) => Math.round(value + (toColor[i] - value) * travel));
               dot.style.color = `rgb(${color.join(',')})`;
-              arc.setAttribute('stroke-dashoffset', ((1 - crossProgress) * (1 - progress) * 100).toFixed(2));
-              persist();
-              requestAnimationFrame(paintLoading);
-            };
-            persist();
-            requestAnimationFrame(paintLoading);
+            }
+            arc.setAttribute('stroke-dashoffset', (half
+              ? 100 - crossProgress * 100 * travel
+              : (1 - crossProgress) * (1 - travel) * 100
+            ).toFixed(2));
+            sourceArc.style.opacity = half ? '0.75' : '0.24';
+            arc.style.opacity = half ? '0.24' : '0.75';
           };
-          requestAnimationFrame(approach);
+
+          paintJourney(0);
+          void warp.offsetWidth;
+          warp.classList.add('is-on', 'is-armed');
+
+          try {
+            sessionStorage.setItem('sch-logo-arrived', pathname);
+          } catch (e) {}
+          window.location.assign(link.href);
+
+          // 导航与加载期间持续推进：200 份逐份前进，并把进度留给抵达页接续
+          let progress = 0;
+          let saved = -1;
+          const persist = () => {
+            const division = Math.round(progress * 2) / 2;
+            if (division === saved) return;
+            saved = division;
+            try {
+              sessionStorage.setItem('sch-load-step', JSON.stringify({ step: division, t: Date.now() }));
+            } catch (e) {}
+          };
+          persist();
+          const begin = performance.now();
+          const advance = (now: number) => {
+            const elapsed = now - begin;
+            // 双曲蠕动：新页面提交前小球也持续前进，不会长时间停在同一格
+            progress = 90 * elapsed / (elapsed + 1600);
+            paintJourney(progress);
+            persist();
+            requestAnimationFrame(advance);
+          };
+          requestAnimationFrame(advance);
         };
 
         switchLinks.forEach((link) => {
