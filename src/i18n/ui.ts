@@ -49,7 +49,7 @@ export const ui = {
 
     'photo.kicker': 'Photography / 2018—2026',
     'photo.title': '把时间铺开，星光就成了一幅画',
-    'photo.lead': '星空摄影是严谨理性的极致追求，也是感性浪漫的终极表达，更是一群人的双向奔赴。',
+    'photo.lead': '星空摄影是严谨理性的极致追求，也是感性浪漫的终极表达。',
     'photo.pauseMotion': '暂停动效',
     'photo.playMotion': '继续动效',
     'photo.featured': '精选作品',
@@ -212,7 +212,7 @@ export const ui = {
 
     'photo.kicker': 'Photography / 2018—2026',
     'photo.title': 'Stretch time out, and starlight becomes a painting',
-    'photo.lead': 'Astrophotography is rigorous reason and romantic feeling at their extremes — and a journey we make toward each other.',
+    'photo.lead': 'Astrophotography is rigorous reason and romantic feeling at their extremes.',
     'photo.pauseMotion': 'Pause animation',
     'photo.playMotion': 'Resume animation',
     'photo.featured': 'Selected works',

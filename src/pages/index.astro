@@ -12,13 +12,13 @@ const t = useTranslations(lang);
 const otherLang: Lang = lang === 'zh' ? 'en' : 'zh';
 const langHref = withBase(otherLang === 'en' ? '/en/' : '/');
 const langLabel = otherLang === 'zh' ? '中文' : 'EN';
-const skyModule = withBase('/vendor/three-bg.js');
+const skyModule = withBase('/vendor/three-bg.js?v=2');
 const photoHref = localizePath('/photo/', lang);
 ---
 
 <BaseLayout lang={lang} title={t('portal.title')} chrome={false} accent="warm">
   <Fragment slot="head">
-    <link rel="modulepreload" href={skyModule} media="(prefers-reduced-motion: no-preference)" />
+    <link rel="modulepreload" href={skyModule} fetchpriority="high" media="(prefers-reduced-motion: no-preference)" />
     <link rel="preload" as="font" type="font/woff2" href={headingFont} crossorigin />
     <link rel="preload" as="font" type="font/woff2" href={numericFont} crossorigin />
   </Fragment>
@@ -26,6 +26,20 @@ const photoHref = localizePath('/photo/', lang);
     <div class="portal-stars"></div>
     <canvas id="three-canvas"></canvas>
   </div>
+  <script is:inline define:vars={{ skyModule }}>
+    const canvas = document.getElementById('three-canvas');
+    if (canvas && matchMedia('(prefers-reduced-motion: no-preference)').matches) {
+      // 画布已存在，可以直接绘制首帧，无需等待文档解析完成。
+      import(skyModule)
+        .then(({ renderPortalSky }) => {
+          renderPortalSky(canvas);
+          canvas.parentElement.classList.add('is-rendered');
+        })
+        .catch(() => {
+          // 脚本或 WebGL 不可用时，保留轻量星空。
+        });
+    }
+  </script>
   <div class="portal">
     <div class="veil" aria-hidden="true"></div>
 
@@ -95,18 +109,6 @@ const photoHref = localizePath('/photo/', lang);
 
   <DevelopingOverlay id="photo-entry-loader" lang={lang} />
 
-  <script is:inline type="module" define:vars={{ skyModule }}>
-    const sky = document.querySelector('.portal-sky');
-    if (sky && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      try {
-        // 模块同步绘制第一帧，随后才切换到 3D 画布。
-        await import(skyModule);
-        sky.classList.add('is-rendered');
-      } catch {
-        // 脚本或 WebGL 不可用时，保留轻量星空。
-      }
-    }
-  </script>
   <script is:inline define:vars={{ photoHref }}>
     (() => {
       const door = document.querySelector('.door-photo');
@@ -217,10 +219,10 @@ const photoHref = localizePath('/photo/', lang);
     inset: 0;
     width: 100%;
     height: 100%;
-    transition: opacity 0.35s ease;
   }
 
   .portal-stars {
+    transition: opacity 0.35s ease;
     /* 星点随首屏样式一同绘制。不同大小的重复图层打散星点间距。 */
     background-image:
       radial-gradient(circle at 17% 32%, #b89be4 0.7px, transparent 1.5px),

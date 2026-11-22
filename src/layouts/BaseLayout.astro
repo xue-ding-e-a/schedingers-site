@@ -69,6 +69,7 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
     <meta property="og:description" content={description} />
     <meta property="og:image" content={new URL(withBase(image), Astro.site)} />
     <meta name="theme-color" content={themeColor} />
+    <slot name="head" />
     <link rel="icon" href={withBase('/favicon.svg')} type="image/svg+xml" />
     <script is:inline define:vars={{ section, adoptStoredWorld }}>
       (function () {
@@ -338,7 +339,6 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
         } catch (e) {}
       })();
     </script>
-    <slot name="head" />
   </head>
   <body class:list={['page', `accent-${accent}`, { 'world-aware': preserveWorldNav }]}>
     {
