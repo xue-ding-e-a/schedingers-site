@@ -10,14 +10,19 @@ interface Props {
   eager?: boolean;
   reveal?: boolean;
   titleOnly?: boolean;
+  vars?: string;
 }
 
-const { work, lang, eager = false, reveal = true, titleOnly = false } = Astro.props;
+const { work, lang, eager = false, reveal = true, titleOnly = false, vars } = Astro.props;
 const href = localizePath(`/works/${work.slug}`, lang);
 const year = work.date.slice(0, 4);
 ---
 
-<a class:list={['work-card', 'work-card-interaction', { reveal, 'title-only': titleOnly }]} href={href} style={`--tint:${work.color}`}>
+<a
+  class:list={['work-card', 'work-card-interaction', { reveal, 'title-only': titleOnly }]}
+  href={href}
+  style={`--tint:${work.color}${vars ? `;${vars}` : ''}`}
+>
   <span class="media" style={`aspect-ratio:${work.width} / ${work.height}`}>
     <img
       src={withBase(work.thumb)}

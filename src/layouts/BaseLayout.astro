@@ -1164,30 +1164,54 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
         .site-head {
           height: auto;
         }
+        /* 两行栅格：第一行品牌 + 语言，第二行导航 + 主线切换（靠右填补空处） */
         .head-inner {
-          flex-wrap: wrap;
-          justify-content: space-between;
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto;
+          grid-template-areas:
+            'brand lang'
+            'nav track';
+          align-items: center;
+          column-gap: 16px;
+          row-gap: 8px;
           padding-block: 12px 8px;
-          gap: 8px 16px;
         }
+        .brand {
+          grid-area: brand;
+          justify-self: start;
+        }
+        /* 拆掉工具区外壳，让语言切换与主线切换各自落到对应栅格 */
+        .head-tools {
+          display: contents;
+        }
+        .lang-switch {
+          grid-area: lang;
+          justify-self: end;
+        }
+        /* 导航不再横向滑动：常规宽度保持原按钮尺寸，只有屏幕确实放不下时才略微收缩 */
         .site-nav {
           display: flex;
-          order: 3;
+          flex-wrap: wrap;
+          grid-area: nav;
           width: 100%;
+          min-width: 0;
           margin-left: 0;
-          gap: 8px;
-          overflow-x: auto;
-          padding-bottom: 4px;
-          scrollbar-width: none;
-        }
-        .site-nav::-webkit-scrollbar {
-          display: none;
+          gap: clamp(3px, 1.2vw, 4px);
         }
         .nav-link {
           white-space: nowrap;
+          font-size: clamp(11.5px, 3.5vw, 13px);
+          padding: clamp(5px, 1.6vw, 6px) clamp(9px, 3.6vw, 13px);
         }
-        .head-tools {
-          margin-left: 0;
+        .track-switch {
+          grid-area: track;
+          justify-self: end;
+          white-space: nowrap;
+          font-size: clamp(11px, 3.4vw, 12.5px);
+          padding: clamp(5px, 1.55vw, 6px) clamp(8px, 3.3vw, 12px);
+        }
+        .track-icon {
+          font-size: clamp(9px, 2.7vw, 10px);
         }
       }
     </style>

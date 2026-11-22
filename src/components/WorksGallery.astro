@@ -37,6 +37,29 @@ for (const { left, right, leftShare } of equalHeightRows) {
 }
 
 const pairColumns = (left: Work, right: Work) => `${displayWidths[left.slug]} ${displayWidths[right.slug]}`;
+
+// 移动端排版：横幅作品逐行单列居中，统一按「银河落入雪山」铺满页面后的高度呈现；
+// 两张竖图并排，两图宽度加间距正好铺满页面。
+const mobileAnchor = getWork('galactic-arch-snow-mountain')!;
+const mobileBaseRatio = mobileAnchor.height / mobileAnchor.width;
+const mobileOrder = [
+  'under-the-milky-way',
+  'meteor-over-ridge',
+  'galactic-arch-snow-mountain',
+  'plank-road-star-bridge',
+  'prairie-starry-night',
+  'star-trails-river',
+  'stars-fall-on-village',
+  'twin-arches-jade',
+  'winter-milky-way',
+  'eaves-of-time',
+];
+const mobileVars = (work: Work) => {
+  const portrait = work.height > work.width;
+  const width = portrait ? '100%' : `${(mobileBaseRatio * ratio(work) * 100).toFixed(4)}cqw`;
+  const span = portrait ? 'auto' : '1 / -1';
+  return `--mobile-order:${mobileOrder.indexOf(work.slug) + 1};--mobile-w:${width};--mobile-span:${span}`;
+};
 ---
 
 <div class="works-layout" style={{
@@ -48,18 +71,18 @@ const pairColumns = (left: Work, right: Work) => `${displayWidths[left.slug]} ${
   <div class="curated-works" id="curated-works">
     {equalHeightRows.map(({ left, right }, index) => (
       <div class="pair reveal" style={{ '--columns': pairColumns(left, right) }}>
-        <WorkCard work={left} {lang} titleOnly reveal={false} eager={index === 0} />
-        <WorkCard work={right} {lang} titleOnly reveal={false} eager={index === 0} />
+        <WorkCard work={left} {lang} titleOnly reveal={false} eager={index === 0} vars={mobileVars(left)} />
+        <WorkCard work={right} {lang} titleOnly reveal={false} eager={index === 0} vars={mobileVars(right)} />
       </div>
     ))}
     <div class="staggered">
       <div class="pair upper-pair reveal" style={{ '--columns': pairColumns(upperLeft, upperRight) }}>
-        <WorkCard work={upperLeft} {lang} titleOnly reveal={false} />
-        <WorkCard work={upperRight} {lang} titleOnly reveal={false} />
+        <WorkCard work={upperLeft} {lang} titleOnly reveal={false} vars={mobileVars(upperLeft)} />
+        <WorkCard work={upperRight} {lang} titleOnly reveal={false} vars={mobileVars(upperRight)} />
       </div>
       <div class="pair lower-pair reveal" style={{ '--columns': pairColumns(lowerLeft, lowerRight) }}>
-        <WorkCard work={lowerLeft} {lang} titleOnly reveal={false} />
-        <WorkCard work={lowerRight} {lang} titleOnly reveal={false} />
+        <WorkCard work={lowerLeft} {lang} titleOnly reveal={false} vars={mobileVars(lowerLeft)} />
+        <WorkCard work={lowerRight} {lang} titleOnly reveal={false} vars={mobileVars(lowerRight)} />
       </div>
     </div>
   </div>
@@ -134,5 +157,28 @@ const pairColumns = (left: Work, right: Work) => `${displayWidths[left.slug]} ${
 
   @media (max-width: 640px) {
     .works-layout { --photo-gap: 24px; }
+
+    /* 移动端：横幅作品一行一张、按「银河落入雪山」的高度居中；两张竖图并排铺满页面 */
+    .curated-works {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      justify-items: center;
+      gap: var(--photo-gap);
+    }
+
+    /* 分组容器设为 display: contents 后，卡片在布局上成为网格项，但 DOM 层级不变 */
+    .curated-works :global(a) {
+      order: var(--mobile-order, 0);
+      grid-column: var(--mobile-span, 1 / -1);
+      width: var(--mobile-w, 100%);
+    }
+
+    .pair,
+    .staggered,
+    .upper-pair,
+    .lower-pair { display: contents; }
+
+    .lower-pair > :global(a:first-child),
+    .lower-pair > :global(a:last-child) { margin-top: 0; }
   }
 </style>
