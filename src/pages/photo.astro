@@ -102,7 +102,7 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
           <div class="strip-group" aria-hidden={duplicate ? 'true' : undefined}>
             {featuredByOrder.map((w) => (
               <div class="strip-item" style={`--ratio:${(w.width / w.height).toFixed(3)}`}>
-                <WorkCard work={w} lang={lang} reveal={false} deferPreview />
+                <WorkCard work={w} lang={lang} reveal={false} eager={!duplicate} deferPreview />
               </div>
             ))}
           </div>
@@ -131,7 +131,7 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
           <a class="series-card reveal" href={localizePath(`/collections/${s.slug}`, lang)}>
             <span class="series-media" style={`background:${s.color}`}>
               <DeferredPreview>
-                <img src={withBase(cover.thumb)} alt={s.name[lang]} loading="lazy" decoding="async" />
+                <img src={withBase(cover.thumb)} alt={s.name[lang]} loading="eager" decoding="async" />
               </DeferredPreview>
             </span>
             <span class="series-info">
@@ -471,6 +471,7 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
       if (!entry || video.paused || !video.loop) return;
       clearTimeout(entryTimer);
       renderProgress(100);
+      releasePreviews();
       entryTimer = window.setTimeout(dismissEntry, 120);
     }
 
