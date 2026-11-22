@@ -94,8 +94,42 @@ const list = sortByDate(works);
   });
   sizeObserver.observe(grid);
 
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  // 记录筛选前每张图的位置，筛选后统一从旧位置上移并渐入
+  function playFilterIn(beforeTops: Map<HTMLElement, number>) {
+    if (reduceMotion.matches) return;
+
+    for (const item of items) {
+      if (item.hidden) continue;
+      const card = item.firstElementChild;
+      if (!(card instanceof HTMLElement)) continue;
+
+      const before = beforeTops.get(item);
+      const shift = before === undefined ? 28 : before - item.getBoundingClientRect().top;
+      if (shift <= 0.5) continue;
+
+      card.getAnimations().forEach(anim => {
+        if (anim.id === 'filter-in') anim.cancel();
+      });
+      card.animate(
+        [
+          { transform: `translateY(${shift}px)`, opacity: 0 },
+          { transform: 'translateY(0)', opacity: 1 },
+        ],
+        { duration: 560, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', id: 'filter-in' },
+      );
+    }
+  }
+
   const apply = (filter: string) => {
     const showAll = filter === 'all';
+    const beforeTops = new Map<HTMLElement, number>();
+    if (!showAll && !grid.hidden) {
+      for (const item of items) {
+        if (!item.hidden) beforeTops.set(item, item.getBoundingClientRect().top);
+      }
+    }
     curated.hidden = !showAll;
     grid.hidden = showAll;
     sortNote.hidden = showAll;
@@ -105,7 +139,10 @@ const list = sortByDate(works);
       item.hidden = !show;
       if (show) visible += 1;
     }
-    if (!showAll) packFilteredWorks();
+    if (!showAll) {
+      packFilteredWorks();
+      playFilterIn(beforeTops);
+    }
     if (count) count.textContent = String(showAll ? items.length : visible);
     if (empty) empty.hidden = showAll || visible > 0;
   };
