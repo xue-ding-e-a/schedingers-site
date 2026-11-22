@@ -26,8 +26,6 @@ const featuredRank = (slug: string) => {
   return index === -1 ? featuredOrder.length : index;
 };
 const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) - featuredRank(b.slug));
-// 手机端精选条按「最宽的一张 = 页面内容宽」反推统一高度，其余卡片按各自比例同步缩窄
-const stripMaxRatio = Math.max(...featuredByOrder.map((w) => w.width / w.height));
 ---
 
 <BaseLayout lang={lang} title={t('nav.photo')} description={t('photo.lead')} section="photo">
@@ -79,7 +77,7 @@ const stripMaxRatio = Math.max(...featuredByOrder.map((w) => w.width / w.height)
       </a>
     </div>
 
-    <div class="strip reveal" style={`--strip-max-ratio:${stripMaxRatio.toFixed(4)}`}>
+    <div class="strip reveal">
       <div class="strip-track">
         {[false, true].map((duplicate) => (
           <div class="strip-group" aria-hidden={duplicate ? 'true' : undefined}>
@@ -260,8 +258,6 @@ const stripMaxRatio = Math.max(...featuredByOrder.map((w) => w.width / w.height)
     padding-bottom: 18px;
     margin-inline: calc(var(--gutter) * -1);
     padding-inline: var(--gutter);
-    /* 以自身内容宽为查询容器，手机端据此让最宽的一张刚好铺满页面内容宽 */
-    container-type: inline-size;
   }
 
   .strip-track {
@@ -400,12 +396,6 @@ const stripMaxRatio = Math.max(...featuredByOrder.map((w) => w.width / w.height)
 
   /* 手机端：首屏动画按设备宽度完整呈现，避免 3:2 横屏画面被纵向放大后裁掉两侧 */
   @media (max-width: 768px) {
-    .hero {
-      min-height: 0;
-      padding-top: 0;
-      justify-content: flex-start;
-    }
-
     /* 动画顶到页面最上方，与导航栏顶部对齐 */
     .hero-video,
     .hero-veil {
@@ -414,41 +404,40 @@ const stripMaxRatio = Math.max(...featuredByOrder.map((w) => w.width / w.height)
       aspect-ratio: 3 / 2;
     }
 
+    /* 遮罩贴合画面尺寸，下缘淡入纯黑，承托右下角文字 */
     .hero-veil {
       opacity: 1;
       background: linear-gradient(to bottom, rgb(0 0 0 / 0%) 58%, #000 100%);
     }
 
-    /* 照片信息（地点、参数）与滚动提示排在动画紧邻下方，不再压在画面上 */
+    /* 照片信息与暂停按钮收进动画右下角 */
     .hero-meta {
-      order: -1;
-      margin: calc(66.6667% + 12px) auto 0;
-      padding-block: 0;
+      position: absolute;
+      inset: 0 0 auto;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 3 / 2;
+      margin: 0;
+      padding: 0 var(--gutter) 12px;
       display: flex;
       flex-direction: column;
-      align-items: flex-start;
-      gap: 4px;
-      text-align: left;
+      align-items: flex-end;
+      justify-content: flex-end;
+      gap: 6px;
+      text-align: right;
     }
 
-    /* 暂停按钮贴在动画左下角 */
+    .hero-meta > .mono {
+      text-shadow: 0 1px 8px rgb(0 0 0 / 85%);
+    }
+
     .hero-motion-toggle {
-      position: absolute;
-      top: 0;
-      left: 0;
       margin: 0;
-      transform: translateY(calc(-100% - 22px));
     }
 
-    .scroll-cue {
-      margin-left: 0;
-      margin-top: 4px;
-    }
-
-    /* 标题上移贴近信息区，标题下方的留白同步收紧 */
+    /* 文案保持原先的底部留白 */
     .hero-inner {
-      padding-top: 44px;
-      padding-bottom: 48px;
+      padding-bottom: 96px;
     }
   }
 
@@ -464,26 +453,6 @@ const stripMaxRatio = Math.max(...featuredByOrder.map((w) => w.width / w.height)
   @media (max-width: 600px) {
     .series-card {
       grid-template-columns: 1fr;
-    }
-  }
-
-  /* 手机端：精选条最宽的一张铺满页面内容宽，其余卡片同高、按原比例缩窄；模块间距整体收紧 */
-  @media (max-width: 768px) {
-    .strip-item {
-      --card-h: calc(100cqw / var(--strip-max-ratio, 2.1429));
-    }
-
-    .section {
-      padding-block: 44px;
-    }
-
-    .sec-head {
-      margin-bottom: 20px;
-      gap: 16px;
-    }
-
-    .atlas-band {
-      padding-block: 36px;
     }
   }
 </style>
