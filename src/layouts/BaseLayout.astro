@@ -147,29 +147,6 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
                 dot.style.color = 'rgb(' + color.join(',') + ')';
                 arc.setAttribute('stroke-dashoffset', ((1 - crossProgress) * (1 - progress) * 100).toFixed(2));
               };
-              var video = isPhoto && document.querySelector('[data-hero] video[data-src]');
-              if (video) {
-                var label = warp.querySelector('.warp-percent');
-                // Also read the snapshot in case a cached video has already started.
-                var syncOrbit = function () {
-                  var state = video.dataset.trackProgress;
-                  if (state === undefined) return;
-                  if (state !== 'fallback') {
-                    paintOrbit(Number(state) / 100);
-                    label.textContent = state + '%';
-                    if (state !== '100') return;
-                  }
-                  video.removeEventListener('sch-track-progress', syncOrbit);
-                  if (state === 'fallback') reveal();
-                  else shrinkAndReveal();
-                };
-                video.addEventListener('sch-track-progress', syncOrbit);
-                syncOrbit();
-                document.addEventListener('DOMContentLoaded', function () {
-                  if (video.dataset.trackProgress === undefined) reveal();
-                }, { once: true });
-                return;
-              }
               var start = performance.now();
               var tick = function (now) {
                 var progress = Math.max(0, Math.min(1, (now - start) / 420));
@@ -268,7 +245,6 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
               style={`color: ${section === 'dev' ? '#e4ab63' : '#7c67e4'}`}
             />
           </svg>
-          {section === 'photo' && <span class="warp-percent mono">0%</span>}
         </div>
       )
     }
@@ -982,12 +958,6 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
       .world-warp.is-armed .world-warp-mark {
         opacity: 1;
         transform: scale(1);
-      }
-
-      .warp-percent {
-        position: absolute;
-        top: calc(50% + min(23vmin, 210px));
-        font-variant-numeric: tabular-nums;
       }
 
       .warp-orbit {

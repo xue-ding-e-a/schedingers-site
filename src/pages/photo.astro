@@ -414,6 +414,24 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
       0 12px 28px -22px rgba(0, 0, 0, 0.6);
   }
 
+  /* 手机端：首屏动画按设备宽度完整呈现，避免 3:2 横屏画面被纵向放大后裁掉两侧 */
+  @media (max-width: 768px) {
+    .hero-video {
+      inset: var(--head-h, var(--nav-h)) 0 auto;
+      height: auto;
+      aspect-ratio: 3 / 2;
+    }
+
+    /* 遮罩贴合画面尺寸，下缘淡入纯黑，与下方留白和文案自然衔接 */
+    .hero-veil {
+      inset: var(--head-h, var(--nav-h)) 0 auto;
+      height: auto;
+      aspect-ratio: 3 / 2;
+      opacity: 1;
+      background: linear-gradient(to bottom, rgb(0 0 0 / 0%) 62%, #000 100%);
+    }
+  }
+
   @media (max-width: 960px) {
     .series-grid {
       grid-template-columns: 1fr;
@@ -447,26 +465,19 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
     const percent = entry?.querySelector<HTMLElement>('.loader-pct');
     let entryTimer: number | undefined;
     let frameCallback: number | undefined;
-    let trackVideoPending = document.documentElement.classList.contains('logo-arrived');
 
     let progress = -1;
     let lastMediaTime: number | undefined;
     let lastFrameCount = 0;
     let lastClock = 0;
 
-    function publishTrack(state: string) {
-      video.dataset.trackProgress = state;
-      video.dispatchEvent(new Event('sch-track-progress'));
-    }
-
     function renderProgress(value: number) {
-      if ((!entry && !trackVideoPending) || value <= progress) return;
+      if (!entry || value <= progress) return;
       progress = value;
       if (fill && percent) {
         fill.style.width = `${value}%`;
         percent.textContent = String(value).padStart(2, '0');
       }
-      if (trackVideoPending) publishTrack(String(value));
       clearTimeout(entryTimer);
       if (value < 100) entryTimer = window.setTimeout(onStartupTimeout, 12000);
     }
@@ -481,8 +492,6 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
     function dismissEntry() {
       clearTimeout(entryTimer);
       stopWatchingFrames();
-      if (trackVideoPending) publishTrack('fallback');
-      trackVideoPending = false;
       entry?.classList.add('is-done');
       entry = null;
     }
@@ -497,7 +506,6 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
 
     function finishEntry() {
       renderProgress(100);
-      trackVideoPending = false;
       stopWatchingFrames();
       if (entry) entryTimer = window.setTimeout(dismissEntry, 120);
     }
@@ -534,7 +542,7 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
     async function readVideo(response: Response) {
       const body = response.body;
       let file: Blob;
-      if ((entry || trackVideoPending) && body) {
+      if (entry && body) {
         const total = Number(response.headers.get('content-length'));
         const chunks: BlobPart[] = [];
         let received = 0;
@@ -576,12 +584,6 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
         if (wantsPlayback) void syncPlayback();
       }, readVideo);
 
-      // Download the full loop before attaching it, including on the native playback fallback.
-      if (!manual && trackVideoPending) {
-        return downloadVideo(url).then((file) => {
-          if (wantsPlayback && !video.hasAttribute('src') && !attachLoop(file)) useNativeSource(file);
-        });
-      }
       if (attachLoop(url)) return;
       if (manual) {
         useNativeSource(url);
@@ -615,7 +617,7 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
         }
         if (attempt !== playbackAttempt) return;
         await video.play();
-        if (attempt !== playbackAttempt || (!entry && !trackVideoPending)) return;
+        if (attempt !== playbackAttempt || !entry) return;
         renderProgress(99);
         if (typeof video.requestVideoFrameCallback === 'function') {
           frameCallback = video.requestVideoFrameCallback(onVideoFrame);
@@ -640,14 +642,14 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
     }
 
     video.addEventListener('progress', () => {
-      if ((entry || trackVideoPending) && video.buffered.length && Number.isFinite(video.duration) && video.duration > 0) {
+      if (entry && video.buffered.length && Number.isFinite(video.duration) && video.duration > 0) {
         renderProgress(Math.min(95, Math.round(95 * video.buffered.end(video.buffered.length - 1) / video.duration)));
       }
     });
     video.addEventListener('error', () => {
       // Allow the loop controller to replace an interrupted source first.
       queueMicrotask(() => {
-        if (video.error && (entry || trackVideoPending)) onStartupTimeout();
+        if (video.error && entry) onStartupTimeout();
       });
     });
     video.muted = true;
