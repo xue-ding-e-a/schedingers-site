@@ -1167,7 +1167,8 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
         /* 两行栅格：第一行品牌 + 语言，第二行主线切换（左紧邻）+ 导航（右紧邻） */
         .head-inner {
           display: grid;
-          grid-template-columns: auto minmax(0, 1fr);
+          /* 首列固定为品牌静止宽度：logo 收缩动画期间宽度会短暂变化，若用 auto 会挤压导航导致多折出一行 */
+          grid-template-columns: 100px minmax(0, 1fr);
           grid-template-areas:
             'brand lang'
             'track nav';
