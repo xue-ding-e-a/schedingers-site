@@ -159,29 +159,38 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
                 requestAnimationFrame(tick);
               };
 
-              var video = isPhoto ? document.querySelector('[data-hero] video[poster]') : null;
+              var video = isPhoto ? document.querySelector('[data-hero] video[data-src]') : null;
               if (!video) {
                 leaveCrossing();
                 return;
               }
 
-              // 只在交点等摄影封面。视频、字体和下方图片不阻塞轨道过渡。
-              var cover = new Image();
-              var waiting = true;
-              var finishWaiting = function () {
-                if (!waiting) return;
-                waiting = false;
-                clearTimeout(waitLimit);
-                leaveCrossing();
+              // 在交点等视频下载并可以播放。只有加载失败才回退到封面。
+              var showPoster = function () {
+                var cover = new Image();
+                var waiting = true;
+                var finishWaiting = function () {
+                  if (!waiting) return;
+                  waiting = false;
+                  clearTimeout(waitLimit);
+                  leaveCrossing();
+                };
+                var waitLimit = setTimeout(finishWaiting, 1600);
+                cover.fetchPriority = 'high';
+                cover.onload = function () {
+                  if (cover.decode) cover.decode().then(finishWaiting, finishWaiting);
+                  else finishWaiting();
+                };
+                cover.onerror = finishWaiting;
+                cover.src = video.poster;
               };
-              var waitLimit = setTimeout(finishWaiting, 1600);
-              cover.fetchPriority = 'high';
-              cover.onload = function () {
-                if (cover.decode) cover.decode().then(finishWaiting, finishWaiting);
-                else finishWaiting();
-              };
-              cover.onerror = finishWaiting;
-              cover.src = video.poster;
+              video.addEventListener('sch-track-video-ready', function (event) {
+                if (event.detail) leaveCrossing();
+                else showPoster();
+              }, { once: true });
+              document.addEventListener('DOMContentLoaded', function () {
+                if (!video.hasAttribute('data-track-video-bound')) showPoster();
+              }, { once: true });
             };
             if (document.readyState === 'loading') {
               document.addEventListener('readystatechange', playArrival, { once: true });

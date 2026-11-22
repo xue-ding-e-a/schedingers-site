@@ -5,7 +5,7 @@ const secondsToBuffer = 4;
 
 export function attachVideoLoop(
   video: HTMLVideoElement,
-  sourceUrl: string,
+  source: string | Blob,
   onInterrupted: (file?: Blob) => void,
   readVideo = (response: Response) => response.blob(),
 ): boolean {
@@ -22,7 +22,7 @@ export function attachVideoLoop(
   const useManagedSource = Source === ManagedMediaSource;
   const remotePlaybackWasDisabled = video.disableRemotePlayback;
   let buffer: SourceBuffer | undefined;
-  let file: Blob | undefined;
+  let file = typeof source === 'string' ? undefined : source;
   let segment: ArrayBuffer | undefined;
   const openTimeout = window.setTimeout(fallback, 2500);
 
@@ -77,10 +77,16 @@ export function attachVideoLoop(
   video.loop = false;
   video.src = url;
 
-  void fetch(sourceUrl, { cache: 'force-cache', signal }).then(async (response) => {
+  async function loadFile() {
+    if (typeof source !== 'string') return source;
+    const response = await fetch(source, { cache: 'force-cache', signal });
     if (!response.ok) throw new Error(`Video request failed (${response.status})`);
-    file = await readVideo(response);
-    segment = await file.arrayBuffer();
+    return readVideo(response);
+  }
+
+  void loadFile().then(async (loaded) => {
+    file = loaded;
+    segment = await loaded.arrayBuffer();
     fillBuffer();
   }).catch(fallback);
   return true;

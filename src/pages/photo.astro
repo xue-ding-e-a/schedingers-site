@@ -32,17 +32,7 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
 <BaseLayout lang={lang} title={t('nav.photo')} description={t('photo.lead')} section="photo">
   <Fragment slot="head">
     <link rel="preload" as="image" href={heroPoster} fetchpriority="high" />
-    <script is:inline define:vars={{ heroVideo }}>
-      if (!document.documentElement.classList.contains('logo-arrived')) {
-        const preload = document.createElement('link');
-        preload.rel = 'preload';
-        preload.as = 'fetch';
-        preload.href = heroVideo;
-        preload.crossOrigin = 'anonymous';
-        preload.fetchPriority = 'high';
-        document.head.appendChild(preload);
-      }
-    </script>
+    <link rel="preload" as="fetch" href={heroVideo} crossorigin="anonymous" fetchpriority="high" />
   </Fragment>
   <DevelopingOverlay id="photo-entry-loader" lang={lang} />
   <script is:inline>
@@ -457,6 +447,20 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
     const percent = entry?.querySelector<HTMLElement>('.loader-pct');
     let entryTimer: number | undefined;
     let frameCallback: number | undefined;
+    let trackVideoPending = document.documentElement.classList.contains('logo-arrived');
+
+    function finishTrackVideo(ready: boolean) {
+      if (!trackVideoPending) return;
+      trackVideoPending = false;
+      video.dispatchEvent(new CustomEvent('sch-track-video-ready', { detail: ready }));
+    }
+
+    if (trackVideoPending) {
+      video.dataset.trackVideoBound = '';
+      video.preload = 'auto';
+      video.addEventListener('canplay', () => finishTrackVideo(true), { once: true });
+      document.addEventListener('sch-track-reveal', releasePreviews, { once: true });
+    }
 
     function renderProgress(progress: number) {
       if (!entry || !fill || !percent) return;
@@ -525,6 +529,9 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
           if (total > 0) renderProgress(Math.min(94, Math.floor(95 * received / total)));
         }
         file = new Blob(chunks, { type: response.headers.get('content-type') || 'video/mp4' });
+      } else if (trackVideoPending) {
+        const bytes = await response.arrayBuffer();
+        file = new Blob([bytes], { type: response.headers.get('content-type') || 'video/mp4' });
       } else {
         file = await response.blob();
       }
@@ -532,22 +539,36 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
       return file;
     }
 
+    async function downloadVideo(url: string) {
+      const response = await fetch(url, { cache: 'force-cache', priority: 'high' });
+      if (!response.ok) throw new Error(`Video request failed (${response.status})`);
+      return readVideo(response);
+    }
+
     function prepareSource(manual: boolean) {
       const url = video.dataset.src!;
-      if (attachVideoLoop(video, url, (file) => {
+      const useNativeSource = (source: string | Blob) => {
         video.loop = true;
-        video.src = file ? URL.createObjectURL(file) : url;
+        video.src = typeof source === 'string' ? source : URL.createObjectURL(source);
+      };
+      const attachLoop = (source: string | Blob) => attachVideoLoop(video, source, (file) => {
+        useNativeSource(file ?? url);
         if (wantsPlayback) void syncPlayback();
-      }, readVideo)) return;
-      video.loop = true;
+      }, readVideo);
+
+      // Download the full loop before attaching it, including on the native playback fallback.
+      if (!manual && trackVideoPending) {
+        return downloadVideo(url).then((file) => {
+          if (!attachLoop(file)) useNativeSource(file);
+        });
+      }
+      if (attachLoop(url)) return;
       if (manual) {
-        video.src = url;
+        useNativeSource(url);
         return;
       }
-      return fetch(url, { cache: 'force-cache', priority: 'high' }).then(async (response) => {
-        if (!response.ok) throw new Error(`Video request failed (${response.status})`);
-        const file = await readVideo(response);
-        if (wantsPlayback && !video.hasAttribute('src')) video.src = URL.createObjectURL(file);
+      return downloadVideo(url).then((file) => {
+        if (wantsPlayback && !video.hasAttribute('src')) useNativeSource(file);
       });
     }
 
@@ -573,15 +594,18 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
         }
         if (attempt !== playbackAttempt) return;
         await video.play();
+        finishTrackVideo(true);
         if (!entry || attempt !== playbackAttempt) return;
         if (typeof video.requestVideoFrameCallback === 'function') {
           frameCallback = video.requestVideoFrameCallback(onVideoFrame);
         } else {
           video.addEventListener('timeupdate', onTimeUpdate);
         }
-      } catch {
+      } catch (error) {
         // A pause or a fallback source can interrupt an older play() request.
         if (attempt !== playbackAttempt) return;
+        // The full file is already local if the browser rejected autoplay.
+        finishTrackVideo(error instanceof DOMException && error.name === 'NotAllowedError');
         if (video.error) {
           URL.revokeObjectURL(video.src);
           video.removeAttribute('src');
@@ -600,15 +624,7 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
       void syncPlayback(true);
     });
 
-    const root = document.documentElement;
-    if (root.classList.contains('logo-arrived') && !root.classList.contains('logo-arrived--play')) {
-      document.addEventListener('sch-track-reveal', () => {
-        releasePreviews();
-        void syncPlayback();
-      }, { once: true });
-    } else {
-      void syncPlayback();
-    }
+    void syncPlayback();
   }
   if (video && toggle) setupPlayback(video, toggle);
 </script>
