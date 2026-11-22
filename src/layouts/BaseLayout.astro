@@ -93,240 +93,207 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
               startProgress = parseFloat(sessionStorage.getItem('sch-logo-progress')) || 0;
               sessionStorage.removeItem('sch-logo-progress');
             } catch (e) {}
-            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-              root.classList.add('logo-arrived');
-              var playArrival = function () {
-                var warp = document.querySelector('.arrive-warp');
-                var mark = warp ? warp.querySelector('.world-warp-mark') : null;
-                var dot = warp ? warp.querySelector('.warp-dot') : null;
-                var arc = warp ? warp.querySelector('.warp-orbit--' + section) : null;
-                var slot = document.querySelector('.brand-slot--mark');
-
-                // 轨道几何，与来源页完全一致
-                var CENTER = 32;
-                var RX = 27;
-                var RY = 10.5;
-                var TAU = Math.PI * 2;
-                var WORLDS = {
-                  photo: { dot: [228, 171, 99] },
-                  dev: { dot: [124, 103, 228] }
-                };
-                var source = section === 'dev' ? 'photo' : 'dev';
-                var rad = function (deg) { return (deg * Math.PI) / 180; };
-                var easeInOut = function (t) {
-                  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-                };
-                var mix = function (a, b, t) { return a + (b - a) * t; };
-                var ellipsePoint = function (rot, angle) {
-                  var c = Math.cos(rad(rot));
-                  var s = Math.sin(rad(rot));
-                  var x = RX * Math.cos(angle);
-                  var y = RY * Math.sin(angle);
-                  return { x: CENTER + x * c - y * s, y: CENTER + x * s + y * c };
-                };
-                var angleOnTrack = function (rot, x, y) {
-                  var c = Math.cos(rad(rot));
-                  var s = Math.sin(rad(rot));
-                  var dx = x - CENTER;
-                  var dy = y - CENTER;
-                  var lx = dx * c + dy * s;
-                  var ly = -dx * s + dy * c;
-                  return Math.atan2(ly / RY, lx / RX);
-                };
-                var topY = CENTER - 11.83;
-                var bottomY = CENTER + 11.83;
-                var plans = {
-                  'photo-dev': {
-                    from: { rot: 30, a: -Math.PI, b: angleOnTrack(30, CENTER, bottomY) - TAU },
-                    to: { rot: -30, a: angleOnTrack(-30, CENTER, bottomY), b: 0 }
-                  },
-                  'dev-photo': {
-                    from: { rot: -30, a: 0, b: angleOnTrack(-30, CENTER, topY) },
-                    to: { rot: 30, a: angleOnTrack(30, CENTER, topY), b: -Math.PI }
+            if (window.matchMedia('(pointer: coarse), (max-width: 760px)').matches ||
+                /MicroMessenger/i.test(navigator.userAgent)) return;
+            root.classList.add('logo-arrived');
+            var playArrival = function () {
+              var warp = document.querySelector('.arrive-warp');
+              var mark = warp ? warp.querySelector('.world-warp-mark') : null;
+              var dot = warp ? warp.querySelector('.warp-dot') : null;
+              var arc = warp ? warp.querySelector('.warp-orbit--' + section) : null;
+              var slot = document.querySelector('.brand-slot--mark');
+              // 轨道几何，与来源页完全一致
+              var CENTER = 32;
+              var RX = 27;
+              var RY = 10.5;
+              var TAU = Math.PI * 2;
+              var WORLDS = {
+                photo: { dot: [228, 171, 99] },
+                dev: { dot: [124, 103, 228] }
+              };
+              var source = section === 'dev' ? 'photo' : 'dev';
+              var rad = function (deg) { return (deg * Math.PI) / 180; };
+              var easeInOut = function (t) {
+                return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+              };
+              var mix = function (a, b, t) { return a + (b - a) * t; };
+              var ellipsePoint = function (rot, angle) {
+                var c = Math.cos(rad(rot));
+                var s = Math.sin(rad(rot));
+                var x = RX * Math.cos(angle);
+                var y = RY * Math.sin(angle);
+                return { x: CENTER + x * c - y * s, y: CENTER + x * s + y * c };
+              };
+              var angleOnTrack = function (rot, x, y) {
+                var c = Math.cos(rad(rot));
+                var s = Math.sin(rad(rot));
+                var dx = x - CENTER;
+                var dy = y - CENTER;
+                var lx = dx * c + dy * s;
+                var ly = -dx * s + dy * c;
+                return Math.atan2(ly / RY, lx / RX);
+              };
+              var topY = CENTER - 11.83;
+              var bottomY = CENTER + 11.83;
+              var plans = {
+                'photo-dev': {
+                  from: { rot: 30, a: -Math.PI, b: angleOnTrack(30, CENTER, bottomY) - TAU },
+                  to: { rot: -30, a: angleOnTrack(-30, CENTER, bottomY), b: 0 }
+                },
+                'dev-photo': {
+                  from: { rot: -30, a: 0, b: angleOnTrack(-30, CENTER, topY) },
+                  to: { rot: 30, a: angleOnTrack(30, CENTER, topY), b: -Math.PI }
+                }
+              };
+              var plan = plans[source + '-' + section];
+              var crossed = false;
+              var paintAlong = function (p) {
+                if (!plan || !dot) return;
+                var point;
+                var colorT = 0;
+                if (p < 0.42) {
+                  point = ellipsePoint(plan.from.rot, mix(plan.from.a, plan.from.b, easeInOut(p / 0.42)));
+                } else if (p < 0.56) {
+                  point = ellipsePoint(plan.to.rot, plan.to.a);
+                  if (!crossed) {
+                    crossed = true;
+                    warp.dataset.world = section;
                   }
-                };
-                var plan = plans[source + '-' + section];
-                var crossed = false;
-
-                var paintAlong = function (p) {
-                  if (!plan || !dot) return;
-                  var point;
-                  var colorT = 0;
-                  if (p < 0.42) {
-                    point = ellipsePoint(plan.from.rot, mix(plan.from.a, plan.from.b, easeInOut(p / 0.42)));
-                  } else if (p < 0.56) {
-                    point = ellipsePoint(plan.to.rot, plan.to.a);
-                    if (!crossed) {
-                      crossed = true;
-                      warp.dataset.world = section;
-                    }
-                  } else {
-                    var t = easeInOut(Math.min(1, (p - 0.56) / 0.44));
-                    point = ellipsePoint(plan.to.rot, mix(plan.to.a, plan.to.b, t));
-                    colorT = Math.min(1, t / 0.55);
-                  }
-                  dot.setAttribute('cx', point.x.toFixed(2));
-                  dot.setAttribute('cy', point.y.toFixed(2));
-                  var from = WORLDS[source].dot;
-                  var to = WORLDS[section].dot;
-                  dot.style.color = 'rgb(' + Math.round(mix(from[0], to[0], colorT)) + ',' +
-                    Math.round(mix(from[1], to[1], colorT)) + ',' + Math.round(mix(from[2], to[2], colorT)) + ')';
-                  // 目标轨道即进度条：描边随进度画出
-                  if (arc) arc.setAttribute('stroke-dashoffset', (100 - p * 100).toFixed(2));
-                };
-
-                // 真实加载里程碑 → 目标进度（懒加载图片不阻塞 load，不计入）
-                var fontsDone = 0;
-                var loadDone = 0;
-                var heroDone = section === 'photo' ? 0 : 1;
-                var imgs = Array.prototype.slice.call(document.images).filter(function (im) {
-                  return im.loading !== 'lazy';
-                });
-                var imgRatio = imgs.length ? 0 : 1;
-                var countImg = function () {
-                  if (!imgs.length) {
-                    imgRatio = 1;
-                    return;
-                  }
-                  var done = 0;
-                  imgs.forEach(function (im) { if (im.complete) done++; });
-                  imgRatio = done / imgs.length;
-                };
-                countImg();
-                imgs.forEach(function (im) {
-                  if (im.complete) return;
-                  im.addEventListener('load', countImg);
-                  im.addEventListener('error', countImg);
-                });
-                if (document.fonts && document.fonts.ready) {
-                  document.fonts.ready.then(function () { fontsDone = 1; }, function () { fontsDone = 1; });
                 } else {
-                  fontsDone = 1;
+                  var t = easeInOut(Math.min(1, (p - 0.56) / 0.44));
+                  point = ellipsePoint(plan.to.rot, mix(plan.to.a, plan.to.b, t));
+                  colorT = Math.min(1, t / 0.55);
                 }
-                if (document.readyState === 'complete') {
-                  loadDone = 1;
-                } else {
-                  window.addEventListener('load', function () { loadDone = 1; }, { once: true });
-                }
-                if (section === 'photo') {
-                  var hero = document.querySelector('[data-hero]');
-                  if (!hero) {
-                    heroDone = 1;
-                  } else {
-                    var isSettled = function () {
-                      return hero.hasAttribute('data-photo-settled') ||
-                        (!hero.hasAttribute('data-photo-initialized') && !hero.hasAttribute('data-photo-loading'));
-                    };
-                    if (isSettled()) {
-                      heroDone = 1;
-                    } else {
-                      var observer = new MutationObserver(function () {
-                        if (!isSettled()) return;
-                        observer.disconnect();
-                        heroDone = 1;
-                      });
-                      observer.observe(hero, {
-                        attributes: true,
-                        attributeFilter: ['data-photo-settled', 'data-photo-initialized', 'data-photo-loading']
-                      });
-                    }
-                  }
-                }
-
-                var revealed = false;
-                var reveal = function () {
-                  if (revealed) return;
-                  revealed = true;
-                  requestAnimationFrame(function () {
-                    requestAnimationFrame(function () {
-                      root.classList.add('logo-arrived--play');
-                      setTimeout(function () {
-                        root.classList.remove('logo-arrived');
-                        root.classList.remove('logo-arrived--play');
-                        root.classList.remove('logo-arrived--settled');
-                        if (warp) warp.remove();
-                      }, 1000);
-                    });
-                  });
-                };
-
-                var finished = false;
-                // 进度满格后：全屏 logo 收缩回顶部 logo，再展开文字与正文
-                var shrinkAndReveal = function () {
-                  var finish = function () {
-                    root.classList.add('logo-arrived--settled');
-                    reveal();
-                  };
-                  if (!mark || !slot) {
-                    finish();
-                    return;
-                  }
-                  var from = mark.getBoundingClientRect();
-                  var to = slot.getBoundingClientRect();
-                  if (!from.width || !to.width) {
-                    finish();
-                    return;
-                  }
-                  var scale = to.width / from.width;
-                  var dx = to.left + to.width / 2 - (from.left + from.width / 2);
-                  var dy = to.top + to.height / 2 - (from.top + from.height / 2);
-                  mark.style.transformOrigin = 'center';
-                  mark.style.transition = 'transform 0.34s cubic-bezier(0.22, 1, 0.36, 1)';
-                  mark.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(' + scale + ')';
-                  setTimeout(finish, 340);
-                };
-
-                // 统一用 0–100 的百分比推进；真实进度允许跳跃，画面按固定速率逐份补齐
-                var initialProgress = Math.max(0, Math.min(100, startProgress * 100));
-                var displayed = initialProgress;
-                var last = performance.now();
-                var animStart = last;
-                // 全程匀分为 100 份，避免少数资源里程碑完成时 Logo 突然跳过一大段；
-                // 加载慢时 cap 可以先到 100，但画面仍等待真实进度，不会提前满格
-                var MIN_TRAVEL = 1200;
-                var MS_PER_PERCENT = MIN_TRAVEL / 100;
-                var tick = function (now) {
-                  if (finished) return;
-                  // DOMContentLoaded 占 15%，其余由图片、字体、load、首屏图共同推进
-                  var loaded = Math.max(initialProgress, Math.min(100, Math.round(
-                    (0.15 + 0.45 * imgRatio + 0.15 * fontsDone + 0.15 * loadDone + 0.10 * heroDone) * 100
-                  )));
-                  var cap = initialProgress + (100 - initialProgress) * Math.min(1, (now - animStart) / MIN_TRAVEL);
-                  var target = Math.min(loaded, cap);
-                  var elapsed = Math.max(0, now - last);
-                  last = now;
-                  displayed = Math.min(target, displayed + elapsed / MS_PER_PERCENT);
-                  paintAlong(Math.min(1, displayed / 100));
-                  if (loaded >= 100 && cap >= 100 && displayed >= 99.999) {
-                    finished = true;
-                    paintAlong(1);
-                    shrinkAndReveal();
-                    return;
-                  }
-                  requestAnimationFrame(tick);
-                };
-                paintAlong(initialProgress / 100);
-                requestAnimationFrame(tick);
-
-                // 资源异常时兜底：直接补满进度并展开，不让正文一直隐藏
-                setTimeout(function () {
-                  fontsDone = 1;
-                  loadDone = 1;
-                  heroDone = 1;
+                dot.setAttribute('cx', point.x.toFixed(2));
+                dot.setAttribute('cy', point.y.toFixed(2));
+                var from = WORLDS[source].dot;
+                var to = WORLDS[section].dot;
+                dot.style.color = 'rgb(' + Math.round(mix(from[0], to[0], colorT)) + ',' +
+                  Math.round(mix(from[1], to[1], colorT)) + ',' + Math.round(mix(from[2], to[2], colorT)) + ')';
+                // 目标轨道即进度条：描边随进度画出
+                if (arc) arc.setAttribute('stroke-dashoffset', (100 - p * 100).toFixed(2));
+              };
+              // 真实加载里程碑 → 目标进度（懒加载图片不阻塞 load，不计入）
+              var fontsDone = 0;
+              var loadDone = 0;
+              var imgs = Array.prototype.slice.call(document.images).filter(function (im) {
+                return im.loading !== 'lazy';
+              });
+              var imgRatio = imgs.length ? 0 : 1;
+              var countImg = function () {
+                if (!imgs.length) {
                   imgRatio = 1;
-                }, 4000);
-                setTimeout(function () {
-                  if (finished) return;
-                  finished = true;
+                  return;
+                }
+                var done = 0;
+                imgs.forEach(function (im) { if (im.complete) done++; });
+                imgRatio = done / imgs.length;
+              };
+              countImg();
+              imgs.forEach(function (im) {
+                if (im.complete) return;
+                im.addEventListener('load', countImg);
+                im.addEventListener('error', countImg);
+              });
+              if (document.fonts && document.fonts.ready) {
+                document.fonts.ready.then(function () { fontsDone = 1; }, function () { fontsDone = 1; });
+              } else {
+                fontsDone = 1;
+              }
+              if (document.readyState === 'complete') {
+                loadDone = 1;
+              } else {
+                window.addEventListener('load', function () { loadDone = 1; }, { once: true });
+              }
+              var revealed = false;
+              var reveal = function () {
+                if (revealed) return;
+                revealed = true;
+                requestAnimationFrame(function () {
+                  requestAnimationFrame(function () {
+                    root.classList.add('logo-arrived--play');
+                    setTimeout(function () {
+                      root.classList.remove('logo-arrived');
+                      root.classList.remove('logo-arrived--play');
+                      root.classList.remove('logo-arrived--settled');
+                      if (warp) warp.remove();
+                    }, 1000);
+                  });
+                });
+              };
+              var finished = false;
+              // 进度满格后：全屏 logo 收缩回顶部 logo，再展开文字与正文
+              var shrinkAndReveal = function () {
+                var finish = function () {
                   root.classList.add('logo-arrived--settled');
                   reveal();
-                }, 5000);
+                };
+                if (!mark || !slot) {
+                  finish();
+                  return;
+                }
+                var from = mark.getBoundingClientRect();
+                var to = slot.getBoundingClientRect();
+                if (!from.width || !to.width) {
+                  finish();
+                  return;
+                }
+                var scale = to.width / from.width;
+                var dx = to.left + to.width / 2 - (from.left + from.width / 2);
+                var dy = to.top + to.height / 2 - (from.top + from.height / 2);
+                mark.style.transformOrigin = 'center';
+                mark.style.transition = 'transform 0.34s cubic-bezier(0.22, 1, 0.36, 1)';
+                mark.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(' + scale + ')';
+                setTimeout(finish, 340);
               };
-              if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', playArrival);
-              } else {
-                playArrival();
-              }
+              // 统一用 0–100 的百分比推进；真实进度允许跳跃，画面按固定速率逐份补齐
+              var initialProgress = Math.max(0, Math.min(100, startProgress * 100));
+              var displayed = initialProgress;
+              var last = performance.now();
+              var animStart = last;
+              // 全程匀分为 100 份，避免少数资源里程碑完成时 Logo 突然跳过一大段；
+              // 加载慢时 cap 可以先到 100，但画面仍等待真实进度，不会提前满格
+              var MIN_TRAVEL = 1200;
+              var MS_PER_PERCENT = MIN_TRAVEL / 100;
+              var tick = function (now) {
+                if (finished) return;
+                // DOMContentLoaded 占 15%，其余由图片、字体和 window.load 推进
+                var loaded = Math.max(initialProgress, Math.min(100, Math.round(
+                  (0.15 + 0.55 * imgRatio + 0.15 * fontsDone + 0.15 * loadDone) * 100
+                )));
+                var cap = initialProgress + (100 - initialProgress) * Math.min(1, (now - animStart) / MIN_TRAVEL);
+                var target = Math.min(loaded, cap);
+                var elapsed = Math.max(0, now - last);
+                last = now;
+                displayed = Math.min(target, displayed + elapsed / MS_PER_PERCENT);
+                paintAlong(Math.min(1, displayed / 100));
+                if (loaded >= 100 && cap >= 100 && displayed >= 99.999) {
+                  finished = true;
+                  paintAlong(1);
+                  shrinkAndReveal();
+                  return;
+                }
+                requestAnimationFrame(tick);
+              };
+              paintAlong(initialProgress / 100);
+              requestAnimationFrame(tick);
+              // 资源异常时兜底：直接补满进度并展开，不让正文一直隐藏
+              setTimeout(function () {
+                fontsDone = 1;
+                loadDone = 1;
+                imgRatio = 1;
+              }, 4000);
+              setTimeout(function () {
+                if (finished) return;
+                finished = true;
+                root.classList.add('logo-arrived--settled');
+                reveal();
+              }, 5000);
+            };
+            if (document.readyState === 'loading') {
+              document.addEventListener('DOMContentLoaded', playArrival);
+            } else {
+              playArrival();
             }
           }
           var meta = document.querySelector('meta[name="theme-color"]');
@@ -339,6 +306,31 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
         } catch (e) {}
       })();
     </script>
+    {chrome && (
+      <script is:inline>
+        (() => {
+          const root = document.documentElement;
+          if (!('IntersectionObserver' in window)) return;
+
+          const observer = new IntersectionObserver(
+            (entries) => {
+              for (const { target, isIntersecting } of entries) {
+                if (!isIntersecting) continue;
+                target.classList.add('is-in');
+                observer.unobserve(target);
+              }
+            },
+            { rootMargin: '0px 0px -8% 0px', threshold: 0.08 }
+          );
+
+          // Set the starting state before the first paint, including on cold navigations.
+          root.classList.add('reveal-enabled');
+          document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.reveal').forEach((element) => observer.observe(element));
+          }, { once: true });
+        })();
+      </script>
+    )}
   </head>
   <body class:list={['page', `accent-${accent}`, { 'world-aware': preserveWorldNav }]}>
     {
@@ -473,7 +465,7 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
 
     {
       chrome && (
-        <footer class="site-foot">
+        <footer class:list={['site-foot', { reveal: section === 'dev' }]}>
           <div class="container-wide">
             <ContactFooter lang={lang} engineering={section === 'dev'} />
             <div class="foot-inner">
@@ -496,24 +488,7 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
     }
 
     <script>
-      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-      if (!reduced) {
-        const io = new IntersectionObserver(
-          (entries) => {
-            for (const entry of entries) {
-              if (entry.isIntersecting) {
-                entry.target.classList.add('is-in');
-                io.unobserve(entry.target);
-              }
-            }
-          },
-          { rootMargin: '0px 0px -8% 0px', threshold: 0.08 }
-        );
-        document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
-      } else {
-        document.querySelectorAll('.reveal').forEach((el) => el.classList.add('is-in'));
-      }
+      import { preferLightMotion } from '../scripts/page-performance';
 
       // logo：顶部为文字，悬停或下拉后文字左滚卷起、图案横向展开
       const brandEl = document.querySelector('.brand');
@@ -553,7 +528,7 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
 
       // 轨道切换：全屏轨道过渡，动画期间预加载目标页面
       const brandMark = document.querySelector('.brand-mark');
-      if (brandMark) {
+      if (brandMark && !preferLightMotion()) {
         const switchLinks = document.querySelectorAll('.track-switch');
         const CENTER = 32;
         const RX = 27;
@@ -625,7 +600,7 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
 
             const doc = new DOMParser().parseFromString(html, 'text/html');
             const urls = [];
-            doc.querySelectorAll('img:not(noscript img)').forEach((img) => {
+            doc.querySelectorAll('img:not([loading="lazy"], noscript img)').forEach((img) => {
               const src = img.getAttribute('src');
               if (src) urls.push(src);
               const srcset = img.getAttribute('srcset');
@@ -777,24 +752,21 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
           window.location.assign(link.href);
         };
 
-        if (!reduced) {
-          switchLinks.forEach((link) => {
-            link.addEventListener('click', (event) => startSwitch(event, link));
-            link.addEventListener('pointerenter', () => warmTarget(link.href), { passive: true });
-            link.addEventListener('focus', () => warmTarget(link.href));
-          });
-
-          // bfcache 返回时清理过渡层
-          window.addEventListener('pageshow', (event) => {
-            if (!event.persisted) return;
-            switching = false;
-            document.documentElement.style.overflow = '';
-            if (warpEl) {
-              warpEl.remove();
-              warpEl = null;
-            }
-          });
-        }
+        switchLinks.forEach((link) => {
+          link.addEventListener('click', (event) => startSwitch(event, link));
+          link.addEventListener('pointerenter', () => warmTarget(link.href), { passive: true });
+          link.addEventListener('focus', () => warmTarget(link.href));
+        });
+        // bfcache 返回时清理过渡层
+        window.addEventListener('pageshow', (event) => {
+          if (!event.persisted) return;
+          switching = false;
+          document.documentElement.style.overflow = '';
+          if (warpEl) {
+            warpEl.remove();
+            warpEl = null;
+          }
+        });
       }
     </script>
 
@@ -1188,33 +1160,6 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
         animation: none;
       }
 
-      @media (prefers-reduced-motion: reduce) {
-        .mark-dot-swing {
-          animation: none;
-        }
-        .brand-slot--mark,
-        .brand-slot--word,
-        .brand-mark,
-        .brand-glyph {
-          transition: none;
-        }
-        html.logo-arrived .brand-slot--mark,
-        html.logo-arrived .brand-slot--word,
-        html.logo-arrived .brand-mark,
-        html.logo-arrived .brand-glyph,
-        html.logo-arrived main,
-        html.logo-arrived--play .brand-slot--mark,
-        html.logo-arrived--play .brand-slot--word,
-        html.logo-arrived--play .brand-mark,
-        html.logo-arrived--play .brand-glyph,
-        html.logo-arrived--play main {
-          animation: none;
-        }
-        html.logo-arrived main {
-          opacity: 1;
-        }
-      }
-
       /* ---------- 全屏轨道过渡 ---------- */
       .world-warp {
         position: fixed;
@@ -1304,13 +1249,6 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
 
       html.logo-arrived--settled .arrive-warp {
         display: none;
-      }
-
-      @media (prefers-reduced-motion: reduce) {
-        .world-warp,
-        .world-warp-mark {
-          transition: none;
-        }
       }
 
       .brand-text {

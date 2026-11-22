@@ -47,17 +47,17 @@ const pairColumns = (left: Work, right: Work) => `${displayWidths[left.slug]} ${
 }}>
   <div class="curated-works" id="curated-works">
     {equalHeightRows.map(({ left, right }, index) => (
-      <div class="pair" style={{ '--columns': pairColumns(left, right) }}>
-        <WorkCard work={left} {lang} titleOnly reveal={false} eager={index === 0} />
-        <WorkCard work={right} {lang} titleOnly reveal={false} eager={index === 0} />
+      <div class="pair reveal" style={{ '--columns': pairColumns(left, right) }}>
+        <WorkCard work={left} {lang} titleOnly reveal={false} eager={index === 0} sizes="(max-width: 760px) 21vw, 370px" />
+        <WorkCard work={right} {lang} titleOnly reveal={false} eager={index === 0} sizes="(max-width: 760px) 69vw, 1200px" />
       </div>
     ))}
     <div class="staggered">
-      <div class="pair upper-pair" style={{ '--columns': pairColumns(upperLeft, upperRight) }}>
+      <div class="pair upper-pair reveal" style={{ '--columns': pairColumns(upperLeft, upperRight) }}>
         <WorkCard work={upperLeft} {lang} titleOnly reveal={false} />
         <WorkCard work={upperRight} {lang} titleOnly reveal={false} />
       </div>
-      <div class="pair lower-pair" style={{ '--columns': pairColumns(lowerLeft, lowerRight) }}>
+      <div class="pair lower-pair reveal" style={{ '--columns': pairColumns(lowerLeft, lowerRight) }}>
         <WorkCard work={lowerLeft} {lang} titleOnly reveal={false} />
         <WorkCard work={lowerRight} {lang} titleOnly reveal={false} />
       </div>

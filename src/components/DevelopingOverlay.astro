@@ -4,7 +4,7 @@ import type { Lang } from '../i18n/ui';
 const { id, lang } = Astro.props as { id: string; lang: Lang };
 ---
 
-<div class="developing-overlay is-done" id={id} aria-hidden="true">
+<div class="developing-overlay is-done" id={id} data-reveal-gate aria-hidden="true">
   <div class="loader-inner">
     <div class="loader-meta mono">
       <span>{lang === 'zh' ? '正在显影' : 'DEVELOPING'}</span>
@@ -64,11 +64,5 @@ const { id, lang } = Astro.props as { id: string; lang: Lang };
     height: 100%;
     background: var(--developing-color);
     box-shadow: 0 0 14px rgba(229, 201, 164, 0.55);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .developing-overlay.is-done {
-      transition: none;
-    }
   }
 </style>

@@ -1,12 +1,10 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import DevelopingOverlay from '../components/DevelopingOverlay.astro';
 import { SITE } from '../consts';
 import { useTranslations, localizePath, withBase } from '../i18n/utils';
 import type { Lang } from '../i18n/ui';
 import headingFont from '../assets/fonts/up-job-heading-subset.woff2';
 import numericFont from '../assets/fonts/up-job-numeric-subset.woff2';
-import portalSkyScript from '../scripts/portal-sky.js?raw';
 
 const { lang = 'zh' } = Astro.props as { lang?: Lang };
 const t = useTranslations(lang);
@@ -20,7 +18,6 @@ const photoHref = localizePath('/photo/', lang);
   <Fragment slot="head">
     <link rel="preload" as="font" type="font/woff2" href={headingFont} crossorigin />
     <link rel="preload" as="font" type="font/woff2" href={numericFont} crossorigin />
-    <script is:inline set:html={portalSkyScript}></script>
   </Fragment>
   <div class="portal-sky" aria-hidden="true">
     <div class="portal-stars"></div>
@@ -87,107 +84,68 @@ const photoHref = localizePath('/photo/', lang);
       </a>
     </nav>
 
-    <script is:inline>startPortalSky();</script>
-
     <footer class="portal-foot">
       <span class="mono">{t('portal.footer')}</span>
       <span class="mono">© {new Date().getFullYear()} {SITE.author[lang]}</span>
     </footer>
   </div>
 
-  <DevelopingOverlay id="photo-entry-loader" lang={lang} />
+  <script>
+    import { preferLightMotion } from '../scripts/page-performance';
 
-  <script is:inline define:vars={{ photoHref }}>
-    (() => {
-      const door = document.querySelector('.door-photo');
-      const loader = document.getElementById('photo-entry-loader');
-      const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
-      const entryKey = 'sch-photo-entry';
-
-      door.addEventListener('click', (event) => {
-        if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey ||
-            event.shiftKey || event.altKey || reducedMotion.matches) return;
-
-        try {
-          sessionStorage.setItem(entryKey, new URL(door.href).pathname.replace(/\/$/, ''));
-          loader.classList.remove('is-done');
-        } catch {
-          // 存储不可用时，链接照常打开摄影页。
-        }
-      });
-      window.addEventListener('pageshow', (event) => {
-        if (!event.persisted) return;
-        loader.classList.add('is-done');
-        try { sessionStorage.removeItem(entryKey); } catch {}
-      });
-
-      // 门户加载完成后，低优先级预热摄影首页
-      const loaded = new Promise((resolve) => {
-        if (document.readyState === 'complete') resolve();
-        else window.addEventListener('load', resolve, { once: true });
-      });
-      const fonts = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
-
-      Promise.all([loaded, fonts]).then(() => {
-        const conn = navigator.connection;
-        if (conn && (conn.saveData || /2g$/.test(conn.effectiveType || ''))) return;
-
-        const link = document.createElement('link');
-        link.rel = 'prefetch';
-        link.href = photoHref;
-        document.head.appendChild(link);
-      });
-    })();
+    if (!preferLightMotion()) {
+      const afterLoad = () => {
+        const startSky = () => {
+          if (!document.hidden) void import('../scripts/portal-sky.js').then(({ startPortalSky }) => startPortalSky());
+        };
+        if ('requestIdleCallback' in window) requestIdleCallback(startSky);
+        else setTimeout(startSky, 0);
+      };
+      if (document.readyState === 'complete') afterLoad();
+      else window.addEventListener('load', afterLoad, { once: true });
+    }
   </script>
   <script>
     const el = document.getElementById('typewriter');
     if (el) {
       const texts = ['薛定谔的站点', "Schedinger's site"];
-      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-      if (reduced) {
-        el.textContent = texts[0];
-      } else {
-        let wordIndex = 0;
-        let charIndex = texts[0].length;
-        let isDeleting = false;
-        let timer;
-
-        const step = () => {
-          const word = texts[wordIndex];
-          if (!isDeleting) {
-            if (charIndex < word.length) {
-              charIndex += 1;
-              el.textContent = word.slice(0, charIndex);
-              timer = setTimeout(step, 90);
-              return;
-            }
-            isDeleting = true;
-            timer = setTimeout(step, 1600);
-            return;
-          }
-          if (charIndex > 0) {
-            charIndex -= 1;
+      let wordIndex = 0;
+      let charIndex = texts[0].length;
+      let isDeleting = false;
+      let timer;
+      const step = () => {
+        const word = texts[wordIndex];
+        if (!isDeleting) {
+          if (charIndex < word.length) {
+            charIndex += 1;
             el.textContent = word.slice(0, charIndex);
-            timer = setTimeout(step, 55);
+            timer = setTimeout(step, 90);
             return;
           }
-          isDeleting = false;
-          wordIndex = (wordIndex + 1) % texts.length;
-          timer = setTimeout(step, 260);
-        };
-
-        timer = setTimeout(step, 1800);
-
-        document.addEventListener('visibilitychange', () => {
-          if (document.hidden) {
-            clearTimeout(timer);
-          } else {
-            step();
-          }
-        });
-        window.addEventListener('beforeunload', () => clearTimeout(timer));
-      }
+          isDeleting = true;
+          timer = setTimeout(step, 1600);
+          return;
+        }
+        if (charIndex > 0) {
+          charIndex -= 1;
+          el.textContent = word.slice(0, charIndex);
+          timer = setTimeout(step, 55);
+          return;
+        }
+        isDeleting = false;
+        wordIndex = (wordIndex + 1) % texts.length;
+        timer = setTimeout(step, 260);
+      };
+      timer = setTimeout(step, 1800);
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          clearTimeout(timer);
+        } else {
+          step();
+        }
+      });
+      window.addEventListener('beforeunload', () => clearTimeout(timer));
     }
   </script>
 </BaseLayout>
@@ -221,13 +179,11 @@ const photoHref = localizePath('/photo/', lang);
     background-size: 163px 127px, 211px 173px, 131px 181px, 97px 119px, 347px 271px, 123px 149px;
   }
 
-  @media (prefers-reduced-motion: no-preference) {
-    .portal-stars {
-      inset: -20px;
-      width: auto;
-      height: auto;
-      animation: stars-drift 8s linear infinite alternate;
-    }
+  .portal-stars {
+    inset: -20px;
+    width: auto;
+    height: auto;
+    animation: stars-drift 8s linear infinite alternate;
   }
 
   #portal-canvas,
@@ -366,6 +322,21 @@ const photoHref = localizePath('/photo/', lang);
     align-items: flex-start;
     max-width: 900px;
     padding-block: 8vh 4vh;
+  }
+
+  .portal-core {
+    animation: rise 1.1s var(--ease) both;
+  }
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(26px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
   }
 
   .portal-title {

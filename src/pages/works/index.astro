@@ -13,14 +13,14 @@ const list = sortByDate(works);
 ---
 
 <BaseLayout lang={lang} title={t('works.title')} description={t('works.lead')} section="photo">
-  <section class="page-head container-wide">
+  <section class="page-head container-wide reveal">
     <p class="kicker">{t('photo.kicker')}</p>
     <h1 class="display">{t('works.title')}</h1>
     <p class="lead head-lead">{t('works.lead')}</p>
   </section>
 
   <div class="filter-bar">
-    <div class="container-wide filter-inner">
+    <div class="container-wide filter-inner reveal">
       <span class="mono filter-label">{t('works.filter')}</span>
       <div class="chips" role="group" aria-label={t('works.filter')}>
         <button class="chip is-active" data-filter="all" aria-pressed="true">{t('works.all')}</button>

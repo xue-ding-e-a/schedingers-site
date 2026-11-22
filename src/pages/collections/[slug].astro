@@ -20,12 +20,8 @@ const rows = Array.from({ length: Math.ceil(remaining.length / 2) }, (_, i) => r
 ---
 
 <BaseLayout lang={lang} title={s.name[lang]} description={s.desc[lang]} section="photo" image={cover.thumb}>
-  <Fragment slot="head">
-    <script is:inline>document.documentElement.classList.add('js');</script>
-  </Fragment>
-
   <section class="hero container-wide">
-    <a class="back mono" href={localizePath('/collections', lang)}>← {t('series.back')}</a>
+    <a class="back mono reveal" href={localizePath('/collections', lang)}>← {t('series.back')}</a>
     <div class="hero-grid">
       <div class="hero-text">
         <p class="kicker">{t('series.region')} · {s.region[lang]}</p>
@@ -43,7 +39,7 @@ const rows = Array.from({ length: Math.ceil(remaining.length / 2) }, (_, i) => r
     {rows.map((row) => {
       const ratios = row.map((work) => work.width / work.height);
       return (
-        <div class="pair" style={{
+        <div class="pair reveal" style={{
           '--columns': ratios.map((ratio) => `minmax(0, ${ratio}fr)`).join(' '),
           '--row-width': `${ratios.reduce((sum, ratio) => sum + ratio, 0) * 460}px`,
         }}>
@@ -57,181 +53,6 @@ const rows = Array.from({ length: Math.ceil(remaining.length / 2) }, (_, i) => r
     })}
   </div>}
 
-  <div class="collection-loader" id="collection-loader" aria-hidden="true">
-    <div class="loader-inner">
-      <div class="loader-meta mono">
-        <span>{lang === 'zh' ? '正在显影' : 'DEVELOPING'}</span>
-        <span class="loader-pct">00</span>
-      </div>
-      <div class="loader-track"><i></i></div>
-    </div>
-  </div>
-
-  <script is:inline>
-    (() => {
-      const loader = document.getElementById('collection-loader');
-      const img = document.querySelector('.hero-cover img');
-      if (!loader || !img) return;
-
-      const cover = img.closest('.hero-cover');
-      const fill = loader.querySelector('.loader-track i');
-      const pct = loader.querySelector('.loader-pct');
-      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-      let raf = 0;
-      let done = false;
-      let timer = 0;
-      let progress = 0; // 当前进度 0-100
-
-      const render = (value) => {
-        progress = value;
-        const p = Math.round(value);
-        fill.style.width = p + '%';
-        pct.textContent = String(p).padStart(2, '0');
-      };
-
-      const markReady = () => cover.classList.add('is-ready');
-
-      const hideLoader = (instant) => {
-        if (done) return;
-        done = true;
-        cancelAnimationFrame(raf);
-        clearTimeout(timer);
-        if (instant) loader.style.transition = 'none';
-        loader.classList.add('is-done');
-      };
-
-      // 从当前进度平滑爬到 100%，再短暂停留后隐藏
-      const finishToHundred = () => {
-        const startProgress = progress;
-        const startAt = performance.now();
-        const climbMs = Math.max(300, (100 - startProgress) * 8); // 每 1% 约 8ms
-        const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
-
-        const climb = (now) => {
-          const t = Math.min(1, (now - startAt) / climbMs);
-          render(startProgress + (100 - startProgress) * easeOutCubic(t));
-          if (t < 1) {
-            raf = requestAnimationFrame(climb);
-          } else {
-            // 到达 100% 后停留约 120ms，确保用户看清
-            setTimeout(() => hideLoader(false), 120);
-          }
-        };
-        raf = requestAnimationFrame(climb);
-      };
-
-      if (reduce) {
-        markReady();
-        hideLoader(true);
-        return;
-      }
-
-      cover.classList.add('is-gated');
-
-      // 命中缓存：也走 0→100 过渡，但速度较快
-      if (img.complete && img.naturalWidth) {
-        markReady();
-        const startAt = performance.now();
-        const animate = (now) => {
-          const t = Math.min(1, (now - startAt) / 400);
-          render(100 * (1 - Math.pow(1 - t, 3)));
-          if (t < 1) {
-            raf = requestAnimationFrame(animate);
-          } else {
-            setTimeout(() => hideLoader(false), 120);
-          }
-        };
-        raf = requestAnimationFrame(animate);
-        return;
-      }
-
-      // ===== 主逻辑：fetch 监听右侧大图真实字节进度 =====
-      let imgLoaded = false;
-      let fetchDone = false;
-
-      const onImgLoad = () => {
-        if (imgLoaded) return;
-        imgLoaded = true;
-        markReady();
-        if (fetchDone) finishToHundred();
-      };
-
-      img.addEventListener('load', onImgLoad, { once: true });
-      img.addEventListener(
-        'error',
-        () => {
-          imgLoaded = true;
-          markReady();
-          finishToHundred();
-        },
-        { once: true }
-      );
-
-      const targetUrl = img.currentSrc || img.src;
-
-      fetch(targetUrl)
-        .then((response) => {
-          if (!response.ok) throw new Error('Network response not ok');
-          const total = response.headers.get('content-length')
-            ? parseInt(response.headers.get('content-length'), 10)
-            : 0;
-
-          if (!total) {
-            startFallback();
-            return;
-          }
-
-          const reader = response.body.getReader();
-          let loaded = 0;
-
-          function pump() {
-            reader.read().then(({ done: streamDone, value }) => {
-              if (done) return;
-              if (value) {
-                loaded += value.length;
-                // 真实字节进度映射到 6%~92% 区间（首尾留空间给进场和收尾）
-                render(6 + 86 * (loaded / total));
-              }
-              if (streamDone) {
-                fetchDone = true;
-                if (imgLoaded) finishToHundred();
-                return;
-              }
-              pump();
-            });
-          }
-          pump();
-        })
-        .catch(() => {
-          startFallback();
-        });
-
-      // 无 content-length 或 fetch 失败时的时间驱动假进度
-      function startFallback() {
-        const fbStart = performance.now();
-        const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
-        const step = (now) => {
-          const t = Math.min(1, (now - fbStart) / 2400);
-          render(Math.min(92, 6 + 86 * easeOutCubic(t)));
-          if (t < 1) {
-            raf = requestAnimationFrame(step);
-          } else {
-            render(92);
-          }
-        };
-        raf = requestAnimationFrame(step);
-      }
-
-      // 慢网兜底：4s 后无论当前进度多少，必须走到 100% 再进入
-      timer = setTimeout(() => {
-        markReady();
-        fetchDone = true;
-        imgLoaded = true;
-        finishToHundred();
-      }, 4000);
-    })();
-  </script>
 </BaseLayout>
 
 <style>
@@ -294,67 +115,4 @@ const rows = Array.from({ length: Math.ceil(remaining.length / 2) }, (_, i) => r
     .portrait { width: min(88%, 340px); justify-self: center; }
   }
   /* ---------- 进入系列页的全屏显影过渡 ---------- */
-  .collection-loader {
-    position: fixed;
-    inset: 0;
-    z-index: 300;
-    display: grid;
-    place-items: center;
-    background: #000000;
-    transition: opacity 0.55s var(--ease), visibility 0.55s var(--ease);
-  }
-
-  /* 无脚本时直接放行内容 */
-  :global(html:not(.js)) .collection-loader {
-    display: none;
-  }
-
-  .collection-loader.is-done {
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-  }
-
-  .loader-inner {
-    width: min(420px, 62vw);
-    display: grid;
-    gap: 14px;
-  }
-
-  .loader-meta {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    font-size: 11px;
-    letter-spacing: 0.22em;
-    color: var(--text-dim);
-  }
-
-  .loader-pct {
-    color: var(--primary);
-    font-variant-numeric: tabular-nums;
-  }
-
-  .loader-track {
-    height: 1px;
-    background: rgba(255, 255, 255, 0.16);
-    overflow: hidden;
-  }
-
-  .loader-track i {
-    display: block;
-    width: 0;
-    height: 100%;
-    background: var(--primary);
-    box-shadow: 0 0 14px rgba(229, 201, 164, 0.55);
-  }
-
-  .hero-cover.is-gated :global(.media) {
-    opacity: 0;
-    transition: opacity 0.9s var(--ease);
-  }
-
-  .hero-cover.is-gated.is-ready :global(.media) {
-    opacity: 1;
-  }
 </style>

@@ -471,36 +471,15 @@ h4 {
 
 /* ---------- reveal ---------- */
 
-.reveal {
-  opacity: 0;
-  transform: translateY(22px);
+.reveal-enabled .reveal:not(:focus-within) {
   transition: opacity 0.9s var(--ease), transform 0.9s var(--ease);
 }
 
-.reveal.is-in {
-  opacity: 1;
-  transform: none;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
-  .reveal {
-    opacity: 1;
-    transform: none;
-    transition: none;
-  }
-  body::before,
-  .grad-text {
-    animation: none;
-  }
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.001ms !important;
-    transition-duration: 0.001ms !important;
-  }
+/* Keep visible sections ready to enter as the developing overlay fades out. */
+.reveal-enabled .reveal:not(.is-in, :focus-within),
+.reveal-enabled main:has(> [data-reveal-gate]:not(.is-done)) .reveal:not(:focus-within) {
+  opacity: 0;
+  transform: translateY(22px);
 }
 
 /* ---------- scrollbar ---------- */

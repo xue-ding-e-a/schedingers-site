@@ -2,7 +2,8 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { series } from '../../data/series';
 import { works } from '../../data/works';
-import { useTranslations, localizePath, withBase } from '../../i18n/utils';
+import { previewImage } from '../../data/work-images';
+import { useTranslations, localizePath } from '../../i18n/utils';
 import type { Lang } from '../../i18n/ui';
 
 const { lang = 'zh' } = Astro.props as { lang?: Lang };
@@ -22,8 +23,7 @@ const points = series.map((s) => {
 ---
 
 <BaseLayout lang={lang} title={t('series.title')} description={t('series.lead')} section="photo">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <section class="page-head container-wide">
+  <section class="page-head container-wide reveal">
     <p class="kicker">{t('photo.series')}</p>
     <h1 class="display">{t('series.title')}</h1>
     <p class="lead head-lead">{t('series.lead')}</p>
@@ -37,7 +37,8 @@ const points = series.map((s) => {
         <a class="row reveal" href={localizePath(`/collections/${s.slug}`, lang)}>
           <span class="num mono">{String(i + 1).padStart(2, '0')}</span>
           <span class="thumb" style={`background:${s.color}`}>
-            <img src={withBase(cover.thumb)} alt={s.name[lang]} loading="lazy" decoding="async" />
+            <img {...previewImage(cover)} sizes="auto, (max-width: 820px) 90vw, 16vw"
+              alt={s.name[lang]} width={cover.width} height={cover.height} loading="lazy" decoding="async" />
           </span>
           <span class="text">
             <span class="name">{s.name[lang]}</span>
@@ -51,12 +52,12 @@ const points = series.map((s) => {
   </section>
 
   <section class="container-wide map-sec">
-    <div class="map-head">
+    <div class="map-head reveal">
       <p class="kicker">{t('atlas.title')}</p>
       <p class="map-lead">{t('atlas.lead')}</p>
       <p class="mono hint">{t('atlas.hint')}</p>
     </div>
-    <div class="map-wrap">
+    <div class="map-wrap reveal">
       <div
         id="map"
         style="height: clamp(360px, 58vh, 620px)"
@@ -67,7 +68,6 @@ const points = series.map((s) => {
     </div>
   </section>
 
-  <script is:inline src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
     const el = document.getElementById('map');
     const fallback = document.getElementById('map-fallback');
@@ -115,8 +115,39 @@ const points = series.map((s) => {
       if (fallback) fallback.remove();
     };
 
-    if ((window as any).L) init();
-    else window.addEventListener('load', init, { once: true });
+    const loadMap = async () => {
+      const loadAsset = (element: HTMLLinkElement | HTMLScriptElement) => new Promise<void>((resolve, reject) => {
+        element.onload = () => resolve();
+        element.onerror = reject;
+        document.head.appendChild(element);
+      });
+      try {
+        const css = document.createElement('link');
+        css.rel = 'stylesheet';
+        css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+        const script = document.createElement('script');
+        script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+        await Promise.all([loadAsset(css), loadAsset(script)]);
+        init();
+      } catch {
+        if (fallback) fallback.textContent = noNetwork;
+      }
+    };
+
+    if (el) {
+      let started = false;
+      const observer = 'IntersectionObserver' in window ? new IntersectionObserver(([entry]) => {
+        if (entry.isIntersecting) start();
+      }, { rootMargin: '160px' }) : undefined;
+      function start() {
+        if (started) return;
+        started = true;
+        observer?.disconnect();
+        void loadMap();
+      }
+      if (observer && location.hash !== '#map') observer.observe(el);
+      else start();
+    }
   </script>
 </BaseLayout>
 

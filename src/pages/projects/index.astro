@@ -11,7 +11,7 @@ const hasDrafts = projects.some((p) => p.status === 'draft');
 ---
 
 <BaseLayout lang={lang} title={t('projects.title')} description={t('projects.lead')} section="dev" accent="cool">
-  <section class="page-head container-wide">
+  <section class="page-head container-wide reveal">
     <p class="kicker">{t('nav.projects')}</p>
     <h1 class="display">{t('projects.title')}</h1>
     <p class="lead head-lead">{t('projects.lead')}</p>
@@ -21,7 +21,7 @@ const hasDrafts = projects.some((p) => p.status === 'draft');
     {projects.map((p, i) => <ProjectCard project={p} lang={lang} index={i} />)}
   </section>
 
-  {hasDrafts && <p class="container-wide note mono">{t('projects.statusNote')}</p>}
+  {hasDrafts && <p class="container-wide note mono reveal">{t('projects.statusNote')}</p>}
 </BaseLayout>
 
 <style>

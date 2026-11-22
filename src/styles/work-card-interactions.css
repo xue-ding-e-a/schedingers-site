@@ -43,8 +43,6 @@
   transform: none;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .work-card-interaction:is(:hover, :focus-visible) .media img {
-    transform: scale(1.035);
-  }
+.work-card-interaction:is(:hover, :focus-visible) .media img {
+  transform: scale(1.035);
 }

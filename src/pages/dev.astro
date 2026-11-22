@@ -10,7 +10,7 @@ const t = useTranslations(lang);
 ---
 
 <BaseLayout lang={lang} title={t('nav.dev')} description={t('dev.lead')} section="dev" accent="cool">
-  <section class="hero container-wide">
+  <section class="hero container-wide reveal">
     <p class="kicker">{t('dev.kicker')}</p>
     <h1 class="display-lg hero-title">{t('dev.title')}</h1>
     <p class="lead hero-lead">{t('dev.lead')}</p>
@@ -23,7 +23,7 @@ const t = useTranslations(lang);
   </section>
 
   <section class="section container-wide">
-    <div class="sec-head">
+    <div class="sec-head reveal">
       <div>
         <p class="kicker">{t('dev.projects')}</p>
         <h2 class="h2 sec-title">{t('dev.projectsDesc')}</h2>
@@ -40,7 +40,7 @@ const t = useTranslations(lang);
   </section>
 
   <section class="section container-wide">
-    <div class="sec-head">
+    <div class="sec-head reveal">
       <div>
         <p class="kicker">{t('dev.capability')}</p>
         <h2 class="h2 sec-title">{t('dev.capabilityDesc')}</h2>
@@ -59,7 +59,7 @@ const t = useTranslations(lang);
     </div>
   </section>
 
-  <section class="build-band">
+  <section class="build-band reveal">
     <div class="container-wide build-inner">
       <div>
         <p class="kicker">{t('dev.buildTitle')}</p>
@@ -149,14 +149,6 @@ const t = useTranslations(lang);
   @keyframes blink {
     50% {
       opacity: 0.3;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .terminal[data-terminal] [data-out] {
-      opacity: 1;
-      transform: none;
-      transition: none;
     }
   }
 
@@ -251,63 +243,51 @@ const t = useTranslations(lang);
   if (terminal && cmd) {
     const full = cmd.textContent ?? '';
     const outs = Array.from(terminal.querySelectorAll('[data-out]'));
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    if (reduced) {
-      outs.forEach((el) => el.classList.add('is-shown'));
-    } else {
-      let timer = 0;
-      let charIndex = 0;
-      let phase = 'typing';
-      let started = false;
-
-      const setOuts = (show) => {
-        outs.forEach((el) => el.classList.toggle('is-shown', show));
-      };
-
-      const step = () => {
-        if (phase === 'typing') {
-          if (charIndex < full.length) {
-            charIndex += 1;
-            cmd.textContent = full.slice(0, charIndex);
-            timer = window.setTimeout(step, 90);
-            return;
-          }
-          phase = 'holding';
-          setOuts(true);
-          timer = window.setTimeout(step, 2200);
-          return;
-        }
-
-        if (phase === 'holding') {
-          phase = 'deleting';
-          setOuts(false);
-          timer = window.setTimeout(step, 340);
-          return;
-        }
-
-        if (charIndex > 0) {
-          charIndex -= 1;
+    let timer = 0;
+    let charIndex = 0;
+    let phase = 'typing';
+    let started = false;
+    const setOuts = (show) => {
+      outs.forEach((el) => el.classList.toggle('is-shown', show));
+    };
+    const step = () => {
+      if (phase === 'typing') {
+        if (charIndex < full.length) {
+          charIndex += 1;
           cmd.textContent = full.slice(0, charIndex);
-          timer = window.setTimeout(step, 55);
+          timer = window.setTimeout(step, 90);
           return;
         }
-
-        phase = 'typing';
-        timer = window.setTimeout(step, 520);
-      };
-
-      document.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-          window.clearTimeout(timer);
-        } else if (started) {
-          step();
-        }
-      });
-
-      started = true;
-      cmd.textContent = '';
-      timer = window.setTimeout(step, 900);
-    }
+        phase = 'holding';
+        setOuts(true);
+        timer = window.setTimeout(step, 2200);
+        return;
+      }
+      if (phase === 'holding') {
+        phase = 'deleting';
+        setOuts(false);
+        timer = window.setTimeout(step, 340);
+        return;
+      }
+      if (charIndex > 0) {
+        charIndex -= 1;
+        cmd.textContent = full.slice(0, charIndex);
+        timer = window.setTimeout(step, 55);
+        return;
+      }
+      phase = 'typing';
+      timer = window.setTimeout(step, 520);
+    };
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        window.clearTimeout(timer);
+      } else if (started) {
+        step();
+      }
+    });
+    started = true;
+    cmd.textContent = '';
+    timer = window.setTimeout(step, 900);
   }
 </script>

@@ -1,6 +1,6 @@
-function startPortalSky() {
+export function startPortalSky() {
   const canvas = document.getElementById('portal-canvas');
-  if (!canvas || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (!canvas) return;
 
   const gl = canvas.getContext('webgl', { depth: false, antialias: true });
   if (!gl) return;

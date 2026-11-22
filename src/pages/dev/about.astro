@@ -174,17 +174,17 @@ const show = (v: Localized | string) => (typeof v === 'string' ? v : v[lang]);
   </section>
 
   <section class="container-wide block">
-    <div class="block-head">
+    <div class="block-head reveal">
       <span class="mono numeric num">01</span>
       <h2 class="h2">{t('aboutDev.bioTitle')}</h2>
     </div>
-    <div class="prose story">
+    <div class="prose story reveal">
       {bio.map((p) => <p>{p[lang]}</p>)}
     </div>
   </section>
 
   <section class="container-wide block">
-    <div class="block-head">
+    <div class="block-head reveal">
       <span class="mono numeric num">02</span>
       <h2 class="h2">{t('aboutDev.expTitle')}</h2>
     </div>
@@ -205,7 +205,7 @@ const show = (v: Localized | string) => (typeof v === 'string' ? v : v[lang]);
   </section>
 
   <section class="container-wide block">
-    <div class="block-head">
+    <div class="block-head reveal">
       <span class="mono numeric num">03</span>
       <h2 class="h2">{t('aboutDev.howTitle')}</h2>
     </div>
@@ -217,7 +217,7 @@ const show = (v: Localized | string) => (typeof v === 'string' ? v : v[lang]);
         </div>
       ))}
     </div>
-    <div class="creds">
+    <div class="creds reveal">
       <span class="mono creds-label">{t('aboutDev.credTitle')}</span>
       <ul class="creds-list">
         {creds.map((c) => <li>{c[lang]}</li>)}
@@ -226,11 +226,11 @@ const show = (v: Localized | string) => (typeof v === 'string' ? v : v[lang]);
   </section>
 
   <section class="container-wide block cta-block">
-    <div class="block-head">
+    <div class="block-head reveal">
       <span class="mono numeric num">04</span>
       <h2 class="h2">{t('aboutDev.nowTitle')}</h2>
     </div>
-    <div class="now">
+    <div class="now reveal">
       <p class="now-text">{now[lang]}</p>
       <div class="now-links">
         <a class="btn" href={localizePath('/projects', lang)}>

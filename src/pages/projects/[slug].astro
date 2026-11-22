@@ -17,7 +17,7 @@ const related = projects.filter((x) => x.slug !== p.slug).slice(0, 3);
 ---
 
 <BaseLayout lang={lang} title={p.name[lang]} description={p.tagline[lang]} section="dev" accent="cool">
-  <section class="head container-wide">
+  <section class="head container-wide reveal">
     <a class="back mono" href={localizePath('/projects', lang)}>← {t('projects.back')}</a>
 
     <div class="head-main">
@@ -60,7 +60,7 @@ const related = projects.filter((x) => x.slug !== p.slug).slice(0, 3);
   </section>
 
   {p.overview && (
-    <section class="container-wide block">
+    <section class="container-wide block reveal">
       <p class="kicker">{t('projects.overview')}</p>
       <div class="prose block-body">
         <p>{p.overview[lang]}</p>
@@ -70,7 +70,7 @@ const related = projects.filter((x) => x.slug !== p.slug).slice(0, 3);
 
   {p.highlights && p.highlights.length > 0 && (
     <section class="container-wide block">
-      <p class="kicker">{t('projects.highlights')}</p>
+      <p class="kicker reveal">{t('projects.highlights')}</p>
       <ol class="points">
         {p.highlights.map((h, i) => (
           <li class="point reveal">
@@ -83,7 +83,7 @@ const related = projects.filter((x) => x.slug !== p.slug).slice(0, 3);
   )}
 
   {p.note && (
-    <section class="container-wide block">
+    <section class="container-wide block reveal">
       <div class="note-box">
         <span class="mono">{p.status === 'draft' ? t('projects.draft') : t('projects.overview')}</span>
         <p>{p.note[lang]}</p>
@@ -91,7 +91,7 @@ const related = projects.filter((x) => x.slug !== p.slug).slice(0, 3);
     </section>
   )}
 
-  <nav class="container-wide more">
+  <nav class="container-wide more reveal">
     <p class="kicker">{t('projects.title')}</p>
     <div class="more-list">
       {related.map((r) => (
