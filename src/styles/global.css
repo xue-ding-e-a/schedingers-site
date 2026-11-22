@@ -85,7 +85,7 @@ html[data-world='photo'] {
   --glass-bg: rgba(12, 12, 14, 0.15);
   --glass-bg-scrolled: rgba(12, 12, 14, 0.3);
   --glass-border: rgba(255, 255, 255, 0.18);
-  --glass-highlight: rgba(255, 255, 255, 0.95);
+  --glass-highlight: rgba(255, 255, 255, 0.12);
   --glass-sheen: rgba(255, 255, 255, 0.32);
   --glass-streak: rgba(255, 255, 255, 0.4);
   --glass-shadow: 0 20px 48px -22px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.08);

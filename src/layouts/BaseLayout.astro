@@ -599,6 +599,12 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
         opacity: 0;
       }
 
+      /* 摄影主线不使用颗粒层与斜向高光层，保持与工程主线一致的干净玻璃 */
+      html[data-world='photo'] .site-head::before,
+      html[data-world='photo'] .site-head::after {
+        opacity: 0;
+      }
+
       /* 导航按钮的磨砂玻璃底 */
       .site-head[data-section='photo'] {
         --chip-bg: rgba(255, 255, 255, 0.06);
