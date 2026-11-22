@@ -30,10 +30,10 @@ const stack: { name: string; why: Localized }[] = [
     },
   },
   {
-    name: 'CSS + Three.js / MP4',
+    name: 'WebGL + CSS / MP4',
     why: {
-      zh: '门户先显示 CSS 星野，再切换到 Three.js。摄影首页先显示封面，星轨视频走独立缓存。',
-      en: 'The portal starts with a CSS starfield before handing off to Three.js. The photography homepage shows a poster while the star-trail video loads as a separately cacheable asset.',
+      zh: '门户内联 WebGL 星空，和标题、入口一起首绘。摄影首页先显示封面，星轨视频走独立缓存。',
+      en: 'The portal inlines its WebGL starfield so it can render with the title and entry cards. The photography homepage shows a poster while the star-trail video loads as a separately cacheable asset.',
     },
   },
   {
@@ -185,8 +185,8 @@ const timeline: { date: string; title: Localized; desc: Localized }[] = [
     date: '2026.11.21',
     title: { zh: '先让首屏出现，再加载后面的照片', en: 'Show the hero first, then load the previews' },
     desc: {
-      zh: '门户先用 CSS 绘制轻量星空，Three.js 首帧就绪后再切换。摄影首页先显示 WebP 封面，再播放可缓存的循环星轨视频。精选作品和系列预览等视频开始播放后再加载。减少动效、暂停或播放失败时，直接放行预览。',
-      en: 'The portal starts with a lightweight CSS starfield and switches once Three.js renders its first frame. The photography homepage shows a WebP poster before playing a cacheable star-trail loop. Featured work and series previews wait until the video starts. Reduced-motion mode, pausing and playback errors all release the previews immediately.',
+      zh: '门户用内联 WebGL 绘制动态星空，并为不支持的设备提供 CSS 星野。摄影首页先显示 WebP 封面，再播放可缓存的循环星轨视频。精选作品和系列预览等视频开始播放后再加载。减少动效、暂停或播放失败时，直接放行预览。',
+      en: 'The portal renders its animated starfield with inline WebGL, with CSS stars available as a fallback. The photography homepage shows a WebP poster before playing a cacheable star-trail loop. Featured work and series previews wait until the video starts. Reduced-motion mode, pausing and playback errors all release the previews immediately.',
     },
   },
   {

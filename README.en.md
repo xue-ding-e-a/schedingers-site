@@ -49,7 +49,7 @@ So the site splits into two entries: photography in black, engineering in white,
 ## Features
 
 - Photography in black and engineering in white, each with its own navigation and About page. The atom logo carries the transition between tracks. See the [photography homepage](https://xue-ding-e-a.github.io/schedingers-site/en/photo/), [engineering homepage](https://xue-ding-e-a.github.io/schedingers-site/en/dev/) and [engineering About page](https://xue-ding-e-a.github.io/schedingers-site/en/dev/about/).
-- The portal shows a lightweight starfield until Three.js renders its first frame. The photography homepage uses a WebP poster and a cacheable star-trail loop, then loads work and series previews once playback starts. Previews also load when motion is disabled, playback is paused or playback fails. See the [portal](src/pages/index.astro) and [photography homepage](src/pages/photo.astro) source.
+- The portal inlines its lightweight WebGL starfield so it can render with the title and glass entry cards. CSS stars are available without WebGL. The photography homepage uses a WebP poster and a cacheable star-trail loop, then loads work and series previews once playback starts. Previews also load when motion is disabled, playback is paused or playback fails. See the [portal](src/pages/index.astro) and [photography homepage](src/pages/photo.astro) source.
 - The All view arranges 10 photographs in paired and staggered rows while preserving each frame. Series filters group works by capture date and pack same-day cards by width. See the [works index](https://xue-ding-e-a.github.io/schedingers-site/en/works/) and [gallery source](src/components/WorksGallery.astro).
 - Featured works scroll horizontally on the photography homepage. The stargazing map lives on the series index and each of the four series has its own page. Work details fit the photo’s native aspect ratio, show coordinates, gear, EXIF and stacking methods, and offer a Back action. See the [series index](https://xue-ding-e-a.github.io/schedingers-site/en/collections/) and [work detail example](https://xue-ding-e-a.github.io/schedingers-site/en/works/galactic-arch-snow-mountain/).
 - All four engineering projects have covers and detail pages. Both tracks are bilingual and share a footer contact section with copy buttons for email and WeChat. See the [engineering projects](https://xue-ding-e-a.github.io/schedingers-site/en/projects/) and [contact section source](src/components/ContactFooter.astro).
@@ -63,7 +63,7 @@ So the site splits into two entries: photography in black, engineering in white,
 | Types | TypeScript | Locks down bilingual EXIF, coordinate and copy fields |
 | Styling | Vanilla CSS | Aspect ratios run from 0.67 to 2.14; hand-written grids beat breakpoint tuning |
 | Images | Python / Pillow | Largest original is 144 MB and 168 megapixels, processed before build |
-| Hero motion | CSS + Three.js / MP4 | CSS starfield on the portal, static poster and looping video on the photography homepage |
+| Hero motion | WebGL + CSS / MP4 | Inline animated starfield on the portal, static poster and looping video on the photography homepage |
 | Deployment | GitHub Pages + Actions | Push to main builds and publishes |
 
 ## Quick Start

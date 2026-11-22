@@ -49,7 +49,7 @@
 ## 功能
 
 - 摄影黑、工程白，两条主线有独立的导航与关于页。跨主线时由原子 Logo 衔接过渡。参见[摄影线](https://xue-ding-e-a.github.io/schedingers-site/photo/)、[工程线](https://xue-ding-e-a.github.io/schedingers-site/dev/)和[工程关于页](https://xue-ding-e-a.github.io/schedingers-site/dev/about/)。
-- 门户先显示轻量星空，Three.js 画布首帧就绪后再切换。摄影首页用 WebP 封面与可缓存的循环星轨视频，精选作品和系列预览等到视频开始播放后再加载。关闭动效、暂停播放或播放失败时，预览仍可加载。参见[门户](src/pages/index.astro)和[摄影首页](src/pages/photo.astro)。
+- 门户将轻量 WebGL 星空内联到首页，和标题、磨砂入口一起绘制，无法启用 WebGL 时使用 CSS 星野。摄影首页用 WebP 封面与可缓存的循环星轨视频，精选作品和系列预览等到视频开始播放后再加载。关闭动效、暂停播放或播放失败时，预览仍可加载。参见[门户](src/pages/index.astro)和[摄影首页](src/pages/photo.astro)。
 - 10 幅作品的「全部」视图用并排与错落组合保留完整画幅。筛选系列后，按拍摄日期分组，同日作品按卡片宽度紧凑排布。参见[作品总览](https://xue-ding-e-a.github.io/schedingers-site/works/)和[作品布局源码](src/components/WorksGallery.astro)。
 - 摄影首页的精选作品横向滚动。观星地图归入系列总览，4 个系列各有独立页面。作品详情按照片原始比例收紧画框，展示拍摄坐标、器材、EXIF 与堆栈方式，并支持返回上一页。参见[系列总览](https://xue-ding-e-a.github.io/schedingers-site/collections/)和[作品详情示例](https://xue-ding-e-a.github.io/schedingers-site/works/galactic-arch-snow-mountain/)。
 - 4 个工程项目均有封面和独立详情，摄影与工程内容均提供中英双语。两条主线共用页脚联系区，邮箱和微信可一键复制。参见[工程项目](https://xue-ding-e-a.github.io/schedingers-site/projects/)和[联系区源码](src/components/ContactFooter.astro)。
@@ -63,7 +63,7 @@
 | 类型 | TypeScript | 锁死双语的 EXIF、坐标与文案字段 |
 | 样式 | 原生 CSS | 画幅从 0.67 到 2.14，手写栅格比调断点更直接 |
 | 图像 | Python / Pillow | 最大原图 144MB、1.68 亿像素，构建前离线处理 |
-| 首屏动效 | CSS + Three.js / MP4 | 门户先显示 CSS 星野，摄影首页用静态封面到循环视频的过渡 |
+| 首屏动效 | WebGL + CSS / MP4 | 门户直接绘制动态星空，摄影首页从静态封面过渡到循环视频 |
 | 部署 | GitHub Pages + Actions | 推送 main 即构建发布 |
 
 ## 快速开始
