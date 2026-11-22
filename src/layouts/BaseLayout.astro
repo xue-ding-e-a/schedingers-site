@@ -93,8 +93,6 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
               startProgress = parseFloat(sessionStorage.getItem('sch-logo-progress')) || 0;
               sessionStorage.removeItem('sch-logo-progress');
             } catch (e) {}
-            if (window.matchMedia('(pointer: coarse), (max-width: 760px)').matches ||
-                /MicroMessenger/i.test(navigator.userAgent)) return;
             root.classList.add('logo-arrived');
             var playArrival = function () {
               var warp = document.querySelector('.arrive-warp');
@@ -176,6 +174,7 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
               // 真实加载里程碑 → 目标进度（懒加载图片不阻塞 load，不计入）
               var fontsDone = 0;
               var loadDone = 0;
+              var heroDone = section === 'photo' ? 0 : 1;
               var imgs = Array.prototype.slice.call(document.images).filter(function (im) {
                 return im.loading !== 'lazy';
               });
@@ -205,6 +204,31 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
               } else {
                 window.addEventListener('load', function () { loadDone = 1; }, { once: true });
               }
+              if (section === 'photo') {
+                var hero = document.querySelector('[data-hero]');
+                if (!hero) {
+                  heroDone = 1;
+                } else {
+                  var isSettled = function () {
+                    return hero.hasAttribute('data-photo-settled') ||
+                      (!hero.hasAttribute('data-photo-initialized') && !hero.hasAttribute('data-photo-loading'));
+                  };
+                  if (isSettled()) {
+                    heroDone = 1;
+                  } else {
+                    var observer = new MutationObserver(function () {
+                      if (!isSettled()) return;
+                      observer.disconnect();
+                      heroDone = 1;
+                    });
+                    observer.observe(hero, {
+                      attributes: true,
+                      attributeFilter: ['data-photo-settled', 'data-photo-initialized', 'data-photo-loading']
+                    });
+                  }
+                }
+              }
+
               var revealed = false;
               var reveal = function () {
                 if (revealed) return;
@@ -257,9 +281,9 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
               var MS_PER_PERCENT = MIN_TRAVEL / 100;
               var tick = function (now) {
                 if (finished) return;
-                // DOMContentLoaded 占 15%，其余由图片、字体和 window.load 推进
+                // DOMContentLoaded 占 15%，其余由图片、字体、load、首屏图共同推进
                 var loaded = Math.max(initialProgress, Math.min(100, Math.round(
-                  (0.15 + 0.55 * imgRatio + 0.15 * fontsDone + 0.15 * loadDone) * 100
+                  (0.15 + 0.45 * imgRatio + 0.15 * fontsDone + 0.15 * loadDone + 0.10 * heroDone) * 100
                 )));
                 var cap = initialProgress + (100 - initialProgress) * Math.min(1, (now - animStart) / MIN_TRAVEL);
                 var target = Math.min(loaded, cap);
@@ -281,6 +305,7 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
               setTimeout(function () {
                 fontsDone = 1;
                 loadDone = 1;
+                heroDone = 1;
                 imgRatio = 1;
               }, 4000);
               setTimeout(function () {
@@ -488,8 +513,6 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
     }
 
     <script>
-      import { preferLightMotion } from '../scripts/page-performance';
-
       // logo：顶部为文字，悬停或下拉后文字左滚卷起、图案横向展开
       const brandEl = document.querySelector('.brand');
       let brandHovered = false;
@@ -528,7 +551,7 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
 
       // 轨道切换：全屏轨道过渡，动画期间预加载目标页面
       const brandMark = document.querySelector('.brand-mark');
-      if (brandMark && !preferLightMotion()) {
+      if (brandMark) {
         const switchLinks = document.querySelectorAll('.track-switch');
         const CENTER = 32;
         const RX = 27;
@@ -600,7 +623,7 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
 
             const doc = new DOMParser().parseFromString(html, 'text/html');
             const urls = [];
-            doc.querySelectorAll('img:not([loading="lazy"], noscript img)').forEach((img) => {
+            doc.querySelectorAll('img:not(noscript img)').forEach((img) => {
               const src = img.getAttribute('src');
               if (src) urls.push(src);
               const srcset = img.getAttribute('srcset');

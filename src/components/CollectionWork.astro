@@ -2,8 +2,7 @@
 import '../styles/work-card-interactions.css';
 import type { Work } from '../data/works';
 import type { Lang } from '../i18n/ui';
-import { fullImage } from '../data/work-images';
-import { localizePath } from '../i18n/utils';
+import { localizePath, withBase } from '../i18n/utils';
 
 interface Props {
   work: Work;
@@ -12,13 +11,18 @@ interface Props {
 }
 
 const { work, lang, featured = false } = Astro.props;
+const sources = [
+  `${withBase(work.thumb)} 1100w`,
+  `${withBase(work.image.replace(/\.webp$/, '-1600.webp'))} 1600w`,
+  `${withBase(work.image)} ${work.width}w`,
+].join(', ');
 ---
 
 <a class="plate work-card-interaction" href={localizePath(`/works/${work.slug}`, lang)}>
   <figure>
     <span class="media" style={`background:${work.color}`}>
-      <img {...fullImage(work)}
-        sizes={featured ? '(max-width: 760px) 92vw, min(62vw, 960px)' : 'auto, (max-width: 760px) 92vw, min(58vw, 840px)'}
+      <img src={withBase(work.thumb)} srcset={sources}
+        sizes={featured ? '(max-width: 760px) 92vw, min(62vw, 960px)' : '(max-width: 760px) 92vw, min(58vw, 840px)'}
         alt="" width={work.width} height={work.height} loading={featured ? 'eager' : 'lazy'}
         fetchpriority={featured ? 'high' : 'auto'} decoding="async" />
     </span>

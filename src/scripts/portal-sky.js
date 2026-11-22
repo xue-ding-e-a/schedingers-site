@@ -1,4 +1,4 @@
-export function startPortalSky() {
+function startPortalSky() {
   const canvas = document.getElementById('portal-canvas');
   if (!canvas) return;
 

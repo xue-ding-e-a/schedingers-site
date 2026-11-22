@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-"""Generate responsive images for the photo pages.
+"""为作品详情页生成 1600px 宽的中间档图片。
 
-Run: python scripts/build-responsive-images.py (requires Pillow)
+运行：python scripts/build-responsive-images.py
+原图与缩略图已存在，这里只补一档介于两者之间的尺寸，供 srcset 使用。
+依赖：pip install pillow
 """
 
 from pathlib import Path
@@ -10,38 +12,32 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parent.parent
 WORKS = ROOT / "public" / "images" / "works"
-PHOTO = ROOT / "src" / "assets" / "photo"
-
-
-def write_variant(source: Path, target: Path, width: int, quality: int, portrait: bool = False) -> None:
-    if target.exists() and target.stat().st_mtime >= source.stat().st_mtime:
-        return
-
-    with Image.open(source) as image:
-        if portrait:
-            crop_width = min(image.width, round(image.height * 9 / 16))
-            left = (image.width - crop_width) // 2
-            image = image.crop((left, 0, left + crop_width, image.height))
-        if image.width < width:
-            width = image.width
-        height = round(image.height * width / image.width)
-        resized = image.convert("RGB").resize((width, height), Image.LANCZOS)
-        resized.save(target, "WEBP", quality=quality, method=6)
-
-    print(f"{target.name}: {target.stat().st_size / 1024:.1f} KiB ({width}x{height})")
+TARGET_WIDTH = 1600
+QUALITY = 80
+SUFFIXES = ("-thumb.webp", "-flow.webp", f"-{TARGET_WIDTH}.webp")
 
 
 def main() -> None:
-    for thumb in sorted(WORKS.glob("*-thumb.webp")):
-        slug = thumb.stem.removesuffix("-thumb")
-        original = WORKS / f"{slug}.webp"
-        write_variant(thumb, WORKS / f"{slug}-480.webp", 480, 74)
-        with Image.open(original) as image:
-            needs_intermediate = image.width > 1600
-        if needs_intermediate:
-            write_variant(original, WORKS / f"{slug}-1600.webp", 1600, 80)
+    created = 0
+    for path in sorted(WORKS.glob("*.webp")):
+        if path.name.endswith(SUFFIXES):
+            continue
 
-    write_variant(PHOTO / "star-trails-poster.webp", PHOTO / "star-trails-poster-mobile.webp", 480, 72, portrait=True)
+        out = path.with_name(f"{path.stem}-{TARGET_WIDTH}.webp")
+        if out.exists() and out.stat().st_mtime >= path.stat().st_mtime:
+            continue
+
+        with Image.open(path) as image:
+            if image.width <= TARGET_WIDTH:
+                continue
+            height = round(image.height * TARGET_WIDTH / image.width)
+            resized = image.convert("RGB").resize((TARGET_WIDTH, height), Image.LANCZOS)
+            resized.save(out, "WEBP", quality=QUALITY, method=6)
+
+        created += 1
+        print(f"{out.name}: {out.stat().st_size / 1024:.1f} KB ({TARGET_WIDTH}x{height})")
+
+    print(f"完成，新生成 {created} 个文件。")
 
 
 if __name__ == "__main__":

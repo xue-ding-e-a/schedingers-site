@@ -3,8 +3,7 @@ import '../styles/work-card-interactions.css';
 import DeferredPreview from './DeferredPreview.astro';
 import type { Work } from '../data/works';
 import type { Lang } from '../i18n/ui';
-import { previewImage } from '../data/work-images';
-import { localizePath } from '../i18n/utils';
+import { localizePath, withBase } from '../i18n/utils';
 
 interface Props {
   work: Work;
@@ -13,10 +12,9 @@ interface Props {
   deferPreview?: boolean;
   reveal?: boolean;
   titleOnly?: boolean;
-  sizes?: string;
 }
 
-const { work, lang, eager = false, deferPreview = false, reveal = true, titleOnly = false, sizes = '(max-width: 760px) 68vw, 780px' } = Astro.props;
+const { work, lang, eager = false, deferPreview = false, reveal = true, titleOnly = false } = Astro.props;
 const href = localizePath(`/works/${work.slug}`, lang);
 const year = work.date.slice(0, 4);
 ---
@@ -25,8 +23,7 @@ const year = work.date.slice(0, 4);
   <span class="media" style={`aspect-ratio:${work.width} / ${work.height}`}>
     <DeferredPreview deferred={deferPreview}>
       <img
-        {...previewImage(work)}
-        sizes={eager ? sizes : `auto, ${sizes}`}
+        src={withBase(work.thumb)}
         alt={work.title[lang]}
         width={work.width}
         height={work.height}

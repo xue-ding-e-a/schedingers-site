@@ -48,8 +48,8 @@ const pairColumns = (left: Work, right: Work) => `${displayWidths[left.slug]} ${
   <div class="curated-works" id="curated-works">
     {equalHeightRows.map(({ left, right }, index) => (
       <div class="pair reveal" style={{ '--columns': pairColumns(left, right) }}>
-        <WorkCard work={left} {lang} titleOnly reveal={false} eager={index === 0} sizes="(max-width: 760px) 21vw, 370px" />
-        <WorkCard work={right} {lang} titleOnly reveal={false} eager={index === 0} sizes="(max-width: 760px) 69vw, 1200px" />
+        <WorkCard work={left} {lang} titleOnly reveal={false} eager={index === 0} />
+        <WorkCard work={right} {lang} titleOnly reveal={false} eager={index === 0} />
       </div>
     ))}
     <div class="staggered">

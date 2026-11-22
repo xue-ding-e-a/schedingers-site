@@ -7,6 +7,7 @@ export function attachVideoLoop(
   video: HTMLVideoElement,
   sourceUrl: string,
   onInterrupted: (file?: Blob) => void,
+  readVideo = (response: Response) => response.blob(),
 ): boolean {
   const { ManagedMediaSource, MediaSource } = window as Window & typeof globalThis & {
     ManagedMediaSource?: typeof MediaSource;
@@ -78,7 +79,7 @@ export function attachVideoLoop(
 
   void fetch(sourceUrl, { cache: 'force-cache', signal }).then(async (response) => {
     if (!response.ok) throw new Error(`Video request failed (${response.status})`);
-    file = await response.blob();
+    file = await readVideo(response);
     segment = await file.arrayBuffer();
     fillBuffer();
   }).catch(fallback);

@@ -1,14 +1,13 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import DevelopingOverlay from '../components/DevelopingOverlay.astro';
 import heroVideo from '../assets/photo/star-trails-loop.mp4?url';
 import heroPoster from '../assets/photo/star-trails-poster.webp?url';
-import mobilePoster from '../assets/photo/star-trails-poster-mobile.webp?url';
 import DeferredPreview from '../components/DeferredPreview.astro';
 import WorkCard from '../components/WorkCard.astro';
 import { works, featuredWorks } from '../data/works';
 import { series } from '../data/series';
-import { previewImage } from '../data/work-images';
-import { useTranslations, localizePath } from '../i18n/utils';
+import { useTranslations, localizePath, withBase } from '../i18n/utils';
 import type { Lang } from '../i18n/ui';
 
 const { lang = 'zh' } = Astro.props as { lang?: Lang };
@@ -31,19 +30,47 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
 ---
 
 <BaseLayout lang={lang} title={t('nav.photo')} description={t('photo.lead')} section="photo">
+  <Fragment slot="head">
+    <link rel="preload" as="fetch" href={heroVideo} crossorigin="anonymous" fetchpriority="high"
+      media="(prefers-reduced-motion: no-preference)" />
+  </Fragment>
+  <DevelopingOverlay id="photo-entry-loader" lang={lang} />
+  <script is:inline>
+    (() => {
+      const entryKey = 'sch-photo-entry';
+      try {
+        const target = sessionStorage.getItem(entryKey);
+        sessionStorage.removeItem(entryKey);
+        if (target !== location.pathname.replace(/\/$/, '') ||
+            matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+        const loader = document.getElementById('photo-entry-loader');
+        loader.classList.remove('is-done');
+        document.addEventListener('DOMContentLoaded', () => {
+          if (!loader.hasAttribute('data-playback-bound')) loader.classList.add('is-done');
+        }, { once: true });
+      } catch {
+        // 无法接续门户的显影时，直接展示摄影首页。
+      }
+    })();
+  </script>
   <section class="hero" data-hero>
-    <picture class="hero-poster">
-      <source media="(max-width: 760px) and (orientation: portrait)" srcset={mobilePoster} />
-      <img src={heroPoster} alt={hero.title[lang]} width="1280" height="854" fetchpriority="high" />
-    </picture>
-    <video class="hero-video" data-src={heroVideo} preload="none" aria-hidden="true" muted playsinline loop></video>
+    <video
+      class="hero-video"
+      data-src={heroVideo}
+      poster={heroPoster}
+      aria-label={hero.title[lang]}
+      muted
+      playsinline
+      loop
+    ></video>
     <div class="hero-veil" aria-hidden="true"></div>
-    <div class="hero-inner container-wide">
+    <div class="hero-inner container-wide reveal">
       <p class="kicker">{t('photo.kicker')}</p>
       <h1 class="display-lg hero-title">{t('photo.title')}</h1>
       <p class="hero-lead">{t('photo.lead')}</p>
     </div>
-    <div class="hero-meta container-wide">
+    <div class="hero-meta container-wide reveal">
       <span class="mono">{hero.location[lang]}</span>
       <span class="mono">{hero.exif.aperture} · ISO {hero.exif.iso} · {hero.exif.shutter}</span>
       <button
@@ -52,7 +79,7 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
         data-pause-label={t('photo.pauseMotion')}
         data-play-label={t('photo.playMotion')}
         hidden
-      >{t('photo.playMotion')}</button>
+      >{t('photo.pauseMotion')}</button>
       <span class="scroll-cue mono">SCROLL ↓</span>
     </div>
   </section>
@@ -69,14 +96,13 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
       </a>
     </div>
 
-    <div class="strip reveal" data-photo-previews>
+    <div class="strip reveal">
       <div class="strip-track">
         {[false, true].map((duplicate) => (
           <div class="strip-group" aria-hidden={duplicate ? 'true' : undefined}>
             {featuredByOrder.map((w) => (
               <div class="strip-item" style={`--ratio:${(w.width / w.height).toFixed(3)}`}>
-                <WorkCard work={w} lang={lang} reveal={false} deferPreview
-                  sizes={`(max-width: 960px) ${Math.ceil(292 * w.width / w.height)}px, ${Math.ceil(427 * w.width / w.height)}px`} />
+                <WorkCard work={w} lang={lang} reveal={false} deferPreview />
               </div>
             ))}
           </div>
@@ -97,7 +123,7 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
       </a>
     </div>
 
-    <div class="series-grid" data-photo-previews>
+    <div class="series-grid">
       {series.map((s) => {
         const cover = works.find((w) => w.slug === s.cover)!;
         const count = works.filter((w) => w.series === s.slug).length;
@@ -105,8 +131,7 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
           <a class="series-card reveal" href={localizePath(`/collections/${s.slug}`, lang)}>
             <span class="series-media" style={`background:${s.color}`}>
               <DeferredPreview>
-                <img {...previewImage(cover)} sizes="(max-width: 600px) 90vw, (max-width: 960px) 40vw, 21vw"
-                  alt={s.name[lang]} width={cover.width} height={cover.height} loading="lazy" decoding="async" />
+                <img src={withBase(cover.thumb)} alt={s.name[lang]} loading="lazy" decoding="async" />
               </DeferredPreview>
             </span>
             <span class="series-info">
@@ -124,7 +149,7 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
   </section>
 
   <section class="atlas-band">
-    <div class="container-wide atlas-inner reveal">
+    <div class="container-wide atlas-inner">
       <div>
         <p class="kicker">{t('photo.atlasTitle')}</p>
         <h2 class="h2">{t('photo.atlasDesc')}</h2>
@@ -140,9 +165,7 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
 <style>
   .hero {
     position: relative;
-    min-height: 100vh;
     min-height: 100svh;
-    background: #10151f;
     /* 向上延伸，让首屏图覆盖到导航栏顶部 */
     margin-top: calc(var(--head-h, var(--nav-h)) * -1);
     padding-top: var(--head-h, var(--nav-h));
@@ -152,23 +175,13 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
     overflow: hidden;
   }
 
-  .hero-poster, .hero-video {
+  .hero-video {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
   }
-
-  .hero-poster img {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  .hero-video { opacity: 0; }
-  .hero-video.is-visible { opacity: 1; }
 
   .hero-veil {
     position: absolute;
@@ -419,120 +432,171 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
 </style>
 
 <script>
-  import { preferLightMotion } from '../scripts/page-performance';
   import { attachVideoLoop } from '../scripts/video-loop';
 
-  const poster = document.querySelector<HTMLImageElement>('.hero-poster img');
-  const toggle = document.querySelector<HTMLButtonElement>('.hero-motion-toggle');
-  const video = document.querySelector<HTMLVideoElement>('.hero-video');
+  const hero = document.querySelector<HTMLElement>('[data-hero]');
+  const toggle = hero?.querySelector<HTMLButtonElement>('.hero-motion-toggle');
+  const video = hero?.querySelector<HTMLVideoElement>('.hero-video');
+  const loader = document.getElementById('photo-entry-loader');
+  function setupPlayback(video: HTMLVideoElement, toggle: HTMLButtonElement) {
+    const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+    let wantsPlayback = !reducedMotion.matches;
+    let sourceReady: Promise<void> | undefined;
+    let entry = loader && !loader.classList.contains('is-done') ? loader : null;
+    const fill = entry?.querySelector<HTMLElement>('.loader-track i');
+    const percent = entry?.querySelector<HTMLElement>('.loader-pct');
+    let entryTimer: number | undefined;
+    let frameCallback: number | undefined;
 
-  if (video && toggle && poster) {
-    const motion = matchMedia('(prefers-reduced-motion: reduce)');
-    const lightMotion = preferLightMotion();
-    let userControlled = false;
-    let wantsPlayback = false;
-    let playAttempt = 0;
-
-    const updateLabel = () => {
-      toggle.textContent = (wantsPlayback ? toggle.dataset.pauseLabel : toggle.dataset.playLabel) ?? '';
-    };
-
-    const useNativeLoop = (url: string) => {
-      video.loop = true;
-      video.src = url;
-    };
-
-    const prepareSource = () => {
-      const url = video.dataset.src!;
-      try {
-        if (attachVideoLoop(video, url, (file) => {
-          video.classList.remove('is-visible');
-          useNativeLoop(file ? URL.createObjectURL(file) : url);
-          if (wantsPlayback) void play();
-        })) return;
-      } catch {
-        // If continuous playback cannot be initialized, use the MP4 directly.
-      }
-      useNativeLoop(url);
-    };
-
-    const play = async () => {
-      const attempt = ++playAttempt;
-      wantsPlayback = true;
-      updateLabel();
-      try {
-        if (!video.getAttribute('src')) prepareSource();
-        await video.play();
-      } catch {
-        if (attempt !== playAttempt) return;
-        if (video.error) resetPlayback();
-        else pause();
-      }
-    };
-
-    const pause = () => {
-      playAttempt++;
-      wantsPlayback = false;
-      video.pause();
-      updateLabel();
-    };
-
-    const resetPlayback = () => {
-      pause();
-      video.classList.remove('is-visible');
-      if (video.src.startsWith('blob:')) URL.revokeObjectURL(video.src);
-      video.removeAttribute('src');
-      video.load();
-    };
-
-    video.addEventListener('error', () => {
-      if (video.loop && video.error) resetPlayback();
-    });
-    video.addEventListener('playing', () => {
-      if (!video.paused) video.classList.add('is-visible');
-    });
-    toggle.addEventListener('click', () => {
-      userControlled = true;
-      if (wantsPlayback) pause();
-      else void play();
-    });
-    const autoplay = () => {
-      if (motion.matches || userControlled || lightMotion) return;
-      requestAnimationFrame(() => requestAnimationFrame(() => {
-        if (!userControlled && !wantsPlayback && !motion.matches && !document.hidden &&
-            poster.naturalWidth && video.getBoundingClientRect().bottom > 0) void play();
-      }));
-    };
-
-    motion.addEventListener?.('change', () => {
-      if (motion.matches) {
-        pause();
-        video.classList.remove('is-visible');
-      } else if (poster.complete) {
-        autoplay();
-      }
-    });
-    toggle.hidden = false;
-    if (poster.complete) autoplay();
-    else poster.addEventListener('load', autoplay, { once: true });
-  }
-
-  const showPreviews = (section: Element) => {
-    for (const preview of section.querySelectorAll<HTMLTemplateElement>('template[data-photo-preview]')) {
-      preview.replaceWith(preview.content);
+    function renderProgress(progress: number) {
+      if (!entry || !fill || !percent) return;
+      fill.style.width = `${progress}%`;
+      percent.textContent = String(progress).padStart(2, '0');
     }
-  };
-  const sections = document.querySelectorAll('[data-photo-previews]');
-  if ('IntersectionObserver' in window) {
-    const observer = new IntersectionObserver((entries) => {
-      for (const { target, isIntersecting } of entries) {
-        if (!isIntersecting) continue;
-        observer.unobserve(target);
-        showPreviews(target);
+
+    function dismissEntry() {
+      clearTimeout(entryTimer);
+      if (frameCallback !== undefined) video.cancelVideoFrameCallback(frameCallback);
+      video.removeEventListener('timeupdate', onTimeUpdate);
+      entry?.classList.add('is-done');
+      entry = null;
+      releasePreviews();
+    }
+
+    function finishEntry() {
+      if (!entry || video.paused) return;
+      clearTimeout(entryTimer);
+      renderProgress(100);
+      entryTimer = window.setTimeout(dismissEntry, 120);
+    }
+
+    function onVideoFrame(_: number, frame: VideoFrameCallbackMetadata) {
+      frameCallback = undefined;
+      // The image at time zero can still match the poster. Wait for motion.
+      if (frame.mediaTime > 0) finishEntry();
+      else if (entry) frameCallback = video.requestVideoFrameCallback(onVideoFrame);
+    }
+
+    function onTimeUpdate() {
+      if (video.currentTime <= 0) return;
+      video.removeEventListener('timeupdate', onTimeUpdate);
+      finishEntry();
+    }
+
+    if (entry) {
+      entry.setAttribute('data-playback-bound', '');
+      entryTimer = window.setTimeout(dismissEntry, 45000);
+    }
+
+    function releasePreviews() {
+      for (const template of document.querySelectorAll<HTMLTemplateElement>('template[data-photo-preview]')) {
+        template.replaceWith(template.content);
       }
-    }, { rootMargin: '64px 0px' });
-    sections.forEach((section) => observer.observe(section));
-  } else {
-    sections.forEach(showPreviews);
+    }
+
+    video.addEventListener('playing', () => {
+      if (!entry && !video.paused) releasePreviews();
+    }, { once: true });
+    video.addEventListener('error', dismissEntry, { once: true });
+
+    async function readVideo(response: Response) {
+      const body = response.body;
+      let file: Blob;
+      if (entry && body) {
+        const total = Number(response.headers.get('content-length'));
+        const chunks: BlobPart[] = [];
+        let received = 0;
+        const reader = body.getReader();
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          chunks.push(value);
+          received += value.byteLength;
+          if (total > 0) renderProgress(Math.min(94, Math.floor(95 * received / total)));
+        }
+        file = new Blob(chunks, { type: response.headers.get('content-type') || 'video/mp4' });
+      } else {
+        file = await response.blob();
+      }
+      renderProgress(95);
+      return file;
+    }
+
+    function prepareSource(manual: boolean) {
+      const url = video.dataset.src!;
+      if (attachVideoLoop(video, url, (file) => {
+        video.loop = true;
+        video.src = file ? URL.createObjectURL(file) : url;
+        if (wantsPlayback) void syncPlayback();
+      }, readVideo)) return;
+      video.loop = true;
+      if (manual) {
+        video.src = url;
+        return;
+      }
+      return fetch(url, { cache: 'force-cache', priority: 'high' }).then(async (response) => {
+        if (!response.ok) throw new Error(`Video request failed (${response.status})`);
+        const file = await readVideo(response);
+        if (wantsPlayback && !video.hasAttribute('src')) video.src = URL.createObjectURL(file);
+      });
+    }
+
+    function updateLabel() {
+      toggle.textContent = (wantsPlayback ? toggle.dataset.pauseLabel : toggle.dataset.playLabel) ?? '';
+    }
+
+    async function syncPlayback(manual = false) {
+      updateLabel();
+      if (!wantsPlayback) {
+        video.pause();
+        dismissEntry();
+        return;
+      }
+      try {
+        if (!video.hasAttribute('src')) {
+          if (manual) prepareSource(true);
+          else sourceReady ??= prepareSource(false) || undefined;
+        }
+        if (sourceReady) await sourceReady;
+        if (!wantsPlayback) return;
+        await video.play();
+        if (!entry || !wantsPlayback) return;
+        if (typeof video.requestVideoFrameCallback === 'function') {
+          frameCallback = video.requestVideoFrameCallback(onVideoFrame);
+        } else {
+          video.addEventListener('timeupdate', onTimeUpdate);
+        }
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError' && !wantsPlayback) return;
+        if (video.error) {
+          URL.revokeObjectURL(video.src);
+          video.removeAttribute('src');
+          video.load();
+        }
+        if (!video.hasAttribute('src')) sourceReady = undefined;
+        wantsPlayback = false;
+        updateLabel();
+        dismissEntry();
+      }
+    }
+
+    toggle.hidden = false;
+    toggle.addEventListener('click', () => {
+      wantsPlayback = !wantsPlayback;
+      void syncPlayback(true);
+    });
+    reducedMotion.addEventListener?.('change', () => {
+      wantsPlayback = !reducedMotion.matches;
+      if (!wantsPlayback) {
+        video.pause();
+        if (video.src.startsWith('blob:')) URL.revokeObjectURL(video.src);
+        video.removeAttribute('src');
+        video.load();
+        sourceReady = undefined;
+      }
+      void syncPlayback();
+    });
+    void syncPlayback();
   }
+  if (video && toggle) setupPlayback(video, toggle);
 </script>
