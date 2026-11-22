@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import DevelopingOverlay from '../../components/DevelopingOverlay.astro';
 import { works } from '../../data/works';
 import { getSeries } from '../../data/series';
 import { useTranslations, localizePath, formatDate, withBase } from '../../i18n/utils';
@@ -41,10 +42,6 @@ const stageSrcset = [
 ---
 
 <BaseLayout lang={lang} title={work.title[lang]} description={work.story[lang].slice(0, 90)} section="photo" image={work.thumb}>
-  <Fragment slot="head">
-    <script is:inline>document.documentElement.classList.add('js');</script>
-  </Fragment>
-
   <article class="work">
     <div class="container-wide work-top">
       <a class="back mono" id="work-back" href={localizePath('/works', lang)}>← {t('work.back')}</a>
@@ -140,15 +137,7 @@ const stageSrcset = [
     })();
   </script>
 
-  <div class="work-loader" id="work-loader" aria-hidden="true">
-    <div class="loader-inner">
-      <div class="loader-meta mono">
-        <span>{lang === 'zh' ? '正在显影' : 'DEVELOPING'}</span>
-        <span class="loader-pct">00</span>
-      </div>
-      <div class="loader-track"><i></i></div>
-    </div>
-  </div>
+  <DevelopingOverlay id="work-loader" lang={lang} />
 
   <script is:inline>
     (() => {
@@ -210,6 +199,7 @@ const stageSrcset = [
         return;
       }
 
+      loader.classList.remove('is-done');
       stage.classList.add('is-gated');
 
       // 命中缓存：也走 0→100 过渡，但速度较快
@@ -514,62 +504,6 @@ const stageSrcset = [
       align-items: flex-start;
       text-align: left;
     }
-  }
-
-  /* ---------- 进入详情页的全屏显影过渡 ---------- */
-  .work-loader {
-    position: fixed;
-    inset: 0;
-    z-index: 300;
-    display: grid;
-    place-items: center;
-    background: #000000;
-    transition: opacity 0.55s var(--ease), visibility 0.55s var(--ease);
-  }
-
-  /* 无脚本时直接放行内容 */
-  html:not(.js) .work-loader {
-    display: none;
-  }
-
-  .work-loader.is-done {
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-  }
-
-  .loader-inner {
-    width: min(420px, 62vw);
-    display: grid;
-    gap: 14px;
-  }
-
-  .loader-meta {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    font-size: 11px;
-    letter-spacing: 0.22em;
-    color: var(--text-dim);
-  }
-
-  .loader-pct {
-    color: var(--primary);
-    font-variant-numeric: tabular-nums;
-  }
-
-  .loader-track {
-    height: 1px;
-    background: rgba(255, 255, 255, 0.16);
-    overflow: hidden;
-  }
-
-  .loader-track i {
-    display: block;
-    width: 0;
-    height: 100%;
-    background: var(--primary);
-    box-shadow: 0 0 14px rgba(229, 201, 164, 0.55);
   }
 
   .stage.is-gated img {

@@ -1,0 +1,74 @@
+---
+import type { Lang } from '../i18n/ui';
+
+const { id, lang } = Astro.props as { id: string; lang: Lang };
+---
+
+<div class="developing-overlay is-done" id={id} aria-hidden="true">
+  <div class="loader-inner">
+    <div class="loader-meta mono">
+      <span>{lang === 'zh' ? '正在显影' : 'DEVELOPING'}</span>
+      <span class="loader-pct">00</span>
+    </div>
+    <div class="loader-track"><i></i></div>
+  </div>
+</div>
+
+<style>
+  .developing-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 300;
+    display: grid;
+    place-items: center;
+    background: #000;
+    --developing-color: #e5c9a4;
+  }
+
+  .developing-overlay.is-done {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.55s var(--ease), visibility 0.55s var(--ease);
+  }
+
+  .loader-inner {
+    width: min(420px, 62vw);
+    display: grid;
+    gap: 14px;
+  }
+
+  .loader-meta {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    color: #a8a8a8;
+  }
+
+  .loader-pct {
+    color: var(--developing-color);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .loader-track {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.16);
+    overflow: hidden;
+  }
+
+  .loader-track i {
+    display: block;
+    width: 0;
+    height: 100%;
+    background: var(--developing-color);
+    box-shadow: 0 0 14px rgba(229, 201, 164, 0.55);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .developing-overlay.is-done {
+      transition: none;
+    }
+  }
+</style>
