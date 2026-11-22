@@ -522,6 +522,7 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
     </script>
 
     <style is:global>
+      /* 导航容器：沿用参考页参数，无底部分隔线与阴影，仅靠背景与模糊过渡 */
       .site-head {
         position: sticky;
         top: 0;
@@ -531,49 +532,17 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
         align-items: center;
         isolation: isolate;
         background: var(--glass-bg);
-        -webkit-backdrop-filter: blur(36px) saturate(200%);
-        backdrop-filter: blur(36px) saturate(200%);
-        border-bottom: 1px solid var(--glass-border);
-        box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-highlight);
-        transition: background 0.4s var(--ease), border-color 0.4s var(--ease),
-          box-shadow 0.4s var(--ease), backdrop-filter 0.4s var(--ease);
-      }
-
-      /* 颗粒层：让玻璃在没有照片的纯色背景上也有折射质感 */
-      .site-head::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        z-index: 0;
-        pointer-events: none;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
-        background-size: 180px 180px;
-        opacity: var(--grain-opacity);
-        mix-blend-mode: overlay;
-        transition: opacity 0.35s var(--ease);
-      }
-
-      /* 顶部斜向高光：玻璃边缘的反射 */
-      .site-head::after {
-        content: '';
-        position: absolute;
-        inset: 0;
-        z-index: 0;
-        pointer-events: none;
-        background:
-          linear-gradient(180deg, var(--glass-sheen), transparent 46%),
-          linear-gradient(104deg, transparent 28%, var(--glass-streak) 44%, transparent 62%);
-        background-repeat: no-repeat;
-        opacity: 1;
-        transition: opacity 0.35s var(--ease);
+        -webkit-backdrop-filter: blur(20px);
+        backdrop-filter: blur(20px);
+        border-bottom: 0;
+        box-shadow: none;
+        transition: background 0.2s ease, backdrop-filter 0.2s ease;
       }
 
       .site-head.is-scrolled {
         background: var(--glass-bg-scrolled);
-        -webkit-backdrop-filter: blur(42px) saturate(210%);
-        backdrop-filter: blur(42px) saturate(210%);
-        box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-highlight),
-          0 12px 28px -22px rgba(0, 0, 0, 0.5);
+        -webkit-backdrop-filter: blur(20px);
+        backdrop-filter: blur(20px);
       }
 
       /* 首屏：摄影 / 工程主线导航完全透明，下拉后恢复磨砂玻璃 */
@@ -584,25 +553,6 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
         background: transparent;
         -webkit-backdrop-filter: none;
         backdrop-filter: none;
-        border-bottom-color: transparent;
-        box-shadow: none;
-      }
-
-      .site-head[data-section='photo']:not(.is-scrolled)::before,
-      .site-head[data-section='photo']:not(.is-scrolled)::after,
-      .site-head[data-section='dev']:not(.is-scrolled)::before,
-      .site-head[data-section='dev']:not(.is-scrolled)::after,
-      html[data-world='photo'] .site-head.preserve-world-nav:not(.is-scrolled)::before,
-      html[data-world='photo'] .site-head.preserve-world-nav:not(.is-scrolled)::after,
-      html[data-world='dev'] .site-head.preserve-world-nav:not(.is-scrolled)::before,
-      html[data-world='dev'] .site-head.preserve-world-nav:not(.is-scrolled)::after {
-        opacity: 0;
-      }
-
-      /* 摄影主线不使用颗粒层与斜向高光层，保持与工程主线一致的干净玻璃 */
-      html[data-world='photo'] .site-head::before,
-      html[data-world='photo'] .site-head::after {
-        opacity: 0;
       }
 
       /* 导航按钮的磨砂玻璃底 */
@@ -641,9 +591,6 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
         /* 不支持背景模糊时沿用主线玻璃的半透明值，避免整条导航变成实色块 */
         .site-head {
           background: var(--glass-bg-scrolled);
-        }
-        .site-head::before {
-          opacity: calc(var(--grain-opacity) * 0.6);
         }
       }
 
@@ -1173,11 +1120,11 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
         /* 两行栅格：第一行品牌 + 语言，第二行主线切换（左紧邻）+ 导航（右紧邻） */
         .head-inner {
           display: grid;
-          /* 首列固定为品牌静止宽度：logo 收缩动画期间宽度会短暂变化，若用 auto 会挤压导航导致多折出一行 */
-          grid-template-columns: 100px minmax(0, 1fr);
+          /* 品牌横跨前两列，首列只由主线切换按钮决定宽度，把剩余空间全部让给导航，避免导航折行 */
+          grid-template-columns: max-content minmax(0, 1fr) auto;
           grid-template-areas:
-            'brand lang'
-            'track nav';
+            'brand brand lang'
+            'track nav nav';
           align-items: center;
           column-gap: clamp(8px, 2.4vw, 10px);
           row-gap: 8px;
@@ -1208,8 +1155,8 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
         }
         .nav-link {
           white-space: nowrap;
-          font-size: clamp(11.5px, 3.5vw, 13px);
-          padding: clamp(5px, 1.6vw, 6px) clamp(7px, 3.3vw, 13px);
+          font-size: clamp(11px, 3.2vw, 12.5px);
+          padding: clamp(5px, 1.5vw, 6px) clamp(6px, 2.8vw, 11px);
         }
         .track-switch {
           grid-area: track;
