@@ -3,7 +3,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import DevelopingOverlay from '../components/DevelopingOverlay.astro';
 import heroVideo from '../assets/photo/star-trails-loop.mp4?url';
 import heroPoster from '../assets/photo/star-trails-poster.webp?url';
-import DeferredPreview from '../components/DeferredPreview.astro';
+import mobileHeroVideo from '../assets/photo/star-trails-mobile.mp4?url';
 import WorkCard from '../components/WorkCard.astro';
 import { works, featuredWorks } from '../data/works';
 import { series } from '../data/series';
@@ -32,7 +32,6 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
 <BaseLayout lang={lang} title={t('nav.photo')} description={t('photo.lead')} section="photo">
   <Fragment slot="head">
     <link rel="preload" as="image" href={heroPoster} fetchpriority="high" />
-    <link rel="preload" as="fetch" href={heroVideo} crossorigin="anonymous" fetchpriority="high" />
   </Fragment>
   <DevelopingOverlay id="photo-entry-loader" lang={lang} />
   <script is:inline>
@@ -57,6 +56,9 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
     <video
       class="hero-video"
       data-src={heroVideo}
+      data-mobile-src={mobileHeroVideo}
+      autoplay
+      preload="auto"
       poster={heroPoster}
       aria-label={hero.title[lang]}
       muted
@@ -101,7 +103,7 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
           <div class="strip-group" aria-hidden={duplicate ? 'true' : undefined}>
             {featuredByOrder.map((w) => (
               <div class="strip-item" style={`--ratio:${(w.width / w.height).toFixed(3)}`}>
-                <WorkCard work={w} lang={lang} reveal={false} deferPreview />
+                <WorkCard work={w} lang={lang} reveal={false} />
               </div>
             ))}
           </div>
@@ -129,9 +131,7 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
         return (
           <a class="series-card reveal" href={localizePath(`/collections/${s.slug}`, lang)}>
             <span class="series-media" style={`background:${s.color}`}>
-              <DeferredPreview>
-                <img src={withBase(cover.thumb)} alt={s.name[lang]} loading="lazy" decoding="async" />
-              </DeferredPreview>
+              <img src={withBase(cover.thumb)} alt={s.name[lang]} width={cover.width} height={cover.height} loading="lazy" decoding="async" />
             </span>
             <span class="series-info">
               <span class="series-top">
@@ -449,74 +449,92 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
     let frameCallback: number | undefined;
     let trackVideoPending = document.documentElement.classList.contains('logo-arrived');
 
-    function finishTrackVideo(ready: boolean) {
-      if (!trackVideoPending) return;
-      trackVideoPending = false;
-      video.dispatchEvent(new CustomEvent('sch-track-video-ready', { detail: ready }));
+    let progress = -1;
+    let lastMediaTime: number | undefined;
+    let lastFrameCount = 0;
+    let lastClock = 0;
+
+    function publishTrack(state: string) {
+      video.dataset.trackProgress = state;
+      video.dispatchEvent(new Event('sch-track-progress'));
     }
 
-    if (trackVideoPending) {
-      video.dataset.trackVideoBound = '';
-      video.preload = 'auto';
-      video.addEventListener('canplay', () => finishTrackVideo(true), { once: true });
-      document.addEventListener('sch-track-reveal', releasePreviews, { once: true });
+    function renderProgress(value: number) {
+      if ((!entry && !trackVideoPending) || value <= progress) return;
+      progress = value;
+      if (fill && percent) {
+        fill.style.width = `${value}%`;
+        percent.textContent = String(value).padStart(2, '0');
+      }
+      if (trackVideoPending) publishTrack(String(value));
+      clearTimeout(entryTimer);
+      if (value < 100) entryTimer = window.setTimeout(onStartupTimeout, 12000);
     }
 
-    function renderProgress(progress: number) {
-      if (!entry || !fill || !percent) return;
-      fill.style.width = `${progress}%`;
-      percent.textContent = String(progress).padStart(2, '0');
+    function stopWatchingFrames() {
+      if (frameCallback !== undefined) video.cancelVideoFrameCallback(frameCallback);
+      frameCallback = undefined;
+      lastMediaTime = undefined;
+      video.removeEventListener('timeupdate', onTimeUpdate);
     }
 
     function dismissEntry() {
       clearTimeout(entryTimer);
-      if (frameCallback !== undefined) video.cancelVideoFrameCallback(frameCallback);
-      video.removeEventListener('timeupdate', onTimeUpdate);
+      stopWatchingFrames();
+      if (trackVideoPending) publishTrack('fallback');
+      trackVideoPending = false;
       entry?.classList.add('is-done');
       entry = null;
-      releasePreviews();
+    }
+
+    function onStartupTimeout() {
+      wantsPlayback = false;
+      ++playbackAttempt;
+      video.pause();
+      updateLabel();
+      dismissEntry();
     }
 
     function finishEntry() {
-      if (!entry || video.paused) return;
-      clearTimeout(entryTimer);
       renderProgress(100);
-      entryTimer = window.setTimeout(dismissEntry, 120);
+      trackVideoPending = false;
+      stopWatchingFrames();
+      if (entry) entryTimer = window.setTimeout(dismissEntry, 120);
     }
 
     function onVideoFrame(_: number, frame: VideoFrameCallbackMetadata) {
       frameCallback = undefined;
-      // The image at time zero can still match the poster. Wait for motion.
-      if (frame.mediaTime > 0) finishEntry();
-      else if (entry) frameCallback = video.requestVideoFrameCallback(onVideoFrame);
+      if (!video.paused && !video.seeking && !video.ended) {
+        if (lastMediaTime !== undefined && frame.mediaTime > lastMediaTime) {
+          finishEntry();
+          return;
+        }
+        lastMediaTime = frame.mediaTime;
+      }
+      frameCallback = video.requestVideoFrameCallback(onVideoFrame);
+    }
+
+    function presentedFrames() {
+      const quality = video.getVideoPlaybackQuality?.();
+      return quality ? quality.totalVideoFrames - quality.droppedVideoFrames :
+        (video as HTMLVideoElement & { webkitDecodedFrameCount?: number }).webkitDecodedFrameCount;
     }
 
     function onTimeUpdate() {
-      if (video.currentTime <= 0) return;
-      video.removeEventListener('timeupdate', onTimeUpdate);
-      finishEntry();
+      if (video.paused || video.seeking || video.ended) return;
+      const count = presentedFrames();
+      if (count !== undefined && count > lastFrameCount && video.currentTime > lastClock) finishEntry();
     }
 
-    if (entry) {
-      entry.setAttribute('data-playback-bound', '');
-      entryTimer = window.setTimeout(dismissEntry, 45000);
-    }
-
-    function releasePreviews() {
-      for (const template of document.querySelectorAll<HTMLTemplateElement>('template[data-photo-preview]')) {
-        template.replaceWith(template.content);
-      }
-    }
-
-    video.addEventListener('playing', () => {
-      if (!entry && !video.paused) releasePreviews();
-    }, { once: true });
-    video.addEventListener('error', dismissEntry, { once: true });
+    entry?.setAttribute('data-playback-bound', '');
+    renderProgress(0);
+    video.addEventListener('loadeddata', () => renderProgress(96));
+    video.addEventListener('canplay', () => renderProgress(98));
 
     async function readVideo(response: Response) {
       const body = response.body;
       let file: Blob;
-      if (entry && body) {
+      if ((entry || trackVideoPending) && body) {
         const total = Number(response.headers.get('content-length'));
         const chunks: BlobPart[] = [];
         let received = 0;
@@ -529,9 +547,6 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
           if (total > 0) renderProgress(Math.min(94, Math.floor(95 * received / total)));
         }
         file = new Blob(chunks, { type: response.headers.get('content-type') || 'video/mp4' });
-      } else if (trackVideoPending) {
-        const bytes = await response.arrayBuffer();
-        file = new Blob([bytes], { type: response.headers.get('content-type') || 'video/mp4' });
       } else {
         file = await response.blob();
       }
@@ -546,6 +561,11 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
     }
 
     function prepareSource(manual: boolean) {
+      // A native, fast-start MP4 can play on touch devices as bytes arrive.
+      if (matchMedia('(pointer: coarse), (max-width: 1024px)').matches) {
+        video.src = video.dataset.mobileSrc!;
+        return;
+      }
       const url = video.dataset.src!;
       const useNativeSource = (source: string | Blob) => {
         video.loop = true;
@@ -559,7 +579,7 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
       // Download the full loop before attaching it, including on the native playback fallback.
       if (!manual && trackVideoPending) {
         return downloadVideo(url).then((file) => {
-          if (!attachLoop(file)) useNativeSource(file);
+          if (wantsPlayback && !video.hasAttribute('src') && !attachLoop(file)) useNativeSource(file);
         });
       }
       if (attachLoop(url)) return;
@@ -578,6 +598,7 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
 
     async function syncPlayback(manual = false) {
       const attempt = ++playbackAttempt;
+      stopWatchingFrames();
       updateLabel();
       if (!wantsPlayback) {
         video.pause();
@@ -594,18 +615,18 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
         }
         if (attempt !== playbackAttempt) return;
         await video.play();
-        finishTrackVideo(true);
-        if (!entry || attempt !== playbackAttempt) return;
+        if (attempt !== playbackAttempt || (!entry && !trackVideoPending)) return;
+        renderProgress(99);
         if (typeof video.requestVideoFrameCallback === 'function') {
           frameCallback = video.requestVideoFrameCallback(onVideoFrame);
         } else {
+          lastFrameCount = presentedFrames() ?? 0;
+          lastClock = video.currentTime;
           video.addEventListener('timeupdate', onTimeUpdate);
         }
-      } catch (error) {
+      } catch {
         // A pause or a fallback source can interrupt an older play() request.
         if (attempt !== playbackAttempt) return;
-        // The full file is already local if the browser rejected autoplay.
-        finishTrackVideo(error instanceof DOMException && error.name === 'NotAllowedError');
         if (video.error) {
           URL.revokeObjectURL(video.src);
           video.removeAttribute('src');
@@ -618,6 +639,18 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
       }
     }
 
+    video.addEventListener('progress', () => {
+      if ((entry || trackVideoPending) && video.buffered.length && Number.isFinite(video.duration) && video.duration > 0) {
+        renderProgress(Math.min(95, Math.round(95 * video.buffered.end(video.buffered.length - 1) / video.duration)));
+      }
+    });
+    video.addEventListener('error', () => {
+      // Allow the loop controller to replace an interrupted source first.
+      queueMicrotask(() => {
+        if (video.error && (entry || trackVideoPending)) onStartupTimeout();
+      });
+    });
+    video.muted = true;
     toggle.hidden = false;
     toggle.addEventListener('click', () => {
       wantsPlayback = !wantsPlayback;

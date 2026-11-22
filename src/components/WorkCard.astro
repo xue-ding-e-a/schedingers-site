@@ -1,6 +1,5 @@
 ---
 import '../styles/work-card-interactions.css';
-import DeferredPreview from './DeferredPreview.astro';
 import type { Work } from '../data/works';
 import type { Lang } from '../i18n/ui';
 import { localizePath, withBase } from '../i18n/utils';
@@ -9,28 +8,25 @@ interface Props {
   work: Work;
   lang: Lang;
   eager?: boolean;
-  deferPreview?: boolean;
   reveal?: boolean;
   titleOnly?: boolean;
 }
 
-const { work, lang, eager = false, deferPreview = false, reveal = true, titleOnly = false } = Astro.props;
+const { work, lang, eager = false, reveal = true, titleOnly = false } = Astro.props;
 const href = localizePath(`/works/${work.slug}`, lang);
 const year = work.date.slice(0, 4);
 ---
 
 <a class:list={['work-card', 'work-card-interaction', { reveal, 'title-only': titleOnly }]} href={href} style={`--tint:${work.color}`}>
   <span class="media" style={`aspect-ratio:${work.width} / ${work.height}`}>
-    <DeferredPreview deferred={deferPreview}>
-      <img
-        src={withBase(work.thumb)}
-        alt={work.title[lang]}
-        width={work.width}
-        height={work.height}
-        loading={eager ? 'eager' : 'lazy'}
-        decoding="async"
-      />
-    </DeferredPreview>
+    <img
+      src={withBase(work.thumb)}
+      alt={work.title[lang]}
+      width={work.width}
+      height={work.height}
+      loading={eager ? 'eager' : 'lazy'}
+      decoding="async"
+    />
   </span>
   <span class="meta">
     <span class="name">

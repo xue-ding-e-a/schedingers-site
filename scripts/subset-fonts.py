@@ -6,6 +6,7 @@
 依赖：pip install fonttools brotli
 """
 
+import re
 from pathlib import Path
 
 from fontTools import subset
@@ -61,6 +62,11 @@ def main() -> None:
         if not src.exists():
             raise SystemExit(f"缺少原始字体：{src}")
         write_subset(src, FONTS / out_name, chars if chars is not None else site_chars)
+
+    # Include both localized initial titles and the typewriter's alternate spelling.
+    titles = re.findall(r"'portal\.title': ([^\n]+),", (SRC / 'i18n/ui.ts').read_text(encoding='utf-8'))
+    title_chars = set("Schedinger's site" + "".join(title[1:-1] for title in titles))
+    write_subset(SOURCE / 'up-job-heading-v2.woff2', FONTS / 'portal-title.woff2', title_chars)
 
 
 if __name__ == "__main__":

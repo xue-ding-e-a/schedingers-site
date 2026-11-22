@@ -133,64 +133,51 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
                 setTimeout(reveal, 340);
               };
 
-              // 离开交点后，连续走完目标轨道并收回顶部。
-              var leaveCrossing = function () {
-                if (!dot || !arc) {
-                  reveal();
-                  return;
-                }
-                var start = performance.now();
-                var tick = function (now) {
-                  var progress = Math.max(0, Math.min(1, (now - start) / 420));
-                  var travel = progress * progress * (2 - progress);
-                  var angle = startAngle + (endAngle - startAngle) * travel;
-                  var x = 27 * Math.cos(angle);
-                  var y = 10.5 * Math.sin(angle);
-                  dot.setAttribute('cx', (32 + x * Math.cos(tilt) - y * Math.sin(tilt)).toFixed(2));
-                  dot.setAttribute('cy', (32 + x * Math.sin(tilt) + y * Math.cos(tilt)).toFixed(2));
-                  var color = fromColor.map(function (value, i) {
-                    return Math.round(value + (toColor[i] - value) * travel);
-                  });
-                  dot.style.color = 'rgb(' + color.join(',') + ')';
-                  arc.setAttribute('stroke-dashoffset', ((1 - crossProgress) * (1 - progress) * 100).toFixed(2));
-                  if (progress < 1) requestAnimationFrame(tick);
+              if (!dot || !arc) return reveal();
+              var paintOrbit = function (progress) {
+                var travel = progress * progress * (2 - progress);
+                var angle = startAngle + (endAngle - startAngle) * travel;
+                var x = 27 * Math.cos(angle);
+                var y = 10.5 * Math.sin(angle);
+                dot.setAttribute('cx', (32 + x * Math.cos(tilt) - y * Math.sin(tilt)).toFixed(2));
+                dot.setAttribute('cy', (32 + x * Math.sin(tilt) + y * Math.cos(tilt)).toFixed(2));
+                var color = fromColor.map(function (value, i) {
+                  return Math.round(value + (toColor[i] - value) * travel);
+                });
+                dot.style.color = 'rgb(' + color.join(',') + ')';
+                arc.setAttribute('stroke-dashoffset', ((1 - crossProgress) * (1 - progress) * 100).toFixed(2));
+              };
+              var video = isPhoto && document.querySelector('[data-hero] video[data-src]');
+              if (video) {
+                var label = warp.querySelector('.warp-percent');
+                // Also read the snapshot in case a cached video has already started.
+                var syncOrbit = function () {
+                  var state = video.dataset.trackProgress;
+                  if (state === undefined) return;
+                  if (state !== 'fallback') {
+                    paintOrbit(Number(state) / 100);
+                    label.textContent = state + '%';
+                    if (state !== '100') return;
+                  }
+                  video.removeEventListener('sch-track-progress', syncOrbit);
+                  if (state === 'fallback') reveal();
                   else shrinkAndReveal();
                 };
-                requestAnimationFrame(tick);
-              };
-
-              var video = isPhoto ? document.querySelector('[data-hero] video[data-src]') : null;
-              if (!video) {
-                leaveCrossing();
+                video.addEventListener('sch-track-progress', syncOrbit);
+                syncOrbit();
+                document.addEventListener('DOMContentLoaded', function () {
+                  if (video.dataset.trackProgress === undefined) reveal();
+                }, { once: true });
                 return;
               }
-
-              // 在交点等视频下载并可以播放。只有加载失败才回退到封面。
-              var showPoster = function () {
-                var cover = new Image();
-                var waiting = true;
-                var finishWaiting = function () {
-                  if (!waiting) return;
-                  waiting = false;
-                  clearTimeout(waitLimit);
-                  leaveCrossing();
-                };
-                var waitLimit = setTimeout(finishWaiting, 1600);
-                cover.fetchPriority = 'high';
-                cover.onload = function () {
-                  if (cover.decode) cover.decode().then(finishWaiting, finishWaiting);
-                  else finishWaiting();
-                };
-                cover.onerror = finishWaiting;
-                cover.src = video.poster;
+              var start = performance.now();
+              var tick = function (now) {
+                var progress = Math.max(0, Math.min(1, (now - start) / 420));
+                paintOrbit(progress);
+                if (progress < 1) requestAnimationFrame(tick);
+                else shrinkAndReveal();
               };
-              video.addEventListener('sch-track-video-ready', function (event) {
-                if (event.detail) leaveCrossing();
-                else showPoster();
-              }, { once: true });
-              document.addEventListener('DOMContentLoaded', function () {
-                if (!video.hasAttribute('data-track-video-bound')) showPoster();
-              }, { once: true });
+              requestAnimationFrame(tick);
             };
             if (document.readyState === 'loading') {
               document.addEventListener('readystatechange', playArrival, { once: true });
@@ -281,6 +268,7 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
               style={`color: ${section === 'dev' ? '#e4ab63' : '#7c67e4'}`}
             />
           </svg>
+          {section === 'photo' && <span class="warp-percent mono">0%</span>}
         </div>
       )
     }
@@ -788,7 +776,7 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
         opacity: 0;
       }
 
-      html.logo-arrived:not(.logo-arrived--play) main {
+      html.logo-arrived:not([data-world='photo']):not(.logo-arrived--play) main {
         opacity: 0;
       }
 
@@ -994,6 +982,12 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
       .world-warp.is-armed .world-warp-mark {
         opacity: 1;
         transform: scale(1);
+      }
+
+      .warp-percent {
+        position: absolute;
+        top: calc(50% + min(23vmin, 210px));
+        font-variant-numeric: tabular-nums;
       }
 
       .warp-orbit {

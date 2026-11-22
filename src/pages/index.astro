@@ -372,7 +372,15 @@ const photoHref = localizePath('/photo/', lang);
     }
   }
 
+  @font-face {
+    font-family: 'Portal Title';
+    src: url('../assets/fonts/portal-title.woff2?inline') format('woff2');
+    font-weight: 900;
+    font-display: block;
+  }
+
   .portal-title {
+    font-family: 'Portal Title', var(--font-heading);
     margin-top: 22px;
     font-size: clamp(3rem, 9.5vw, 7.6rem);
     line-height: 0.98;
