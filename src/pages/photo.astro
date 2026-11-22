@@ -393,15 +393,6 @@ const stripMaxRatio = Math.max(...featuredByOrder.map((w) => w.width / w.height)
     text-wrap: balance;
   }
 
-  /* 首屏图已铺到导航背后：顶部直接使用与滚动后一致的玻璃效果 */
-  :global(html[data-world='photo'] .site-head) {
-    background: var(--glass-bg-scrolled);
-    -webkit-backdrop-filter: blur(28px) saturate(190%);
-    backdrop-filter: blur(28px) saturate(190%);
-    box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-highlight),
-      0 12px 28px -22px rgba(0, 0, 0, 0.6);
-  }
-
   /* 手机端：首屏动画按设备宽度完整呈现，避免 3:2 横屏画面被纵向放大后裁掉两侧 */
   @media (max-width: 768px) {
     .hero {
@@ -475,6 +466,12 @@ const stripMaxRatio = Math.max(...featuredByOrder.map((w) => w.width / w.height)
   @media (max-width: 600px) {
     .series-card {
       grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    /* 手机端压缩系列封面图显示尺寸，避免整幅铺满后过高 */
+    .series-media {
+      width: min(72%, 232px);
     }
   }
 

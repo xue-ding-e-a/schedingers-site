@@ -281,9 +281,12 @@ const rows = Array.from({ length: Math.ceil(remaining.length / 2) }, (_, i) => r
   }
   @media (max-width: 760px) {
     .hero-grid, .pair { grid-template-columns: minmax(0, 1fr); }
-    .hero-grid { gap: 26px; }
-    .pair { row-gap: 36px; }
-    .portrait { width: min(88%, 340px); justify-self: center; }
+    .hero-grid { gap: 24px; }
+    .pair { row-gap: 30px; }
+    /* 手机端压缩图片显示尺寸：不再整幅铺满内容宽，按比例收窄后居中 */
+    .hero-cover,
+    .plate-wrap { width: min(100%, 300px); justify-self: center; }
+    .plate-wrap.portrait { width: min(70%, 230px); }
   }
   /* ---------- 进入系列页的全屏显影过渡 ---------- */
   .collection-loader {
