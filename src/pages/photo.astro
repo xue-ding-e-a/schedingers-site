@@ -297,6 +297,10 @@ const stripMaxRatio = Math.max(...featuredByOrder.map((w) => w.width / w.height)
     flex-wrap: nowrap;
   }
 
+  .strip-item :global(.name) {
+    font-size: 12px;
+  }
+
   .strip-item :global(.meta > .sub:not(.dim)) {
     display: none;
   }
