@@ -30,6 +30,10 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
 ---
 
 <BaseLayout lang={lang} title={t('nav.photo')} description={t('photo.lead')} section="photo">
+  <Fragment slot="head">
+    <link rel="preload" as="fetch" href={heroVideo} crossorigin="anonymous" fetchpriority="high"
+      media="(prefers-reduced-motion: no-preference)" />
+  </Fragment>
   <DevelopingOverlay id="photo-entry-loader" lang={lang} />
   <script is:inline>
     (() => {
@@ -446,6 +450,7 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
     const fill = entry?.querySelector<HTMLElement>('.loader-track i');
     const percent = entry?.querySelector<HTMLElement>('.loader-pct');
     let entryTimer: number | undefined;
+    let frameCallback: number | undefined;
 
     function renderProgress(progress: number) {
       if (!entry || !fill || !percent) return;
@@ -455,16 +460,36 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
 
     function dismissEntry() {
       clearTimeout(entryTimer);
+      if (frameCallback !== undefined) video.cancelVideoFrameCallback(frameCallback);
+      video.removeEventListener('timeupdate', onTimeUpdate);
       entry?.classList.add('is-done');
       entry = null;
+      releasePreviews();
+    }
+
+    function finishEntry() {
+      if (!entry || video.paused || !video.loop) return;
+      clearTimeout(entryTimer);
+      renderProgress(100);
+      entryTimer = window.setTimeout(dismissEntry, 120);
+    }
+
+    function onVideoFrame(_: number, frame: VideoFrameCallbackMetadata) {
+      frameCallback = undefined;
+      // The image at time zero can still match the poster. Wait for motion.
+      if (frame.mediaTime > 0) finishEntry();
+      else if (entry) frameCallback = video.requestVideoFrameCallback(onVideoFrame);
+    }
+
+    function onTimeUpdate() {
+      if (video.currentTime <= 0) return;
+      video.removeEventListener('timeupdate', onTimeUpdate);
+      finishEntry();
     }
 
     if (entry) {
       entry.setAttribute('data-playback-bound', '');
-      entryTimer = window.setTimeout(() => {
-        dismissEntry();
-        releasePreviews();
-      }, 45000);
+      entryTimer = window.setTimeout(dismissEntry, 45000);
     }
 
     function releasePreviews() {
@@ -473,8 +498,10 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
       }
     }
 
-    video.addEventListener('playing', releasePreviews, { once: true });
-    video.addEventListener('error', releasePreviews, { once: true });
+    video.addEventListener('playing', () => {
+      if (!entry) releasePreviews();
+    }, { once: true });
+    video.addEventListener('error', dismissEntry, { once: true });
 
     async function loadVideo(player: HTMLVideoElement) {
       // The build fingerprints this URL. Reuse the complete cached file across
@@ -512,17 +539,17 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
       if (!wantsPlayback) {
         video.pause();
         dismissEntry();
-        releasePreviews();
         return;
       }
       try {
         await (sourceReady ??= loadVideo(video));
         if (!wantsPlayback) return;
-        await video.play(); // Resolves when the browser starts playback.
-        if (entry && wantsPlayback && !video.paused && video.loop) {
-          clearTimeout(entryTimer);
-          renderProgress(100);
-          entryTimer = window.setTimeout(dismissEntry, 120);
+        await video.play();
+        if (!entry || !wantsPlayback) return;
+        if (typeof video.requestVideoFrameCallback === 'function') {
+          frameCallback = video.requestVideoFrameCallback(onVideoFrame);
+        } else {
+          video.addEventListener('timeupdate', onTimeUpdate);
         }
       } catch (error) {
         if (error instanceof DOMException && error.name === 'AbortError' && !wantsPlayback) return;
@@ -535,7 +562,6 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
         wantsPlayback = false;
         updateLabel();
         dismissEntry();
-        releasePreviews();
       }
     }
 
