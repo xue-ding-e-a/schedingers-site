@@ -481,6 +481,20 @@ const stripMaxRatio = Math.max(...featuredByOrder.map((w) => w.width / w.height)
       --card-h: calc(100cqw / var(--strip-max-ratio, 2.1429));
     }
 
+    /* 手机端精选条只保留作品名，单独一行左对齐展示 */
+    .strip-item :global(.meta) {
+      display: block;
+    }
+
+    .strip-item :global(.name) {
+      display: block;
+      text-align: left;
+    }
+
+    .strip-item :global(.meta > .sub.dim) {
+      display: none;
+    }
+
     .section {
       padding-block: 44px;
     }
