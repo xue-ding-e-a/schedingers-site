@@ -396,6 +396,12 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
 
   /* 手机端：首屏动画按设备宽度完整呈现，避免 3:2 横屏画面被纵向放大后裁掉两侧 */
   @media (max-width: 768px) {
+    .hero {
+      min-height: 0;
+      padding-top: 0;
+      justify-content: flex-start;
+    }
+
     /* 动画顶到页面最上方，与导航栏顶部对齐 */
     .hero-video,
     .hero-veil {
@@ -404,40 +410,41 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
       aspect-ratio: 3 / 2;
     }
 
-    /* 遮罩贴合画面尺寸，下缘淡入纯黑，承托右下角文字 */
     .hero-veil {
       opacity: 1;
       background: linear-gradient(to bottom, rgb(0 0 0 / 0%) 58%, #000 100%);
     }
 
-    /* 照片信息与暂停按钮收进动画右下角 */
+    /* 照片信息（地点、参数）与滚动提示排在动画紧邻下方，不再压在画面上 */
     .hero-meta {
-      position: absolute;
-      inset: 0 0 auto;
-      width: 100%;
-      height: auto;
-      aspect-ratio: 3 / 2;
-      margin: 0;
-      padding: 0 var(--gutter) 12px;
+      order: -1;
+      margin: calc(66.6667% + 12px) auto 0;
+      padding-block: 0;
       display: flex;
       flex-direction: column;
-      align-items: flex-end;
-      justify-content: flex-end;
-      gap: 6px;
-      text-align: right;
+      align-items: flex-start;
+      gap: 4px;
+      text-align: left;
     }
 
-    .hero-meta > .mono {
-      text-shadow: 0 1px 8px rgb(0 0 0 / 85%);
-    }
-
+    /* 暂停按钮贴在动画左下角 */
     .hero-motion-toggle {
+      position: absolute;
+      top: 0;
+      left: 0;
       margin: 0;
+      transform: translateY(calc(-100% - 22px));
     }
 
-    /* 文案保持原先的底部留白 */
+    .scroll-cue {
+      margin-left: 0;
+      margin-top: 4px;
+    }
+
+    /* 标题上移贴近信息区，标题下方的留白同步收紧 */
     .hero-inner {
-      padding-bottom: 96px;
+      padding-top: 44px;
+      padding-bottom: 48px;
     }
   }
 
