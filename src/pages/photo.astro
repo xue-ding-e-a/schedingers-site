@@ -31,8 +31,18 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
 
 <BaseLayout lang={lang} title={t('nav.photo')} description={t('photo.lead')} section="photo">
   <Fragment slot="head">
-    <link rel="preload" as="fetch" href={heroVideo} crossorigin="anonymous" fetchpriority="high"
-      media="(prefers-reduced-motion: no-preference)" />
+    <link rel="preload" as="image" href={heroPoster} fetchpriority="high" />
+    <script is:inline define:vars={{ heroVideo }}>
+      if (!document.documentElement.classList.contains('logo-arrived')) {
+        const preload = document.createElement('link');
+        preload.rel = 'preload';
+        preload.as = 'fetch';
+        preload.href = heroVideo;
+        preload.crossOrigin = 'anonymous';
+        preload.fetchPriority = 'high';
+        document.head.appendChild(preload);
+      }
+    </script>
   </Fragment>
   <DevelopingOverlay id="photo-entry-loader" lang={lang} />
   <script is:inline>
@@ -41,8 +51,7 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
       try {
         const target = sessionStorage.getItem(entryKey);
         sessionStorage.removeItem(entryKey);
-        if (target !== location.pathname.replace(/\/$/, '') ||
-            matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        if (target !== location.pathname.replace(/\/$/, '')) return;
 
         const loader = document.getElementById('photo-entry-loader');
         loader.classList.remove('is-done');
@@ -439,8 +448,9 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
   const video = hero?.querySelector<HTMLVideoElement>('.hero-video');
   const loader = document.getElementById('photo-entry-loader');
   function setupPlayback(video: HTMLVideoElement, toggle: HTMLButtonElement) {
-    const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
-    let wantsPlayback = !reducedMotion.matches;
+    // The star trails are the hero work itself. The page button controls playback.
+    let wantsPlayback = true;
+    let playbackAttempt = 0;
     let sourceReady: Promise<void> | undefined;
     let entry = loader && !loader.classList.contains('is-done') ? loader : null;
     const fill = entry?.querySelector<HTMLElement>('.loader-track i');
@@ -546,6 +556,7 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
     }
 
     async function syncPlayback(manual = false) {
+      const attempt = ++playbackAttempt;
       updateLabel();
       if (!wantsPlayback) {
         video.pause();
@@ -555,19 +566,22 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
       try {
         if (!video.hasAttribute('src')) {
           if (manual) prepareSource(true);
-          else sourceReady ??= prepareSource(false) || undefined;
+          else {
+            sourceReady ??= prepareSource(false) || undefined;
+            if (sourceReady) await sourceReady;
+          }
         }
-        if (sourceReady) await sourceReady;
-        if (!wantsPlayback) return;
+        if (attempt !== playbackAttempt) return;
         await video.play();
-        if (!entry || !wantsPlayback) return;
+        if (!entry || attempt !== playbackAttempt) return;
         if (typeof video.requestVideoFrameCallback === 'function') {
           frameCallback = video.requestVideoFrameCallback(onVideoFrame);
         } else {
           video.addEventListener('timeupdate', onTimeUpdate);
         }
-      } catch (error) {
-        if (error instanceof DOMException && error.name === 'AbortError' && !wantsPlayback) return;
+      } catch {
+        // A pause or a fallback source can interrupt an older play() request.
+        if (attempt !== playbackAttempt) return;
         if (video.error) {
           URL.revokeObjectURL(video.src);
           video.removeAttribute('src');
@@ -585,18 +599,16 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
       wantsPlayback = !wantsPlayback;
       void syncPlayback(true);
     });
-    reducedMotion.addEventListener?.('change', () => {
-      wantsPlayback = !reducedMotion.matches;
-      if (!wantsPlayback) {
-        video.pause();
-        if (video.src.startsWith('blob:')) URL.revokeObjectURL(video.src);
-        video.removeAttribute('src');
-        video.load();
-        sourceReady = undefined;
-      }
+
+    const root = document.documentElement;
+    if (root.classList.contains('logo-arrived') && !root.classList.contains('logo-arrived--play')) {
+      document.addEventListener('sch-track-reveal', () => {
+        releasePreviews();
+        void syncPlayback();
+      }, { once: true });
+    } else {
       void syncPlayback();
-    });
-    void syncPlayback();
+    }
   }
   if (video && toggle) setupPlayback(video, toggle);
 </script>
