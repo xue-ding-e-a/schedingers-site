@@ -102,7 +102,7 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
           <div class="strip-group" aria-hidden={duplicate ? 'true' : undefined}>
             {featuredByOrder.map((w) => (
               <div class="strip-item" style={`--ratio:${(w.width / w.height).toFixed(3)}`}>
-                <WorkCard work={w} lang={lang} reveal={false} eager={!duplicate} deferPreview />
+                <WorkCard work={w} lang={lang} reveal={false} deferPreview />
               </div>
             ))}
           </div>
@@ -131,7 +131,7 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
           <a class="series-card reveal" href={localizePath(`/collections/${s.slug}`, lang)}>
             <span class="series-media" style={`background:${s.color}`}>
               <DeferredPreview>
-                <img src={withBase(cover.thumb)} alt={s.name[lang]} loading="eager" decoding="async" />
+                <img src={withBase(cover.thumb)} alt={s.name[lang]} loading="lazy" decoding="async" />
               </DeferredPreview>
             </span>
             <span class="series-info">
@@ -471,7 +471,6 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
       if (!entry || video.paused || !video.loop) return;
       clearTimeout(entryTimer);
       renderProgress(100);
-      releasePreviews();
       entryTimer = window.setTimeout(dismissEntry, 120);
     }
 
@@ -511,7 +510,7 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
       if (!response.ok) throw new Error(`Video request failed (${response.status})`);
       const body = response.body;
       let file: Blob;
-      if (body) {
+      if (entry && body) {
         const total = Number(response.headers.get('content-length'));
         const chunks: BlobPart[] = [];
         let received = 0;
@@ -521,7 +520,7 @@ const featuredByOrder = [...featuredWorks].sort((a, b) => featuredRank(a.slug) -
           if (done) break;
           chunks.push(value);
           received += value.byteLength;
-          if (entry && total > 0) renderProgress(Math.min(94, Math.floor(95 * received / total)));
+          if (total > 0) renderProgress(Math.min(94, Math.floor(95 * received / total)));
         }
         file = new Blob(chunks, { type: response.headers.get('content-type') || 'video/mp4' });
       } else {
