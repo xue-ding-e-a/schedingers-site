@@ -85,7 +85,7 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
           }
           var arrived = sessionStorage.getItem('sch-logo-arrived');
           if (arrived) sessionStorage.removeItem('sch-logo-arrived');
-          // 读取来源页留下的加载进度（0-100），用于抵达页无缝接续轨道点位置
+          // 读取来源页留下的出发动画位置（仅 0-50 的前半段），抵达页从这里接续到换轨点
           var readLoadStep = function () {
             try {
               var raw = sessionStorage.getItem('sch-load-step');
@@ -94,7 +94,7 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
               var saved = JSON.parse(raw);
               if (!saved || Date.now() - saved.t > 20000) return 0;
               var step = Number(saved.step);
-              return isFinite(step) ? Math.max(0, Math.min(100, step)) : 0;
+              return isFinite(step) ? Math.max(0, Math.min(50, step)) : 0;
             } catch (e) {
               return 0;
             }
@@ -217,16 +217,14 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
               if (!dot || !arc) return reveal();
 
               var value = loadStep;
-              var target = loadStep;
+              var target = 50;
               var finished = false;
               var loaded = document.readyState === 'complete';
               var fontsDone = false;
-              var began = performance.now();
               var reach = function (next) {
                 if (next > target) target = Math.min(100, next);
               };
-              // DOM 解析完成只是整条轨道的四成：剩余进度留给样式、图片与字体
-              reach(40);
+              // 轨道前半段属于来源页的出发动画，抵达页只接管后半段：剩余进度全部由本页真实加载事件驱动
               var settle = function () {
                 if (!loaded || !fontsDone) return;
                 requestAnimationFrame(function () {
@@ -237,7 +235,7 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
               };
               var onLoad = function () {
                 loaded = true;
-                reach(80);
+                reach(82);
                 settle();
               };
               if (loaded) onLoad();
@@ -245,7 +243,7 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
               if (document.fonts && document.fonts.ready) {
                 document.fonts.ready.then(function () {
                   fontsDone = true;
-                  reach(94);
+                  reach(96);
                   settle();
                 });
               } else {
@@ -260,11 +258,8 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
                 reach(100);
               }, 6000);
 
-              var tick = function (now) {
-                var elapsed = now - began;
-                // 双曲蠕动：加载未完成时小球也持续缓慢前进，不会长时间停在同一格
-                var creep = loadStep + (97 - loadStep) * (elapsed / (elapsed + 1200));
-                if (creep > value) value = creep;
+              var tick = function () {
+                // 只向真实加载里程碑缓动，不再叠加与加载无关的自走进度，同一次加载不会被计量两遍
                 if (target > value) {
                   value = Math.min(target, value + Math.min(2.4, Math.max(0.3, (target - value) * 0.12)));
                 }
@@ -528,6 +523,8 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
         let warpEl: HTMLDivElement | null = null;
 
         const warmTarget = (href: string) => {
+          // 触摸端点按即导航，此时再预取会和导航请求重复下载同一页面，仅在支持悬停的设备预热
+          if (!matchMedia('(hover: hover) and (pointer: fine)').matches) return;
           if (warmed.has(href)) return;
           warmed.add(href);
           const prefetch = document.createElement('link');
@@ -641,7 +638,8 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
           } catch (e) {}
           window.location.assign(link.href);
 
-          // 导航与加载期间持续推进：200 份逐份前进，并把进度留给抵达页接续
+          // 出发段只播放换轨动画（固定时长滑到交点），不计量任何加载进度：
+          // 后续半段的进度完全由抵达页按真实加载事件推进，避免同一次加载被算两遍
           let progress = 0;
           let saved = -1;
           const persist = () => {
@@ -654,13 +652,14 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
           };
           persist();
           const begin = performance.now();
+          const departMs = 420;
           const advance = (now: number) => {
-            const elapsed = now - begin;
-            // 双曲蠕动：新页面提交前小球也持续前进，不会长时间停在同一格
-            progress = 90 * elapsed / (elapsed + 1600);
+            const t = Math.min(1, (now - begin) / departMs);
+            const eased = t * t * (3 - 2 * t);
+            progress = 50 * eased;
             paintJourney(progress);
             persist();
-            requestAnimationFrame(advance);
+            if (t < 1) requestAnimationFrame(advance);
           };
           requestAnimationFrame(advance);
         };

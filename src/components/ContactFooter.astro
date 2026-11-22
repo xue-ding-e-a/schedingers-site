@@ -64,29 +64,60 @@ const details = [
   .contact {
     display: grid;
     grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
-    gap: 18px clamp(32px, 6vw, 92px);
-    padding-bottom: 32px;
-    margin-bottom: 32px;
+    gap: 14px clamp(24px, 5vw, 72px);
+    padding-bottom: 26px;
+    margin-bottom: 26px;
     border-bottom: 1px solid var(--line);
     scroll-margin-top: 96px;
   }
-  .contact p, small, dt { color: var(--text-dim); }
-  .contact p { margin-top: 12px; }
+  /* 标题：在全站 .h2 基础上同步收一档，手机与电脑共用同一条 clamp 曲线 */
+  .contact .h2 {
+    font-size: clamp(1.2rem, 2.3vw, 1.75rem);
+    letter-spacing: -0.01em;
+  }
+  .contact p,
+  .contact small,
+  .contact dt { color: var(--text-dim); }
+  .contact p {
+    margin-top: 10px;
+    font-size: clamp(0.85rem, 1vw, 0.95rem);
+    line-height: 1.75;
+  }
   dl, dd { margin: 0; }
   .row {
     display: grid;
-    grid-template-columns: 5rem minmax(0, 1fr);
+    grid-template-columns: 4.5rem minmax(0, 1fr);
     align-items: baseline;
-    gap: 12px;
-    padding-block: 12px;
+    gap: 10px;
+    padding-block: 10px;
     border-bottom: 1px solid var(--line);
   }
   .row:first-child { padding-top: 0; }
-  dd { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; overflow-wrap: anywhere; }
-  a:hover { text-decoration: underline; }
-  button { color: var(--text-dim); background: var(--btn-bg); border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; font-size: 12px; }
-  button:hover { color: var(--text); background: var(--btn-hover-bg); }
-  small { grid-column: 1 / -1; line-height: 1.6; }
+  .contact dt { font-size: 11px; }
+  .contact dd {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+    overflow-wrap: anywhere;
+    font-size: 14px;
+  }
+  .contact a:hover { text-decoration: underline; }
+  .contact button {
+    color: var(--text-dim);
+    background: var(--btn-bg);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 3px 10px;
+    font-size: 11px;
+  }
+  .contact button:hover { color: var(--text); background: var(--btn-hover-bg); }
+  .contact small {
+    grid-column: 1 / -1;
+    line-height: 1.6;
+    font-size: 12px;
+  }
   @media (max-width: 720px) {
     .contact { grid-template-columns: 1fr; }
     .row { grid-template-columns: 4rem minmax(0, 1fr); }
