@@ -113,6 +113,8 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
             var sourceTilt = isPhoto ? -Math.PI / 6 : Math.PI / 6;
             var sourceStart = isPhoto ? 0 : -Math.PI;
             var sourceAngle = Math.atan2(crossY * Math.cos(sourceTilt) / 10.5, crossY * Math.sin(sourceTilt) / 27);
+            // 目标为工程时，交点等价角需取 -2π，保证从摄影左端点走短弧到下方交点
+            if (!isPhoto) sourceAngle -= 2 * Math.PI;
             var fromColor = isPhoto ? [124, 103, 228] : [228, 171, 99];
             var toColor = isPhoto ? [228, 171, 99] : [124, 103, 228];
             var dot = null;
@@ -579,7 +581,8 @@ const fullTitle = path === '/' || path === '/en/' ? `${siteName} — ${t('site.t
           const tilt = isPhoto ? -Math.PI / 6 : Math.PI / 6;
           const startAngle = isPhoto ? 0 : -Math.PI;
           const crossY = isPhoto ? -crossOffset : crossOffset;
-          const crossAngle = Math.atan2(crossY * Math.cos(tilt) / 10.5, crossY * Math.sin(tilt) / 27);
+          // 目标为工程时，交点等价角需取 -2π，保证从摄影左端点走短弧到下方交点
+          const crossAngle = Math.atan2(crossY * Math.cos(tilt) / 10.5, crossY * Math.sin(tilt) / 27) - (isPhoto ? 0 : 2 * Math.PI);
           // 换轨后的目标轨道
           const targetTilt = isPhoto ? Math.PI / 6 : -Math.PI / 6;
           const targetCrossAngle = Math.atan2(crossY * Math.cos(targetTilt) / 10.5, crossY * Math.sin(targetTilt) / 27);
