@@ -175,11 +175,11 @@ export const ui = {
     'site.tagline': 'To observe is to exist',
     'site.subtitle': 'A dual archive of night skies and code.',
 
-    'nav.photo': 'Photography',
+    'nav.photo': 'Photo',
     'nav.works': 'Works',
     'nav.series': 'Series',
     'nav.projects': 'Projects',
-    'nav.build': 'Build Log',
+    'nav.build': 'Log',
     'nav.about': 'About',
     'nav.dev': 'Engineering',
     'nav.index': 'Index',
