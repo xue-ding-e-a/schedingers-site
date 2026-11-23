@@ -117,6 +117,8 @@ If the repository is renamed, update `base` as well or static assets will 404.
 
 Each iteration is recorded by feature batch in the site's [Build Log](https://xue-ding-e-a.github.io/schedingers-site/en/build/), including technical choices, the split between AI and human work, the timeline and retrospective notes. Recent batches:
 
+- `2026.11.23` Turned the photography About page into the CSVA Proust questionnaire, scaled down the contact block, and reordered the mobile hero to copy, star trail, then meta without the black gradient under the video.
+- `2026.11.22` Reworked the mobile photography hero, works page and navigation, unified glass settings across both tracks, and split the track transition into 100 segments per half driven by loading.
 - `2026.11.22` Finalised the curated works layout, packed filtered results by capture date, aligned photography card interactions and moved contact details into the shared footer.
 - `2026.11.21` Added a lightweight portal starfield, switched the photography hero to a cacheable star-trail loop and deferred photo previews.
 - `2026.11.20` Split the photography and engineering About pages, smoothed the atom logo transition, added a theme-aware favicon and refined series reveals, work framing and back navigation.

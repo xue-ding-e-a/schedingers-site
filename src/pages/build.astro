@@ -205,6 +205,38 @@ const timeline: { date: string; title: Localized; desc: Localized }[] = [
       en: 'Folded the standalone Contact page and navigation entry into a shared footer section. Both tracks now show contact details at the bottom of their pages, with copy buttons for email and WeChat.',
     },
   },
+  {
+    date: '2026.11.22',
+    title: { zh: '手机端不是压缩过的桌面版', en: 'Mobile is not a squeezed desktop' },
+    desc: {
+      zh: '摄影首屏的信息与滚动提示移到星轨动画下方，标题区上移收紧；窄屏导航先收按钮宽度、再固定品牌列宽，不再折出第三行或下拉闪烁。作品页筛选行改成不吸顶的胶囊面板，筛选后旧卡片渐入到新位置；精选作品图片名缩到 12px，系列封面收窄居中，并统一移除移动端点击的蓝色高亮。',
+      en: 'Moved the hero meta and scroll hint below the star-trail animation and tightened the title block. On narrow screens the navigation shrinks buttons first and keeps a fixed brand column, so it no longer wraps to a third row or flickers while scrolling. The works filter became a non-sticky capsule panel, filtered cards fade into their new positions, featured captions dropped to 12px, series covers narrowed and centred, and the blue tap highlight was removed site-wide.',
+    },
+  },
+  {
+    date: '2026.11.22',
+    title: { zh: '导航玻璃与换轨过渡共用一套节奏', en: 'One rhythm for navigation glass and track transitions' },
+    desc: {
+      zh: '摄影导航移除颗粒与斜向高光层、减弱顶边高光，与工程线共用同一套毛玻璃参数，只保留深色底；导航容器去掉底部分隔线与阴影，模糊统一 20px、过渡 0.2s。门户到摄影首页的显影过渡层移除，显影只留在作品详情与系列页。双主线换轨不再显示百分比读数，拆成前后各 100 份：出发段 420ms 时长驱动，抵达页后半程按真实加载事件逐份推进，并在下方交点取等价角，修掉摄影转工程前半程的反向。',
+      en: 'The photography navigation dropped its grain and diagonal highlight layers, softened the top edge and now shares the engineering glass settings with only the dark base differing. The container lost its bottom divider and shadow, with a 20px blur and a 0.2s transition. The reveal overlay from the portal to the photography homepage was removed, leaving reveals on work details and series pages only. Track switching no longer shows a percentage: each half has 100 segments, the departure runs on a fixed 420ms timeline and the destination half advances on real load events, while an equivalent angle at the lower junction fixed the reversed first half when leaving photography.',
+    },
+  },
+  {
+    date: '2026.11.23',
+    title: { zh: '关于页换成一份普鲁斯特问卷', en: 'An About page as a Proust questionnaire' },
+    desc: {
+      zh: '摄影关于页把叙述性自述换成星联 CSVA 普鲁斯特问卷：六个问题逐条列出，第一条回答默认展开，其余可点开收起；摄影器材与后期清单保留在下方。',
+      en: 'The photography About page replaced its narrative bio with the CSVA Proust questionnaire: six questions, the first answer open by default and the rest collapsible, with the gear and post-processing list kept below.',
+    },
+  },
+  {
+    date: '2026.11.23',
+    title: { zh: '联系模块收小，手机首屏换序', en: 'A smaller contact block and a reordered mobile hero' },
+    desc: {
+      zh: '联系模块的标题、正文、标签、按钮与间距改用同一条 clamp() 曲线，手机和电脑按比例一起缩小。手机版摄影首屏改为文字介绍在上、星轨视频居中、照片信息在下，并去掉星轨下方的黑色渐变遮罩，画面完整贴到底边。',
+      en: 'The contact block now sizes its heading, copy, labels, buttons and spacing on one clamp() curve, so mobile and desktop shrink together. The mobile photography hero puts the intro copy first, the star-trail video second and the photo meta last, and the black gradient under the video is gone so the frame reaches the bottom edge.',
+    },
+  },
 ];
 
 const lessons: { q: Localized; a: Localized }[] = [
