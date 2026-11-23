@@ -423,9 +423,9 @@ const stripMaxRatio = Math.max(...featuredByOrder.map((w) => w.width / w.height)
       height: 100%;
     }
 
+    /* 取消星轨动画下方的黑色渐变遮罩，视频画面完整呈现 */
     .hero-veil {
-      opacity: 1;
-      background: linear-gradient(to bottom, rgb(0 0 0 / 0%) 58%, #000 100%);
+      display: none;
     }
 
     /* 照片信息跟在视频下方，滚动提示紧贴其下方右对齐 */
