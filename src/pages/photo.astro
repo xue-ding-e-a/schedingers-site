@@ -35,19 +35,21 @@ const stripMaxRatio = Math.max(...featuredByOrder.map((w) => w.width / w.height)
     <link rel="preload" as="image" href={heroPoster} fetchpriority="high" />
   </Fragment>
   <section class="hero" data-hero>
-    <video
-      class="hero-video"
-      data-src={heroVideo}
-      data-mobile-src={mobileHeroVideo}
-      autoplay
-      preload="auto"
-      poster={heroPoster}
-      aria-label={hero.title[lang]}
-      muted
-      playsinline
-      loop
-    ></video>
-    <div class="hero-veil" aria-hidden="true"></div>
+    <div class="hero-media">
+      <video
+        class="hero-video"
+        data-src={heroVideo}
+        data-mobile-src={mobileHeroVideo}
+        autoplay
+        preload="auto"
+        poster={heroPoster}
+        aria-label={hero.title[lang]}
+        muted
+        playsinline
+        loop
+      ></video>
+      <div class="hero-veil" aria-hidden="true"></div>
+    </div>
     <div class="hero-inner container-wide reveal">
       <p class="kicker">{t('photo.kicker')}</p>
       <h1 class="display-lg hero-title">{t('photo.title')}</h1>
@@ -154,6 +156,11 @@ const stripMaxRatio = Math.max(...featuredByOrder.map((w) => w.width / w.height)
     flex-direction: column;
     justify-content: flex-end;
     overflow: hidden;
+  }
+
+  .hero-media {
+    position: absolute;
+    inset: 0;
   }
 
   .hero-video {
@@ -401,12 +408,19 @@ const stripMaxRatio = Math.max(...featuredByOrder.map((w) => w.width / w.height)
       justify-content: flex-start;
     }
 
-    /* 动画顶到页面最上方，与导航栏顶部对齐 */
+    /* 移动端模块顺序：文字介绍在上，星轨动画居中，照片信息在下 */
+    .hero-media {
+      position: relative;
+      order: 2;
+      inset: auto;
+      width: 100%;
+      aspect-ratio: 3 / 2;
+    }
+
     .hero-video,
     .hero-veil {
-      inset: 0 0 auto;
-      height: auto;
-      aspect-ratio: 3 / 2;
+      inset: 0;
+      height: 100%;
     }
 
     .hero-veil {
@@ -414,10 +428,10 @@ const stripMaxRatio = Math.max(...featuredByOrder.map((w) => w.width / w.height)
       background: linear-gradient(to bottom, rgb(0 0 0 / 0%) 58%, #000 100%);
     }
 
-    /* 照片信息合成一行，滚动提示紧贴其下方右对齐 */
+    /* 照片信息跟在视频下方，滚动提示紧贴其下方右对齐 */
     .hero-meta {
-      order: -1;
-      margin: calc(66.6667% + 12px) auto 0;
+      order: 3;
+      margin: 12px auto 0;
       padding-block: 0;
       display: flex;
       flex-direction: row;
@@ -447,10 +461,11 @@ const stripMaxRatio = Math.max(...featuredByOrder.map((w) => w.width / w.height)
       text-align: right;
     }
 
-    /* 标题上移贴近信息区，标题下方的留白同步收紧 */
+    /* 文字区移到最上方：顶部留出透明导航的高度，底部与视频保持间距 */
     .hero-inner {
-      padding-top: 44px;
-      padding-bottom: 48px;
+      order: 1;
+      padding-top: calc(var(--head-h, var(--nav-h)) + 24px);
+      padding-bottom: 36px;
     }
   }
 
